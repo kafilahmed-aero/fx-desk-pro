@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ThemeContext } from "./themeContextValue";
 
 const THEME_STORAGE_KEY = "forex-dashboard-theme";
-const ThemeContext = createContext(null);
 
 const getStoredTheme = () => {
   if (typeof window === "undefined") {
@@ -33,14 +33,4 @@ export function ThemeProvider({ children }) {
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-
-  if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
-
-  return context;
 }

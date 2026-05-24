@@ -30,7 +30,8 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Signals from "./pages/Signals";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { useTheme } from "./context/useTheme";
 import { getCurrentUser, logout } from "./services/authService";
 
 const navigationItems = [
@@ -371,6 +372,7 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                   </ProtectedRoute>
                 }
               />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>
         </main>
@@ -405,11 +407,13 @@ function App() {
           <Route
             path="/*"
             element={
-              <DashboardShell
-                isAuthenticated={isAuthenticated}
-                user={user}
-                onLogout={handleLogout}
-              />
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <DashboardShell
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                  onLogout={handleLogout}
+                />
+              </ProtectedRoute>
             }
           />
         </Routes>

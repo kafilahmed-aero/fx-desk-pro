@@ -28,7 +28,7 @@ import {
   YAxis,
 } from "recharts";
 import PairCard from "../components/PairCard";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 import {
   getChartData,
   getForexPairs,
