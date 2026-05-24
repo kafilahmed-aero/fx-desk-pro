@@ -33,18 +33,6 @@
     animation-delay: 400ms;
   }
 
-  .animate-ticker-scroll {
-    animation: ticker-scroll 32s linear infinite;
-  }
-
-  .animate-price-flash-green {
-    animation: price-flash-green 0.9s ease-out;
-  }
-
-  .animate-price-flash-red {
-    animation: price-flash-red 0.9s ease-out;
-  }
-
   .scrollbar-fintech {
     scrollbar-color: rgba(59, 130, 246, 0.55) rgba(15, 23, 42, 0.7);
     scrollbar-width: thin;
@@ -207,43 +195,6 @@ html:not(.dark) .hover\:shadow-red-400\/25:hover {
   }
 }
 
-@keyframes ticker-scroll {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes price-flash-green {
-  0% {
-    box-shadow: 0 0 0 rgba(74, 222, 128, 0);
-  }
-
-  35% {
-    box-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
-  }
-
-  100% {
-    box-shadow: 0 0 0 rgba(74, 222, 128, 0);
-  }
-}
-
-@keyframes price-flash-red {
-  0% {
-    box-shadow: 0 0 0 rgba(248, 113, 113, 0);
-  }
-
-  35% {
-    box-shadow: 0 0 24px rgba(248, 113, 113, 0.35);
-  }
-
-  100% {
-    box-shadow: 0 0 0 rgba(248, 113, 113, 0);
-  }
-}
 html,
 body,
 #root {

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Activity,
-  ArrowDownRight,
-  ArrowUpRight,
   BarChart3,
   Bell,
   ChevronDown,
@@ -41,15 +39,6 @@ const navigationItems = [
   { label: "Settings", path: "/settings", icon: SettingsIcon },
 ];
 
-const initialMarketPrices = [
-  { pair: "GOLD", price: 2368.4, spread: "1.8", precision: 2, direction: "up" },
-  { pair: "EURUSD", price: 1.0842, spread: "0.6", precision: 4, direction: "down" },
-  { pair: "GBPUSD", price: 1.269, spread: "0.8", precision: 4, direction: "up" },
-  { pair: "USDJPY", price: 156.84, spread: "0.7", precision: 3, direction: "down" },
-  { pair: "AUDUSD", price: 0.6648, spread: "0.9", precision: 4, direction: "up" },
-  { pair: "USDCHF", price: 0.9126, spread: "0.8", precision: 4, direction: "down" },
-];
-
 function ProtectedRoute({ isAuthenticated, children }) {
   const location = useLocation();
 
@@ -65,33 +54,6 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
   const { isDark, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
-  const [marketPrices, setMarketPrices] = useState(initialMarketPrices);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setMarketPrices((prices) => {
-        const priceIndex = Math.floor(Math.random() * prices.length);
-
-        return prices.map((market, index) => {
-          if (index !== priceIndex) {
-            return market;
-          }
-
-          const direction = Math.random() > 0.48 ? "up" : "down";
-          const volatility = market.pair === "GOLD" ? 1.2 : 0.0012;
-          const change = Math.random() * volatility;
-          const price =
-            direction === "up"
-              ? market.price + change
-              : market.price - change;
-
-          return { ...market, price, direction };
-        });
-      });
-    }, 1800);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
@@ -115,7 +77,7 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.09),transparent_30%),linear-gradient(135deg,#f8fafc,#eef4f8_52%,#e8eef5)] text-slate-950 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_32%),linear-gradient(135deg,#07101f,#0B1120_45%,#111827)] dark:text-white">
+    <div className="min-h-screen overflow-x-clip bg-[#eef4f8] text-slate-950 transition-colors duration-300 dark:bg-[#07101f] dark:text-white">
       <header className="z-50 border-b border-slate-200/80 bg-white/95 px-3 py-2 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#080E1B]/95 dark:shadow-black/20">
         <div className="flex h-11 items-center justify-between gap-3">
           <button
@@ -132,13 +94,17 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
               FX Desk Pro
             </p>
             <p className="truncate text-sm font-bold text-slate-950 dark:text-white">
-              Forex Consensus
+              Telegram Signal Consensus
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-500 dark:text-emerald-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span>
-            Live
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/settings")}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm shadow-slate-900/5 transition active:scale-95 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-200"
+            aria-label="Open account settings"
+          >
+            <UserCircle size={21} />
+          </button>
         </div>
       </header>
 
@@ -168,7 +134,7 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 FX Desk Pro
               </p>
               <p className="truncate text-base font-bold text-slate-950 dark:text-white">
-                Forex Consensus
+                Telegram Signal Consensus
               </p>
             </div>
           </div>
@@ -271,7 +237,7 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm shadow-blue-900/15 dark:from-blue-500 dark:to-cyan-400 dark:shadow-blue-500/25"
+                      ? "bg-blue-600 text-white shadow-sm shadow-blue-900/15 dark:bg-blue-500 dark:shadow-blue-500/20"
                       : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
                   }`
                 }
@@ -283,53 +249,14 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
           })}
         </nav>
 
-        <div className="mt-auto rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm font-semibold text-emerald-500 dark:text-emerald-300">
-          <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-          Secure workspace active
+        <div className="mt-auto rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm font-semibold text-slate-500 dark:text-slate-300">
+          Telegram signal workspace
         </div>
       </aside>
 
       <div className="min-h-screen min-w-0">
         <main className="min-w-0 p-3 sm:p-6 xl:p-8 2xl:p-10">
-          <div className="mx-auto w-full min-w-0 max-w-7xl">
-            <div className="mb-4 overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-xl shadow-slate-200/50 lg:backdrop-blur-2xl dark:border-white/10 dark:bg-[#0B1120]/90 dark:shadow-black/10">
-              <div className="flex items-center gap-4 border-b border-slate-200 px-4 py-2 dark:border-white/10">
-                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-blue-500 dark:text-blue-300">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-                  Live Market Tape
-                </div>
-                <div className="hidden text-xs text-slate-500 dark:text-slate-400 sm:block">
-                  Synthetic realtime feed
-                </div>
-              </div>
-              <div className="overflow-hidden">
-                <div className="flex w-max flex-nowrap gap-2 px-3 py-2 will-change-transform animate-ticker-scroll [transform:translateZ(0)] [&:hover]:[animation-play-state:paused] sm:gap-3 sm:px-4 sm:py-3">
-                  {[...marketPrices, ...marketPrices].map((market, index) => (
-                    <div
-                      key={`${market.pair}-${index}`}
-                      className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all duration-300 sm:gap-3 sm:px-4 sm:py-2 sm:text-sm ${
-                        market.direction === "up"
-                          ? "border-green-400/20 bg-green-400/10 text-green-500 sm:animate-price-flash-green dark:text-green-300"
-                          : "border-red-400/20 bg-red-400/10 text-red-500 sm:animate-price-flash-red dark:text-red-300"
-                      }`}
-                    >
-                      <span className="text-slate-700 dark:text-white">
-                        {market.pair}
-                      </span>
-                      <span>{market.price.toFixed(market.precision)}</span>
-                      <span className="inline-flex items-center gap-1 text-xs">
-                        {market.direction === "up" ? (
-                          <ArrowUpRight size={14} />
-                        ) : (
-                          <ArrowDownRight size={14} />
-                        )}
-                        {market.spread}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="mx-auto w-full min-w-0 max-w-6xl">
             <Routes>
               <Route
                 path="/"
