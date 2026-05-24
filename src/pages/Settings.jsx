@@ -1,0 +1,28 @@
+import { SlidersHorizontal, UserCog } from "lucide-react";
+
+function Settings() {
+  return (
+    <div className="animate-dashboard-in">
+      <p className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+        <SlidersHorizontal size={16} />
+        Workspace Controls
+      </p>
+      <h2 className="mt-2 text-3xl font-bold text-blue-500 dark:text-blue-400 sm:text-4xl">
+        Settings
+      </h2>
+
+      <div className="mt-8 rounded-2xl border border-white/70 bg-white/75 p-6 shadow-xl shadow-slate-200/70 backdrop-blur-xl transition-colors duration-300 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/10">
+        <h3 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
+          <UserCog className="text-blue-500 dark:text-blue-300" size={19} />
+          Dashboard Preferences
+        </h3>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+          Alert rules, watched pairs, Telegram source settings, and display
+          preferences can be managed here later.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default Settings;

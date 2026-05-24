@@ -1,3 +1,119 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
+@layer utilities {
+  .animate-dashboard-in {
+    animation: dashboard-in 0.55s ease-out both;
+  }
+
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animate-ticker-scroll {
+    animation: ticker-scroll 32s linear infinite;
+  }
+
+  .animate-price-flash-green {
+    animation: price-flash-green 0.9s ease-out;
+  }
+
+  .animate-price-flash-red {
+    animation: price-flash-red 0.9s ease-out;
+  }
+
+  .scrollbar-fintech {
+    scrollbar-color: rgba(59, 130, 246, 0.55) rgba(15, 23, 42, 0.7);
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-fintech::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .scrollbar-fintech::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 999px;
+  }
+
+  .scrollbar-fintech::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.55);
+    border-radius: 999px;
+  }
+}
+
+@keyframes dashboard-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes price-flash-green {
+  0% {
+    box-shadow: 0 0 0 rgba(74, 222, 128, 0);
+  }
+
+  35% {
+    box-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+  }
+
+  100% {
+    box-shadow: 0 0 0 rgba(74, 222, 128, 0);
+  }
+}
+
+@keyframes price-flash-red {
+  0% {
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+  }
+
+  35% {
+    box-shadow: 0 0 24px rgba(248, 113, 113, 0.35);
+  }
+
+  100% {
+    box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+  }
+}
+html,
+body,
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
