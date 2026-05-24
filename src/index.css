@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply bg-[#eef4f8] dark:bg-[#0B1120];
+  }
+
   body {
-    @apply transition-colors duration-300;
+    @apply bg-[#eef4f8] transition-colors duration-300 overscroll-none dark:bg-[#0B1120];
   }
 }
 
@@ -44,6 +48,8 @@
   .scrollbar-fintech {
     scrollbar-color: rgba(59, 130, 246, 0.55) rgba(15, 23, 42, 0.7);
     scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   .scrollbar-fintech::-webkit-scrollbar {
@@ -60,6 +66,133 @@
     background: rgba(59, 130, 246, 0.55);
     border-radius: 999px;
   }
+}
+
+@media (max-width: 1023px) {
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+html:not(.dark) .bg-white\/70,
+html:not(.dark) .bg-white\/75,
+html:not(.dark) .bg-white\/80,
+html:not(.dark) .bg-white\/85,
+html:not(.dark) .bg-white\/90,
+html:not(.dark) .bg-white\/95 {
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
+html:not(.dark) .bg-white\/65,
+html:not(.dark) .bg-white\/55 {
+  background-color: rgba(248, 250, 252, 0.88);
+}
+
+html:not(.dark) .border-white\/60,
+html:not(.dark) .border-white\/70 {
+  border-color: rgba(203, 213, 225, 0.82);
+}
+
+html:not(.dark) .shadow-slate-200\/40,
+html:not(.dark) .shadow-slate-200\/50,
+html:not(.dark) .shadow-slate-200\/60,
+html:not(.dark) .shadow-slate-200\/70 {
+  --tw-shadow-color: rgb(15 23 42 / 0.07);
+  --tw-shadow: var(--tw-shadow-colored);
+}
+
+html:not(.dark) .shadow-xl {
+  --tw-shadow: 0 14px 30px -22px rgb(15 23 42 / 0.28),
+    0 10px 18px -18px rgb(15 23 42 / 0.18);
+  --tw-shadow-colored: 0 14px 30px -22px var(--tw-shadow-color),
+    0 10px 18px -18px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+html:not(.dark) .shadow-2xl {
+  --tw-shadow: 0 24px 48px -30px rgb(15 23 42 / 0.34),
+    0 14px 24px -22px rgb(15 23 42 / 0.2);
+  --tw-shadow-colored: 0 24px 48px -30px var(--tw-shadow-color),
+    0 14px 24px -22px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+html:not(.dark) .text-blue-400,
+html:not(.dark) .text-blue-500 {
+  color: rgb(37, 99, 235);
+}
+
+html:not(.dark) .text-blue-300,
+html:not(.dark) .text-cyan-300,
+html:not(.dark) .text-cyan-500 {
+  color: rgb(8, 119, 166);
+}
+
+html:not(.dark) .text-green-300,
+html:not(.dark) .text-green-400,
+html:not(.dark) .text-green-500,
+html:not(.dark) .text-emerald-500 {
+  color: rgb(5, 150, 105);
+}
+
+html:not(.dark) .text-red-300,
+html:not(.dark) .text-red-400,
+html:not(.dark) .text-red-500 {
+  color: rgb(220, 38, 38);
+}
+
+html:not(.dark) .text-amber-300,
+html:not(.dark) .text-orange-300,
+html:not(.dark) .text-yellow-400 {
+  color: rgb(180, 83, 9);
+}
+
+html:not(.dark) .bg-blue-500\/10,
+html:not(.dark) .bg-blue-400\/10 {
+  background-color: rgb(37 99 235 / 0.08);
+}
+
+html:not(.dark) .bg-cyan-400 {
+  background-color: rgb(14, 116, 144);
+}
+
+html:not(.dark) .bg-green-400 {
+  background-color: rgb(5, 150, 105);
+}
+
+html:not(.dark) .bg-red-400 {
+  background-color: rgb(220, 38, 38);
+}
+
+html:not(.dark) .from-blue-500 {
+  --tw-gradient-from: #2563eb var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+html:not(.dark) .to-cyan-400 {
+  --tw-gradient-to: #0ea5c9 var(--tw-gradient-to-position);
+}
+
+html:not(.dark) .backdrop-blur-xl,
+html:not(.dark) .backdrop-blur-2xl {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+html:not(.dark) .group:hover [class*="group-hover:drop-shadow"] {
+  filter: none;
+}
+
+html:not(.dark) .hover\:shadow-blue-500\/10:hover,
+html:not(.dark) .hover\:shadow-blue-500\/15:hover,
+html:not(.dark) .hover\:shadow-green-400\/25:hover,
+html:not(.dark) .hover\:shadow-red-400\/25:hover {
+  --tw-shadow-color: rgb(15 23 42 / 0.1);
 }
 
 @keyframes dashboard-in {
@@ -115,5 +248,5 @@ html,
 body,
 #root {
   width: 100%;
-  overflow-x: hidden;
+  max-width: 100%;
 }

@@ -5,7 +5,7 @@ function PairCard({ name, signal, color, percentage }) {
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border bg-white/80 p-6 shadow-xl shadow-slate-200/70 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] dark:bg-white/[0.06] dark:shadow-black/10 ${
+      className={`group relative min-w-0 overflow-hidden rounded-2xl border bg-white/80 p-6 shadow-xl shadow-slate-200/70 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] dark:bg-white/[0.06] dark:shadow-black/10 ${
         isStrongSignal
           ? color === "green"
             ? "border-green-400/30 shadow-green-400/10 hover:border-green-300/60 hover:shadow-green-400/25"
@@ -22,11 +22,11 @@ function PairCard({ name, signal, color, percentage }) {
       ></div>
 
       <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
             Instrument
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
+          <h2 className="mt-2 break-words text-2xl font-semibold text-slate-950 dark:text-white">
             {name}
           </h2>
         </div>

@@ -5,15 +5,15 @@ import {
   ArrowUpRight,
   BarChart3,
   Bell,
-  ChevronRight,
   ChevronDown,
   LayoutDashboard,
   LogOut,
+  Menu,
   Moon,
-  Search,
   Settings as SettingsIcon,
   Signal,
   Sun,
+  X,
   UserCircle,
 } from "lucide-react";
 import {
@@ -62,7 +62,8 @@ function ProtectedRoute({ isAuthenticated, children }) {
 function DashboardShell({ isAuthenticated, user, onLogout }) {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
   const [marketPrices, setMarketPrices] = useState(initialMarketPrices);
 
   useEffect(() => {
@@ -91,73 +92,206 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   const handleLogout = () => {
     onLogout();
-    setIsProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsMobileAccountOpen(false);
     navigate("/login", { replace: true });
   };
 
+  const handleMobileAccountSettings = () => {
+    setIsMobileMenuOpen(false);
+    setIsMobileAccountOpen(false);
+    navigate("/settings");
+  };
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_34%),linear-gradient(135deg,#f8fafc,#e2e8f0)] text-slate-950 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_32%),linear-gradient(135deg,#07101f,#0B1120_45%,#111827)] dark:text-white">
-      <div className="flex min-h-screen flex-col lg:flex-row">
-        <aside className="sticky top-0 z-40 border-b border-white/50 bg-white/75 px-4 py-4 shadow-xl shadow-slate-200/70 backdrop-blur-2xl transition-colors duration-300 dark:border-white/10 dark:bg-[#080E1B]/80 dark:shadow-black/20 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
-          <div className="flex items-center justify-between gap-4 lg:block">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/25">
-                <Activity size={22} />
-              </div>
-              <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-300">
+    <div className="min-h-screen overflow-x-clip bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.09),transparent_30%),linear-gradient(135deg,#f8fafc,#eef4f8_52%,#e8eef5)] text-slate-950 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_32%),linear-gradient(135deg,#07101f,#0B1120_45%,#111827)] dark:text-white">
+      <header className="z-50 border-b border-slate-200/80 bg-white/95 px-3 py-2 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#080E1B]/95 dark:shadow-black/20">
+        <div className="flex h-11 items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm shadow-slate-900/5 transition active:scale-95 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-200"
+            aria-label="Open navigation menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            <Menu size={20} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-300">
+              FX Desk Pro
+            </p>
+            <p className="truncate text-sm font-bold text-slate-950 dark:text-white">
+              Forex Consensus
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-500 dark:text-emerald-300">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"></span>
+            Live
+          </div>
+        </div>
+      </header>
+
+      <div
+        className={`fixed inset-0 z-[60] bg-slate-950/45 transition-opacity duration-300 ${
+          isMobileMenuOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden="true"
+      ></div>
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-[70] flex w-[min(20rem,88vw)] flex-col border-r border-slate-200 bg-white p-4 shadow-2xl shadow-slate-950/15 transition-transform duration-300 ease-out dark:border-white/10 dark:bg-[#080E1B] ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4 dark:border-white/10">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm shadow-blue-900/15 dark:bg-blue-500 dark:shadow-blue-500/25">
+              <Activity size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-300">
                 FX Desk Pro
               </p>
-              <h1 className="mt-1 text-xl font-bold text-slate-950 dark:text-white lg:text-2xl">
+              <p className="truncate text-base font-bold text-slate-950 dark:text-white">
                 Forex Consensus
-              </h1>
-              </div>
-            </div>
-            <div className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-bold uppercase tracking-wide text-emerald-500 shadow-lg shadow-emerald-500/10 dark:text-emerald-300 sm:flex lg:mt-8 lg:inline-flex">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-              Live
+              </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition active:scale-95 dark:border-white/10 dark:text-slate-300"
+            aria-label="Close navigation menu"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-          <nav className="scrollbar-fintech mt-5 flex gap-2 overflow-x-auto pb-1 lg:mt-10 lg:flex-col lg:overflow-visible lg:pb-0">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              return (
+        <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
+          <button
+            type="button"
+            onClick={() => setIsMobileAccountOpen((current) => !current)}
+            className="flex w-full items-center gap-3 p-3 text-left transition hover:bg-slate-100/80 active:scale-[0.99] dark:hover:bg-white/10"
+            aria-expanded={isMobileAccountOpen}
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-sm font-bold text-white shadow-sm shadow-blue-900/15 dark:from-blue-500 dark:to-cyan-400 dark:shadow-blue-500/25">
+              {user?.email?.charAt(0).toUpperCase() || "T"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                FX Trader
+              </p>
+              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                {user?.email || "trader@example.com"}
+              </p>
+            </div>
+            <ChevronDown
+              size={18}
+              className={`shrink-0 text-slate-500 transition-transform duration-300 dark:text-slate-400 ${
+                isMobileAccountOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          <div
+            className={`grid transition-all duration-300 ease-out ${
+              isMobileAccountOpen
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="mx-3 border-t border-slate-200 pb-3 pt-2 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:text-slate-200 dark:hover:bg-white/10"
+                >
+                  <span className="inline-flex items-center gap-3">
+                    {isDark ? <Sun size={17} /> : <Moon size={17} />}
+                    Appearance
+                  </span>
+                  <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs text-blue-500 dark:text-blue-300">
+                    {isDark ? "Dark" : "Light"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleMobileAccountSettings}
+                  className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:text-slate-200 dark:hover:bg-white/10"
+                >
+                  <UserCircle size={17} />
+                  Account Settings
+                </button>
+                <button
+                  type="button"
+                  className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:text-slate-200 dark:hover:bg-white/10"
+                >
+                  <Bell size={17} />
+                  Notifications
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-500/10 active:scale-[0.99] dark:text-red-300"
+                >
+                  <LogOut size={17} />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="my-5 h-px bg-slate-200 dark:bg-white/10"></div>
+
+        <nav className="space-y-2">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            return (
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `group inline-flex items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-left text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 lg:hover:translate-x-1 lg:hover:translate-y-0 ${
+                  `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-lg shadow-blue-500/25"
-                      : "text-slate-600 hover:bg-white/70 hover:text-slate-950 hover:shadow-lg hover:shadow-blue-500/10 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                      ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm shadow-blue-900/15 dark:from-blue-500 dark:to-cyan-400 dark:shadow-blue-500/25"
+                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
                   }`
                 }
               >
                 <Icon size={18} />
-                <span>{item.label}</span>
-                <ChevronRight className="ml-auto hidden opacity-0 transition group-hover:opacity-100 lg:block" size={15} />
+                {item.label}
               </NavLink>
-              );
-            })}
-          </nav>
+            );
+          })}
+        </nav>
 
-          <div className="mt-5 hidden rounded-2xl border border-slate-200 bg-white/55 p-4 shadow-lg shadow-slate-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10 lg:mt-10 lg:block">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
-              Session
-            </p>
-            <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-emerald-500 dark:text-emerald-300">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
-              Secure workspace active
-            </div>
-          </div>
-        </aside>
+        <div className="mt-auto rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm font-semibold text-emerald-500 dark:text-emerald-300">
+          <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
+          Secure workspace active
+        </div>
+      </aside>
 
-        <main className="flex-1 p-4 sm:p-6 xl:p-8 2xl:p-10">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-4 overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-xl shadow-slate-200/50 backdrop-blur-2xl dark:border-white/10 dark:bg-[#0B1120]/70 dark:shadow-black/10">
+      <div className="min-h-screen min-w-0">
+        <main className="min-w-0 p-3 sm:p-6 xl:p-8 2xl:p-10">
+          <div className="mx-auto w-full min-w-0 max-w-7xl">
+            <div className="mb-4 overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-xl shadow-slate-200/50 lg:backdrop-blur-2xl dark:border-white/10 dark:bg-[#0B1120]/90 dark:shadow-black/10">
               <div className="flex items-center gap-4 border-b border-slate-200 px-4 py-2 dark:border-white/10">
                 <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-blue-500 dark:text-blue-300">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
@@ -167,15 +301,15 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                   Synthetic realtime feed
                 </div>
               </div>
-              <div className="scrollbar-fintech overflow-x-auto lg:overflow-hidden">
-                <div className="flex min-w-max gap-3 px-4 py-3 lg:animate-ticker-scroll lg:[&:hover]:[animation-play-state:paused]">
+              <div className="overflow-hidden">
+                <div className="flex w-max flex-nowrap gap-2 px-3 py-2 will-change-transform animate-ticker-scroll [transform:translateZ(0)] [&:hover]:[animation-play-state:paused] sm:gap-3 sm:px-4 sm:py-3">
                   {[...marketPrices, ...marketPrices].map((market, index) => (
                     <div
                       key={`${market.pair}-${index}`}
-                      className={`inline-flex items-center gap-3 rounded-xl border px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                      className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all duration-300 sm:gap-3 sm:px-4 sm:py-2 sm:text-sm ${
                         market.direction === "up"
-                          ? "animate-price-flash-green border-green-400/20 bg-green-400/10 text-green-500 dark:text-green-300"
-                          : "animate-price-flash-red border-red-400/20 bg-red-400/10 text-red-500 dark:text-red-300"
+                          ? "border-green-400/20 bg-green-400/10 text-green-500 sm:animate-price-flash-green dark:text-green-300"
+                          : "border-red-400/20 bg-red-400/10 text-red-500 sm:animate-price-flash-red dark:text-red-300"
                       }`}
                     >
                       <span className="text-slate-700 dark:text-white">
@@ -195,112 +329,6 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 </div>
               </div>
             </div>
-            <header className="sticky top-3 z-30 mb-6 flex flex-col gap-4 rounded-2xl border border-white/60 bg-white/75 p-4 shadow-xl shadow-slate-200/60 backdrop-blur-2xl dark:border-white/10 dark:bg-[#0B1120]/70 dark:shadow-black/10 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-blue-500 dark:text-blue-300">
-                  Market Command Center
-                </p>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Live consensus, confidence scoring, and trade signal workflow.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 md:flex">
-                  <Search size={16} />
-                  Search markets
-                </div>
-                <button className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/70 text-slate-600 transition hover:-translate-y-0.5 hover:text-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-                  <Bell size={18} />
-                </button>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsProfileOpen((current) => !current)}
-                    className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/75 px-2 py-2 pr-3 text-left shadow-lg shadow-slate-200/50 transition hover:-translate-y-0.5 hover:border-blue-400/30 hover:shadow-blue-500/10 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/10"
-                    aria-expanded={isProfileOpen}
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-sm font-bold text-white shadow-lg shadow-blue-500/25">
-                      {user?.email?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                    <div className="hidden min-w-0 sm:block">
-                      <p className="max-w-32 truncate text-sm font-bold text-slate-800 dark:text-white">
-                        FX Trader
-                      </p>
-                      <p className="max-w-32 truncate text-xs text-slate-500 dark:text-slate-400">
-                        {user?.email}
-                      </p>
-                    </div>
-                    <ChevronDown
-                      size={16}
-                      className={`text-slate-500 transition ${
-                        isProfileOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  <div
-                    className={`absolute right-0 mt-3 w-80 origin-top-right rounded-3xl border border-white/70 bg-white/90 p-3 shadow-2xl shadow-slate-300/60 backdrop-blur-2xl transition-all duration-200 dark:border-white/10 dark:bg-[#0B1120]/95 dark:shadow-black/40 ${
-                      isProfileOpen
-                        ? "translate-y-0 scale-100 opacity-100"
-                        : "pointer-events-none -translate-y-2 scale-95 opacity-0"
-                    }`}
-                  >
-                    <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 p-4 text-white shadow-lg shadow-blue-500/25">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-lg font-bold">
-                          {user?.email?.charAt(0).toUpperCase() || "U"}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold">FX Trader</p>
-                          <p className="truncate text-sm text-white/80">
-                            {user?.email}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 space-y-1">
-                      <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className="flex w-full items-center justify-between rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
-                      >
-                        <span className="inline-flex items-center gap-3">
-                          {isDark ? <Sun size={17} /> : <Moon size={17} />}
-                          Appearance
-                        </span>
-                        <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-500 dark:text-blue-300">
-                          {isDark ? "Dark" : "Light"}
-                        </span>
-                      </button>
-                      <NavLink
-                        to="/settings"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
-                      >
-                        <UserCircle size={17} />
-                        Account settings
-                      </NavLink>
-                      <button
-                        type="button"
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
-                      >
-                        <Bell size={17} />
-                        Notifications
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-500/10 dark:text-red-300"
-                      >
-                        <LogOut size={17} />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </header>
             <Routes>
               <Route
                 path="/"
