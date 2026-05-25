@@ -1,0 +1,23 @@
+{
+  "name": "telegram-signal-consensus-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend foundation for the Telegram Signal Consensus project.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "input": "^1.0.1",
+    "mongoose": "^8.9.5",
+    "telegram": "^2.26.22"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
