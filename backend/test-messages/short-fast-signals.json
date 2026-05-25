@@ -1,0 +1,1712 @@
+[
+  {
+    "rawText": "GOLD buy now @4556\nSL : 4548\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4556,
+      "entryRange": [
+        4556
+      ],
+      "stopLoss": 4548,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EUR/USD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD BUY 1.268\nTP 25 PIPS\nSL 1.2655",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.268,
+      "entryRange": [
+        1.268
+      ],
+      "stopLoss": 1.2655,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 65000\nSL 65400",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 65000,
+      "entryRange": [
+        65000
+      ],
+      "stopLoss": 65400,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSD/JPY @156.2 SL155.95 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 156.2,
+      "entryRange": [
+        156.2
+      ],
+      "stopLoss": 155.95,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EURUSD 1.088 sl 1.086",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.088,
+      "entryRange": [
+        1.088
+      ],
+      "stopLoss": 1.086,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY #BTCUSD @ 65400\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 65400,
+      "entryRange": [
+        65400
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USDJPY SELL 155.95 | SL 156.2 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 155.95,
+      "entryRange": [
+        155.95
+      ],
+      "stopLoss": 156.2,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "XAUUSD buy now @4572\nSL : 4564\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4572,
+      "entryRange": [
+        4572
+      ],
+      "stopLoss": 4564,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL #EURUSD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBPUSD BUY 1.273\nTP 25 PIPS\nSL 1.2705",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.273,
+      "entryRange": [
+        1.273
+      ],
+      "stopLoss": 1.2705,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTC/USD SELL\n@ 64200\nSL 64600",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 64200,
+      "entryRange": [
+        64200
+      ],
+      "stopLoss": 64600,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY#USDJPY @156.7 SL156.45 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 156.7,
+      "entryRange": [
+        156.7
+      ],
+      "stopLoss": 156.45,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EUR/USD 1.092 sl 1.09",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.092,
+      "entryRange": [
+        1.092
+      ],
+      "stopLoss": 1.09,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY BTCUSD @ 66200\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 66200,
+      "entryRange": [
+        66200
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USD/JPY SELL 155.45 | SL 155.7 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 155.45,
+      "entryRange": [
+        155.45
+      ],
+      "stopLoss": 155.7,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD buy now @4588\nSL : 4580\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4588,
+      "entryRange": [
+        4588
+      ],
+      "stopLoss": 4580,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EURUSD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD BUY 1.278\nTP 25 PIPS\nSL 1.2755",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.278,
+      "entryRange": [
+        1.278
+      ],
+      "stopLoss": 1.2755,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 63400\nSL 63800",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 63400,
+      "entryRange": [
+        63400
+      ],
+      "stopLoss": 63800,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSDJPY @157.2 SL156.95 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 157.2,
+      "entryRange": [
+        157.2
+      ],
+      "stopLoss": 156.95,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "XAUUSD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy #EURUSD 1.096 sl 1.094",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.096,
+      "entryRange": [
+        1.096
+      ],
+      "stopLoss": 1.094,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBPUSD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY BTC/USD @ 67000\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 67000,
+      "entryRange": [
+        67000
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "#USDJPY SELL 154.95 | SL 155.2 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 154.95,
+      "entryRange": [
+        154.95
+      ],
+      "stopLoss": 155.2,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GOLD buy now @4604\nSL : 4596\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4604,
+      "entryRange": [
+        4604
+      ],
+      "stopLoss": 4596,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EUR/USD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD BUY 1.283\nTP 25 PIPS\nSL 1.2805",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.283,
+      "entryRange": [
+        1.283
+      ],
+      "stopLoss": 1.2805,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 62600\nSL 63000",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 62600,
+      "entryRange": [
+        62600
+      ],
+      "stopLoss": 63000,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSD/JPY @157.7 SL157.45 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 157.7,
+      "entryRange": [
+        157.7
+      ],
+      "stopLoss": 157.45,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EURUSD 1.1 sl 1.098",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.1,
+      "entryRange": [
+        1.1
+      ],
+      "stopLoss": 1.098,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY #BTCUSD @ 67800\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 67800,
+      "entryRange": [
+        67800
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USDJPY SELL 154.45 | SL 154.7 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 154.45,
+      "entryRange": [
+        154.45
+      ],
+      "stopLoss": 154.7,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "XAUUSD buy now @4620\nSL : 4612\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4620,
+      "entryRange": [
+        4620
+      ],
+      "stopLoss": 4612,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL #EURUSD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBPUSD BUY 1.288\nTP 25 PIPS\nSL 1.2855",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.288,
+      "entryRange": [
+        1.288
+      ],
+      "stopLoss": 1.2855,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTC/USD SELL\n@ 61800\nSL 62200",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 61800,
+      "entryRange": [
+        61800
+      ],
+      "stopLoss": 62200,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY#USDJPY @158.2 SL157.95 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 158.2,
+      "entryRange": [
+        158.2
+      ],
+      "stopLoss": 157.95,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EUR/USD 1.104 sl 1.102",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.104,
+      "entryRange": [
+        1.104
+      ],
+      "stopLoss": 1.102,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY BTCUSD @ 68600\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 68600,
+      "entryRange": [
+        68600
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USD/JPY SELL 153.95 | SL 154.2 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 153.95,
+      "entryRange": [
+        153.95
+      ],
+      "stopLoss": 154.2,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD buy now @4636\nSL : 4628\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4636,
+      "entryRange": [
+        4636
+      ],
+      "stopLoss": 4628,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EURUSD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD BUY 1.293\nTP 25 PIPS\nSL 1.2905",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.293,
+      "entryRange": [
+        1.293
+      ],
+      "stopLoss": 1.2905,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 61000\nSL 61400",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 61000,
+      "entryRange": [
+        61000
+      ],
+      "stopLoss": 61400,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSDJPY @158.7 SL158.45 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 158.7,
+      "entryRange": [
+        158.7
+      ],
+      "stopLoss": 158.45,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "XAUUSD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy #EURUSD 1.108 sl 1.106",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.108,
+      "entryRange": [
+        1.108
+      ],
+      "stopLoss": 1.106,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBPUSD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY BTC/USD @ 69400\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 69400,
+      "entryRange": [
+        69400
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "#USDJPY SELL 153.45 | SL 153.7 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 153.45,
+      "entryRange": [
+        153.45
+      ],
+      "stopLoss": 153.7,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GOLD buy now @4652\nSL : 4644\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4652,
+      "entryRange": [
+        4652
+      ],
+      "stopLoss": 4644,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EUR/USD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD BUY 1.298\nTP 25 PIPS\nSL 1.2955",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.298,
+      "entryRange": [
+        1.298
+      ],
+      "stopLoss": 1.2955,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 60200\nSL 60600",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 60200,
+      "entryRange": [
+        60200
+      ],
+      "stopLoss": 60600,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSD/JPY @159.2 SL158.95 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 159.2,
+      "entryRange": [
+        159.2
+      ],
+      "stopLoss": 158.95,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EURUSD 1.112 sl 1.11",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.112,
+      "entryRange": [
+        1.112
+      ],
+      "stopLoss": 1.11,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY #BTCUSD @ 70200\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 70200,
+      "entryRange": [
+        70200
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USDJPY SELL 152.95 | SL 153.2 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 152.95,
+      "entryRange": [
+        152.95
+      ],
+      "stopLoss": 153.2,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "XAUUSD buy now @4668\nSL : 4660\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4668,
+      "entryRange": [
+        4668
+      ],
+      "stopLoss": 4660,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL #EURUSD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBPUSD BUY 1.303\nTP 25 PIPS\nSL 1.3005",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.303,
+      "entryRange": [
+        1.303
+      ],
+      "stopLoss": 1.3005,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTC/USD SELL\n@ 59400\nSL 59800",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 59400,
+      "entryRange": [
+        59400
+      ],
+      "stopLoss": 59800,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY#USDJPY @159.7 SL159.45 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 159.7,
+      "entryRange": [
+        159.7
+      ],
+      "stopLoss": 159.45,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EUR/USD 1.116 sl 1.114",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.116,
+      "entryRange": [
+        1.116
+      ],
+      "stopLoss": 1.114,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY BTCUSD @ 71000\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 71000,
+      "entryRange": [
+        71000
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USD/JPY SELL 152.45 | SL 152.7 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 152.45,
+      "entryRange": [
+        152.45
+      ],
+      "stopLoss": 152.7,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD buy now @4684\nSL : 4676\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4684,
+      "entryRange": [
+        4684
+      ],
+      "stopLoss": 4676,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EURUSD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD BUY 1.308\nTP 25 PIPS\nSL 1.3055",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.308,
+      "entryRange": [
+        1.308
+      ],
+      "stopLoss": 1.3055,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 58600\nSL 59000",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 58600,
+      "entryRange": [
+        58600
+      ],
+      "stopLoss": 59000,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSDJPY @160.2 SL159.95 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 160.2,
+      "entryRange": [
+        160.2
+      ],
+      "stopLoss": 159.95,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "XAUUSD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy #EURUSD 1.12 sl 1.118",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.12,
+      "entryRange": [
+        1.12
+      ],
+      "stopLoss": 1.118,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBPUSD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY BTC/USD @ 71800\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 71800,
+      "entryRange": [
+        71800
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "#USDJPY SELL 151.95 | SL 152.2 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 151.95,
+      "entryRange": [
+        151.95
+      ],
+      "stopLoss": 152.2,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GOLD buy now @4700\nSL : 4692\nTp : 40/100 Pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 4700,
+      "entryRange": [
+        4700
+      ],
+      "stopLoss": 4692,
+      "pipTargets": [
+        40,
+        100
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "⚡ SELL EUR/USD NOW",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GBPUSD BUY 1.313\nTP 25 PIPS\nSL 1.3105",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "BUY",
+      "entry": 1.313,
+      "entryRange": [
+        1.313
+      ],
+      "stopLoss": 1.3105,
+      "pipTargets": [
+        25
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#BTCUSD SELL\n@ 57800\nSL 58200",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "SELL",
+      "entry": 57800,
+      "entryRange": [
+        57800
+      ],
+      "stopLoss": 58200,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUYUSD/JPY @160.7 SL160.45 TP 20/50 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "BUY",
+      "entry": 160.7,
+      "entryRange": [
+        160.7
+      ],
+      "stopLoss": 160.45,
+      "pipTargets": [
+        20,
+        50
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "#GOLD\nSELL\nTP 40 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        40
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "🚀🚀 buy EURUSD 1.124 sl 1.122",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.124,
+      "entryRange": [
+        1.124
+      ],
+      "stopLoss": 1.122,
+      "pipTargets": [],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "GBP/USD SELL NOW\nTP 25/60 Pips\nSL later",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "entry": null,
+      "entryRange": [],
+      "stopLoss": null,
+      "pipTargets": [
+        25,
+        60
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  },
+  {
+    "rawText": "BUY #BTCUSD @ 72600\nSL: VIP\nTP: 300 pips",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "entry": 72600,
+      "entryRange": [
+        72600
+      ],
+      "stopLoss": null,
+      "hiddenStopLoss": true,
+      "pipTargets": [
+        300
+      ],
+      "targets": []
+    }
+  },
+  {
+    "rawText": "USDJPY SELL 151.45 | SL 151.7 | TP 20 PIPS",
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "entry": 151.45,
+      "entryRange": [
+        151.45
+      ],
+      "stopLoss": 151.7,
+      "pipTargets": [
+        20
+      ],
+      "targets": [],
+      "hiddenStopLoss": false
+    }
+  }
+]

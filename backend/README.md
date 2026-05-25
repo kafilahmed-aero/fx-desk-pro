@@ -49,4 +49,43 @@ Expected response:
 
 Create Telegram API credentials at `https://my.telegram.org/apps`, then add `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` to `.env`.
 
-This foundation prepares the GramJS client but does not fetch messages yet. Advanced logic for Telegram fetching, noise filtering, signal parsing, consensus scoring, and dashboard APIs should be added in later steps.
+Run a one-time login to save a reusable GramJS session:
+
+```bash
+npm run telegram:test
+```
+
+Then configure the background ingestion channels:
+
+```env
+TELEGRAM_CHANNELS=channel1,channel2,channel3
+```
+
+When the backend starts, the Telegram listener runs inside the backend process and polls configured channels on `TELEGRAM_POLL_INTERVAL_MS`. This keeps signal collection running even when no frontend user is online. Frontend users should later read stored and processed results from backend APIs.
+
+Verify stored raw messages:
+
+```bash
+GET http://localhost:5000/api/raw-messages
+```
+
+Verify parsed signal extraction:
+
+```bash
+GET http://localhost:5000/api/signals
+```
+
+The first parser layer is rules-based and built for messy Telegram content. It classifies messages as `NEW_SIGNAL`, `UPDATE_SIGNAL`, `RESULT_SIGNAL`, `PROMO`, `NEWS`, or `NOISE`. Actionable records extract pair/action/entry/targets/stop loss when available, keep missing fields as `null`, and store confidence, lifecycle, freshness, and parser warning metadata for review.
+
+Run repeatable parser fixtures:
+
+```bash
+npm run parser:test
+npm run parser:regression
+```
+
+Signal status uses `ACTIVE`, `PARTIAL`, `CLOSED`, `EXPIRED`, and `CANCELLED`. Parsed records also include dedupe, channel reliability, and update-linking foundation objects so consensus, duplicate clustering, and channel scoring can be added without reshaping the ingestion pipeline.
+
+Parser changes must be regression-safe. `npm run parser:regression` compares the current parser against `test-messages/regression-baseline.json`, reports category accuracy before/after, extraction differences, and newly broken fixtures. Regenerate the baseline with `npm run parser:baseline` only after intentional fixture or parser-contract changes are reviewed.
+
+Advanced noise filtering, signal parsing, consensus scoring, and dashboard APIs should be added in later steps.

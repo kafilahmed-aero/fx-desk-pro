@@ -1,0 +1,189 @@
+const now = new Date().toISOString();
+
+export const parserFixtures = [
+  {
+    name: "clean multiline gold signal",
+    rawMessage: {
+      channel: "fixture-clean",
+      messageId: 1,
+      text: "BUY GOLD ENTRY 3345\nTP1 3350\nTP2 3360\nSL 3335",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 3345,
+      targets: [3350, 3360],
+      stopLoss: 3335,
+      signalStatus: "ACTIVE",
+      signalState: "ACTIVE",
+      freshnessScore: "VERY_FRESH",
+    },
+  },
+  {
+    name: "emoji and symbol noisy partial",
+    rawMessage: {
+      channel: "fixture-noisy",
+      messageId: 2,
+      text: "🚀🚀 BUY GOLD NOW 🔥🔥",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: null,
+      signalStatus: "ACTIVE",
+    },
+  },
+  {
+    name: "unordered fields",
+    rawMessage: {
+      channel: "fixture-unordered",
+      messageId: 3,
+      text: "TP1 1.0920\nSL 1.0840\nEUR/USD buy @ 1.0880\nTP2 1.0960",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "EURUSD",
+      action: "BUY",
+      entry: 1.088,
+      targets: [1.092, 1.096],
+      stopLoss: 1.084,
+    },
+  },
+  {
+    name: "update breakeven",
+    rawMessage: {
+      channel: "fixture-update",
+      messageId: 4,
+      text: "Move SL to breakeven",
+      timestamp: now,
+    },
+    expected: {
+      classification: "UPDATE_SIGNAL",
+      managementAction: "MOVE_SL_BREAKEVEN",
+      signalStatus: "ACTIVE",
+      signalState: "ACTIVE",
+    },
+  },
+  {
+    name: "result target hit",
+    rawMessage: {
+      channel: "fixture-result",
+      messageId: 5,
+      text: "TP1 HIT ✅",
+      timestamp: now,
+    },
+    expected: {
+      classification: "RESULT_SIGNAL",
+      resultActionType: "TARGET_HIT",
+      signalStatus: "PARTIAL",
+      signalState: "PARTIAL",
+    },
+  },
+  {
+    name: "promo spam",
+    rawMessage: {
+      channel: "fixture-promo",
+      messageId: 6,
+      text: "Join VIP now t.me/example",
+      timestamp: now,
+    },
+    expected: {
+      classification: "PROMO",
+      parsed: false,
+    },
+  },
+  {
+    name: "media only",
+    rawMessage: {
+      channel: "fixture-media",
+      messageId: 7,
+      text: "",
+      hasMedia: true,
+      mediaType: "MessageMediaPhoto",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NOISE",
+      parsed: false,
+    },
+  },
+  {
+    name: "old signal expires",
+    rawMessage: {
+      channel: "fixture-old",
+      messageId: 8,
+      text: "SELL GBP/USD 1.2700 TP 1.2650 SL 1.2740",
+      timestamp: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "GBPUSD",
+      action: "SELL",
+      signalStatus: "EXPIRED",
+      signalState: "ACTIVE",
+      freshnessScore: "STALE",
+    },
+  },
+  {
+    name: "spaced tp index and sl at marker",
+    rawMessage: {
+      channel: "fixture-real-telegram",
+      messageId: 9,
+      text: "XAUUSD SELL 4565\nTP 1 4560\nSL @ 4590",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "SELL",
+      entry: 4565,
+      entryRange: [4565],
+      targets: [4560],
+      stopLoss: 4590,
+    },
+  },
+  {
+    name: "hashtag range open target vip stop",
+    rawMessage: {
+      channel: "fixture-real-telegram",
+      messageId: 10,
+      text: "#BUY #XAUUSD @4513 - 4510\nSL : VIP\nTP3 : OPEN+",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4513,
+      entryRange: [4510, 4513],
+      targets: ["OPEN"],
+      stopLoss: null,
+      hiddenStopLoss: true,
+    },
+  },
+  {
+    name: "pip targets stay separate from price targets",
+    rawMessage: {
+      channel: "fixture-real-telegram",
+      messageId: 11,
+      text: "Gold buy now @4556\nTP : 50Pips / 100Pips\nSL : VIP",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4556,
+      entryRange: [4556],
+      targets: [],
+      pipTargets: [50, 100],
+      stopLoss: null,
+      hiddenStopLoss: true,
+    },
+  },
+];

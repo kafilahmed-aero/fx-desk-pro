@@ -7,7 +7,14 @@
   "main": "server.js",
   "scripts": {
     "dev": "node --watch server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "telegram:test": "node src/scripts/testTelegramConnection.js",
+    "parser:test": "node src/scripts/testParserFixtures.js",
+    "parser:replay": "node src/scripts/replayParserFixtures.js",
+    "parser:baseline": "node src/scripts/replayParserFixtures.js --write-baseline test-messages/regression-baseline.json",
+    "parser:regression": "node src/scripts/replayParserFixtures.js --baseline test-messages/regression-baseline.json",
+    "consensus:test": "node src/scripts/testConsensusSummary.js",
+    "telegram:beta": "node src/scripts/liveBetaIngestion.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

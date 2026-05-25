@@ -1,0 +1,1902 @@
+[
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 1,
+      "text": "BUY GOLD @3345\nTP1 3355\nTP2 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:00:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 2,
+      "text": "Signal repost: Gold buy now 3345\nTP 3355 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:01:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 3,
+      "text": "Quick setup: XAUUSD BUY 3345\nTargets 3355 3365\nStop loss 3335",
+      "timestamp": "2026-05-25T12:02:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 4,
+      "text": "Fresh call: Buy XAU/USD at 3345\nTP1: 3355\nTP2: 3365\nSL: 3335",
+      "timestamp": "2026-05-25T12:03:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 5,
+      "text": "Trade idea: GOLD LONG @ 3345\nTake profit 3355\nTake profit 3365\nStop loss 3335",
+      "timestamp": "2026-05-25T12:04:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 6,
+      "text": "#gold buy setup\nentry 3345\ntp1 3355\ntp2 3365\nsl 3335",
+      "timestamp": "2026-05-25T12:05:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 7,
+      "text": "Signal repost: XAU buy now 3345\nTP1 3355\nTP2 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:06:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 8,
+      "text": "Quick setup: BUY XAUUSD NOW\nENTRY: 3345\nTARGET 3355\nTARGET 3365\nSTOP LOSS 3335",
+      "timestamp": "2026-05-25T12:07:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 9,
+      "text": "Fresh call: Gold buy signal\nEntry zone 3345 - 3346\nTP 3355\nTP 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:08:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 10,
+      "text": "Trade idea: BUY GOLD\nENTRY 3345\nTAKE PROFIT 3355\nTAKE PROFIT 3365\nSTOP LOSS 3335",
+      "timestamp": "2026-05-25T12:09:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 11,
+      "text": "xauusd buy limit @3345\ntp1 3355\ntp2 3365\nsl 3335",
+      "timestamp": "2026-05-25T12:10:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 12,
+      "text": "Signal repost: Long gold 3345\ntp 3355 3365\nsl 3335",
+      "timestamp": "2026-05-25T12:11:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 13,
+      "text": "Quick setup: BUY GOLD 3345\nTP 3355 / 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:12:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 14,
+      "text": "Fresh call: Gold going long @ 3345\nTP1 3355\nTP2 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:13:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 15,
+      "text": "Trade idea: XAU/USD BUY NOW 3345\nTP1 3355\nTP2 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:14:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 16,
+      "text": "GOLD BUY LIMIT 3345\nSL 3335\nTP1 3355\nTP2 3365",
+      "timestamp": "2026-05-25T12:15:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 17,
+      "text": "Signal repost: Buy gold from 3345\nTarget 3355\nTarget 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:16:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 18,
+      "text": "Quick setup: #XAUUSD\nBUY @ 3345\nSL 3335\nTP1 3355\nTP2 3365",
+      "timestamp": "2026-05-25T12:17:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 19,
+      "text": "Fresh call: GOLD BUY ENTRY 3345\nTP1:3355\nTP2:3365\nSL:3335",
+      "timestamp": "2026-05-25T12:18:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 20,
+      "text": "Trade idea: XAUUSD long now at 3345\nTake profit 3355\nTake profit 3365\nSL 3335",
+      "timestamp": "2026-05-25T12:19:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 21,
+      "text": "BUY GOLD @3345\nTP1 3355\nTP2 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:20:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 22,
+      "text": "Signal repost: Gold buy now 3345\nTP 3355 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:21:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 23,
+      "text": "Quick setup: XAUUSD BUY 3345\nTargets 3355 3365\nStop loss 3335\nManage risk",
+      "timestamp": "2026-05-25T12:22:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 24,
+      "text": "Fresh call: Buy XAU/USD at 3345\nTP1: 3355\nTP2: 3365\nSL: 3335\nManage risk",
+      "timestamp": "2026-05-25T12:23:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 25,
+      "text": "Trade idea: GOLD LONG @ 3345\nTake profit 3355\nTake profit 3365\nStop loss 3335\nManage risk",
+      "timestamp": "2026-05-25T12:24:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 26,
+      "text": "#gold buy setup\nentry 3345\ntp1 3355\ntp2 3365\nsl 3335\nManage risk",
+      "timestamp": "2026-05-25T12:25:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 27,
+      "text": "Signal repost: XAU buy now 3345\nTP1 3355\nTP2 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:26:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 28,
+      "text": "Quick setup: BUY XAUUSD NOW\nENTRY: 3345\nTARGET 3355\nTARGET 3365\nSTOP LOSS 3335\nManage risk",
+      "timestamp": "2026-05-25T12:27:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 29,
+      "text": "Fresh call: Gold buy signal\nEntry zone 3345 - 3346\nTP 3355\nTP 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:28:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 30,
+      "text": "Trade idea: BUY GOLD\nENTRY 3345\nTAKE PROFIT 3355\nTAKE PROFIT 3365\nSTOP LOSS 3335\nManage risk",
+      "timestamp": "2026-05-25T12:29:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 31,
+      "text": "xauusd buy limit @3345\ntp1 3355\ntp2 3365\nsl 3335\nManage risk",
+      "timestamp": "2026-05-25T12:30:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 32,
+      "text": "Signal repost: Long gold 3345\ntp 3355 3365\nsl 3335\nManage risk",
+      "timestamp": "2026-05-25T12:31:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 33,
+      "text": "Quick setup: BUY GOLD 3345\nTP 3355 / 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:32:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 34,
+      "text": "Fresh call: Gold going long @ 3345\nTP1 3355\nTP2 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:33:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 35,
+      "text": "Trade idea: XAU/USD BUY NOW 3345\nTP1 3355\nTP2 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:34:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 36,
+      "text": "GOLD BUY LIMIT 3345\nSL 3335\nTP1 3355\nTP2 3365\nManage risk",
+      "timestamp": "2026-05-25T12:35:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 37,
+      "text": "Signal repost: Buy gold from 3345\nTarget 3355\nTarget 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:36:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 38,
+      "text": "Quick setup: #XAUUSD\nBUY @ 3345\nSL 3335\nTP1 3355\nTP2 3365\nManage risk",
+      "timestamp": "2026-05-25T12:37:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 39,
+      "text": "Fresh call: GOLD BUY ENTRY 3345\nTP1:3355\nTP2:3365\nSL:3335\nManage risk",
+      "timestamp": "2026-05-25T12:38:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 40,
+      "text": "Trade idea: XAUUSD long now at 3345\nTake profit 3355\nTake profit 3365\nSL 3335\nManage risk",
+      "timestamp": "2026-05-25T12:39:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 41,
+      "text": "BUY GOLD @3345\nTP1 3355\nTP2 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:40:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 42,
+      "text": "Signal repost: Gold buy now 3345\nTP 3355 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:41:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 43,
+      "text": "Quick setup: XAUUSD BUY 3345\nTargets 3355 3365\nStop loss 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:42:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 44,
+      "text": "Fresh call: Buy XAU/USD at 3345\nTP1: 3355\nTP2: 3365\nSL: 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:43:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 45,
+      "text": "Trade idea: GOLD LONG @ 3345\nTake profit 3355\nTake profit 3365\nStop loss 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:44:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 46,
+      "text": "#gold buy setup\nentry 3345\ntp1 3355\ntp2 3365\nsl 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:45:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 47,
+      "text": "Signal repost: XAU buy now 3345\nTP1 3355\nTP2 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:46:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 48,
+      "text": "Quick setup: BUY XAUUSD NOW\nENTRY: 3345\nTARGET 3355\nTARGET 3365\nSTOP LOSS 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:47:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 49,
+      "text": "Fresh call: Gold buy signal\nEntry zone 3345 - 3346\nTP 3355\nTP 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:48:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 50,
+      "text": "Trade idea: BUY GOLD\nENTRY 3345\nTAKE PROFIT 3355\nTAKE PROFIT 3365\nSTOP LOSS 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:49:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 51,
+      "text": "xauusd buy limit @3345\ntp1 3355\ntp2 3365\nsl 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:50:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 52,
+      "text": "Signal repost: Long gold 3345\ntp 3355 3365\nsl 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:51:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 53,
+      "text": "Quick setup: BUY GOLD 3345\nTP 3355 / 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:52:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 54,
+      "text": "Fresh call: Gold going long @ 3345\nTP1 3355\nTP2 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:53:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 55,
+      "text": "Trade idea: XAU/USD BUY NOW 3345\nTP1 3355\nTP2 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:54:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 56,
+      "text": "GOLD BUY LIMIT 3345\nSL 3335\nTP1 3355\nTP2 3365\nUse proper lot size",
+      "timestamp": "2026-05-25T12:55:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 57,
+      "text": "Signal repost: Buy gold from 3345\nTarget 3355\nTarget 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:56:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 58,
+      "text": "Quick setup: #XAUUSD\nBUY @ 3345\nSL 3335\nTP1 3355\nTP2 3365\nUse proper lot size",
+      "timestamp": "2026-05-25T12:57:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 59,
+      "text": "Fresh call: GOLD BUY ENTRY 3345\nTP1:3355\nTP2:3365\nSL:3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:58:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 60,
+      "text": "Trade idea: XAUUSD long now at 3345\nTake profit 3355\nTake profit 3365\nSL 3335\nUse proper lot size",
+      "timestamp": "2026-05-25T12:59:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 61,
+      "text": "BUY GOLD @3345\nTP1 3355\nTP2 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:00:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 62,
+      "text": "Signal repost: Gold buy now 3345\nTP 3355 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:01:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 63,
+      "text": "Quick setup: XAUUSD BUY 3345\nTargets 3355 3365\nStop loss 3335\nActive now",
+      "timestamp": "2026-05-25T12:02:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 64,
+      "text": "Fresh call: Buy XAU/USD at 3345\nTP1: 3355\nTP2: 3365\nSL: 3335\nActive now",
+      "timestamp": "2026-05-25T12:03:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 65,
+      "text": "Trade idea: GOLD LONG @ 3345\nTake profit 3355\nTake profit 3365\nStop loss 3335\nActive now",
+      "timestamp": "2026-05-25T12:04:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 66,
+      "text": "#gold buy setup\nentry 3345\ntp1 3355\ntp2 3365\nsl 3335\nActive now",
+      "timestamp": "2026-05-25T12:05:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 67,
+      "text": "Signal repost: XAU buy now 3345\nTP1 3355\nTP2 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:06:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 68,
+      "text": "Quick setup: BUY XAUUSD NOW\nENTRY: 3345\nTARGET 3355\nTARGET 3365\nSTOP LOSS 3335\nActive now",
+      "timestamp": "2026-05-25T12:07:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 69,
+      "text": "Fresh call: Gold buy signal\nEntry zone 3345 - 3346\nTP 3355\nTP 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:08:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 70,
+      "text": "Trade idea: BUY GOLD\nENTRY 3345\nTAKE PROFIT 3355\nTAKE PROFIT 3365\nSTOP LOSS 3335\nActive now",
+      "timestamp": "2026-05-25T12:09:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 71,
+      "text": "xauusd buy limit @3345\ntp1 3355\ntp2 3365\nsl 3335\nActive now",
+      "timestamp": "2026-05-25T12:10:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 72,
+      "text": "Signal repost: Long gold 3345\ntp 3355 3365\nsl 3335\nActive now",
+      "timestamp": "2026-05-25T12:11:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 73,
+      "text": "Quick setup: BUY GOLD 3345\nTP 3355 / 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:12:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 74,
+      "text": "Fresh call: Gold going long @ 3345\nTP1 3355\nTP2 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:13:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 75,
+      "text": "Trade idea: XAU/USD BUY NOW 3345\nTP1 3355\nTP2 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:14:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 76,
+      "text": "GOLD BUY LIMIT 3345\nSL 3335\nTP1 3355\nTP2 3365\nActive now",
+      "timestamp": "2026-05-25T12:15:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 77,
+      "text": "Signal repost: Buy gold from 3345\nTarget 3355\nTarget 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:16:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 78,
+      "text": "Quick setup: #XAUUSD\nBUY @ 3345\nSL 3335\nTP1 3355\nTP2 3365\nActive now",
+      "timestamp": "2026-05-25T12:17:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 79,
+      "text": "Fresh call: GOLD BUY ENTRY 3345\nTP1:3355\nTP2:3365\nSL:3335\nActive now",
+      "timestamp": "2026-05-25T12:18:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 80,
+      "text": "Trade idea: XAUUSD long now at 3345\nTake profit 3355\nTake profit 3365\nSL 3335\nActive now",
+      "timestamp": "2026-05-25T12:19:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 81,
+      "text": "BUY GOLD @3345\nTP1 3355\nTP2 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:20:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 82,
+      "text": "Signal repost: Gold buy now 3345\nTP 3355 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:21:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 83,
+      "text": "Quick setup: XAUUSD BUY 3345\nTargets 3355 3365\nStop loss 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:22:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 84,
+      "text": "Fresh call: Buy XAU/USD at 3345\nTP1: 3355\nTP2: 3365\nSL: 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:23:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 85,
+      "text": "Trade idea: GOLD LONG @ 3345\nTake profit 3355\nTake profit 3365\nStop loss 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:24:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 86,
+      "text": "#gold buy setup\nentry 3345\ntp1 3355\ntp2 3365\nsl 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:25:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 87,
+      "text": "Signal repost: XAU buy now 3345\nTP1 3355\nTP2 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:26:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 88,
+      "text": "Quick setup: BUY XAUUSD NOW\nENTRY: 3345\nTARGET 3355\nTARGET 3365\nSTOP LOSS 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:27:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-5",
+      "messageId": 89,
+      "text": "Fresh call: Gold buy signal\nEntry zone 3345 - 3346\nTP 3355\nTP 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:28:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-6",
+      "messageId": 90,
+      "text": "Trade idea: BUY GOLD\nENTRY 3345\nTAKE PROFIT 3355\nTAKE PROFIT 3365\nSTOP LOSS 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:29:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-7",
+      "messageId": 91,
+      "text": "xauusd buy limit @3345\ntp1 3355\ntp2 3365\nsl 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:30:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-8",
+      "messageId": 92,
+      "text": "Signal repost: Long gold 3345\ntp 3355 3365\nsl 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:31:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-9",
+      "messageId": 93,
+      "text": "Quick setup: BUY GOLD 3345\nTP 3355 / 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:32:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-10",
+      "messageId": 94,
+      "text": "Fresh call: Gold going long @ 3345\nTP1 3355\nTP2 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:33:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-11",
+      "messageId": 95,
+      "text": "Trade idea: XAU/USD BUY NOW 3345\nTP1 3355\nTP2 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:34:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-12",
+      "messageId": 96,
+      "text": "GOLD BUY LIMIT 3345\nSL 3335\nTP1 3355\nTP2 3365\nSmall risk only",
+      "timestamp": "2026-05-25T12:35:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-1",
+      "messageId": 97,
+      "text": "Signal repost: Buy gold from 3345\nTarget 3355\nTarget 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:36:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-2",
+      "messageId": 98,
+      "text": "Quick setup: #XAUUSD\nBUY @ 3345\nSL 3335\nTP1 3355\nTP2 3365\nSmall risk only",
+      "timestamp": "2026-05-25T12:37:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-3",
+      "messageId": 99,
+      "text": "Fresh call: GOLD BUY ENTRY 3345\nTP1:3355\nTP2:3365\nSL:3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:38:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  },
+  {
+    "rawMessage": {
+      "channel": "duplicate-fixture-4",
+      "messageId": 100,
+      "text": "Trade idea: XAUUSD long now at 3345\nTake profit 3355\nTake profit 3365\nSL 3335\nSmall risk only",
+      "timestamp": "2026-05-25T12:39:00.000Z"
+    },
+    "expectedClassification": "NEW_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "entry": 3345,
+      "targets": [
+        3355,
+        3365
+      ],
+      "stopLoss": 3335
+    }
+  }
+]

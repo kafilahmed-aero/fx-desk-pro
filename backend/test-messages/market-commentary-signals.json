@@ -1,0 +1,1402 @@
+[
+  {
+    "rawText": "AUDJPY What Next? SELL!\nBias - Bearish\nGoal - 113.44\nTime Frame : 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 113.44,
+      "targets": [
+        113.44
+      ]
+    }
+  },
+  {
+    "rawText": "📊 EUR/USD my opinion! BUY\nMarket bias: bullish\nTarget - 1.1626\nTF: H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 1.1626,
+      "targets": [
+        1.1626
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD analysis\nBEARISH pressure still valid.\nForecast target 1.284\nTimeframe D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.284,
+      "targets": [
+        1.284
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 2388\nTime Frame - 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 2388,
+      "targets": [
+        2388
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on USD/JPY: bearish while price holds structure. SELL idea only. Target - 156.8. Time Frame : Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 156.8,
+      "targets": [
+        156.8
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 #BTCUSD BUY zone in focus\nBias - BULLISH\nPotential goal 68400\nTF 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 68400,
+      "targets": [
+        68400
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY update\nSellers/buyers momentum: BEARISH\nExpected target: 113.26\nTimeframe: H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 113.26,
+      "targets": [
+        113.26
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 1.1647\nTime Frame : D1\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1647,
+      "targets": [
+        1.1647
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD What Next? SELL!\nBias - Bearish\nGoal - 1.2816\nTime Frame : 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 1.2816,
+      "targets": [
+        1.2816
+      ]
+    }
+  },
+  {
+    "rawText": "📊 GOLD my opinion! BUY\nMarket bias: bullish\nTarget - 2394\nTF: Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2394,
+      "targets": [
+        2394
+      ]
+    }
+  },
+  {
+    "rawText": "#USD/JPY analysis\nBEARISH pressure still valid.\nForecast target 156.58\nTimeframe 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 156.58,
+      "targets": [
+        156.58
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 68920\nTime Frame - H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 68920,
+      "targets": [
+        68920
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on AUDJPY: bearish while price holds structure. SELL idea only. Target - 113.08. Time Frame : D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 113.08,
+      "targets": [
+        113.08
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 EUR/USD BUY zone in focus\nBias - BULLISH\nPotential goal 1.1668\nTF 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 1.1668,
+      "targets": [
+        1.1668
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD update\nSellers/buyers momentum: BEARISH\nExpected target: 1.2792\nTimeframe: Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.2792,
+      "targets": [
+        1.2792
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 2400\nTime Frame : 4H\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 2400,
+      "targets": [
+        2400
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY What Next? SELL!\nBias - Bearish\nGoal - 156.36\nTime Frame : H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 156.36,
+      "targets": [
+        156.36
+      ]
+    }
+  },
+  {
+    "rawText": "📊 #BTCUSD my opinion! BUY\nMarket bias: bullish\nTarget - 69440\nTF: D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 69440,
+      "targets": [
+        69440
+      ]
+    }
+  },
+  {
+    "rawText": "#AUDJPY analysis\nBEARISH pressure still valid.\nForecast target 112.9\nTimeframe 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 112.9,
+      "targets": [
+        112.9
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 1.1689\nTime Frame - Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1689,
+      "targets": [
+        1.1689
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on #GBPUSD: bearish while price holds structure. SELL idea only. Target - 1.2768. Time Frame : 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 1.2768,
+      "targets": [
+        1.2768
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 GOLD BUY zone in focus\nBias - BULLISH\nPotential goal 2406\nTF H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 2406,
+      "targets": [
+        2406
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY update\nSellers/buyers momentum: BEARISH\nExpected target: 156.14\nTimeframe: D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 156.14,
+      "targets": [
+        156.14
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 69960\nTime Frame : 1H\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 69960,
+      "targets": [
+        69960
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY What Next? SELL!\nBias - Bearish\nGoal - 112.72\nTime Frame : Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 112.72,
+      "targets": [
+        112.72
+      ]
+    }
+  },
+  {
+    "rawText": "📊 EUR/USD my opinion! BUY\nMarket bias: bullish\nTarget - 1.171\nTF: 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 1.171,
+      "targets": [
+        1.171
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD analysis\nBEARISH pressure still valid.\nForecast target 1.2744\nTimeframe H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 1.2744,
+      "targets": [
+        1.2744
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 2412\nTime Frame - D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2412,
+      "targets": [
+        2412
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on USD/JPY: bearish while price holds structure. SELL idea only. Target - 155.92. Time Frame : 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 155.92,
+      "targets": [
+        155.92
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 #BTCUSD BUY zone in focus\nBias - BULLISH\nPotential goal 70480\nTF Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 70480,
+      "targets": [
+        70480
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY update\nSellers/buyers momentum: BEARISH\nExpected target: 112.54\nTimeframe: 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 112.54,
+      "targets": [
+        112.54
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 1.1731\nTime Frame : H1\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 1.1731,
+      "targets": [
+        1.1731
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD What Next? SELL!\nBias - Bearish\nGoal - 1.272\nTime Frame : D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.272,
+      "targets": [
+        1.272
+      ]
+    }
+  },
+  {
+    "rawText": "📊 GOLD my opinion! BUY\nMarket bias: bullish\nTarget - 2418\nTF: 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 2418,
+      "targets": [
+        2418
+      ]
+    }
+  },
+  {
+    "rawText": "#USD/JPY analysis\nBEARISH pressure still valid.\nForecast target 155.7\nTimeframe Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 155.7,
+      "targets": [
+        155.7
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 71000\nTime Frame - 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 71000,
+      "targets": [
+        71000
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on AUDJPY: bearish while price holds structure. SELL idea only. Target - 112.36. Time Frame : H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 112.36,
+      "targets": [
+        112.36
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 EUR/USD BUY zone in focus\nBias - BULLISH\nPotential goal 1.1752\nTF D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1752,
+      "targets": [
+        1.1752
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD update\nSellers/buyers momentum: BEARISH\nExpected target: 1.2696\nTimeframe: 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 1.2696,
+      "targets": [
+        1.2696
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 2424\nTime Frame : Daily\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2424,
+      "targets": [
+        2424
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY What Next? SELL!\nBias - Bearish\nGoal - 155.48\nTime Frame : 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 155.48,
+      "targets": [
+        155.48
+      ]
+    }
+  },
+  {
+    "rawText": "📊 #BTCUSD my opinion! BUY\nMarket bias: bullish\nTarget - 71520\nTF: H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 71520,
+      "targets": [
+        71520
+      ]
+    }
+  },
+  {
+    "rawText": "#AUDJPY analysis\nBEARISH pressure still valid.\nForecast target 112.18\nTimeframe D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 112.18,
+      "targets": [
+        112.18
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 1.1773\nTime Frame - 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 1.1773,
+      "targets": [
+        1.1773
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on #GBPUSD: bearish while price holds structure. SELL idea only. Target - 1.2672. Time Frame : Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.2672,
+      "targets": [
+        1.2672
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 GOLD BUY zone in focus\nBias - BULLISH\nPotential goal 2430\nTF 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 2430,
+      "targets": [
+        2430
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY update\nSellers/buyers momentum: BEARISH\nExpected target: 155.26\nTimeframe: H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 155.26,
+      "targets": [
+        155.26
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 72040\nTime Frame : D1\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 72040,
+      "targets": [
+        72040
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY What Next? SELL!\nBias - Bearish\nGoal - 112\nTime Frame : 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 112,
+      "targets": [
+        112
+      ]
+    }
+  },
+  {
+    "rawText": "📊 EUR/USD my opinion! BUY\nMarket bias: bullish\nTarget - 1.1794\nTF: Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1794,
+      "targets": [
+        1.1794
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD analysis\nBEARISH pressure still valid.\nForecast target 1.2648\nTimeframe 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 1.2648,
+      "targets": [
+        1.2648
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 2436\nTime Frame - H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 2436,
+      "targets": [
+        2436
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on USD/JPY: bearish while price holds structure. SELL idea only. Target - 155.04. Time Frame : D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 155.04,
+      "targets": [
+        155.04
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 #BTCUSD BUY zone in focus\nBias - BULLISH\nPotential goal 72560\nTF 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 72560,
+      "targets": [
+        72560
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY update\nSellers/buyers momentum: BEARISH\nExpected target: 111.82\nTimeframe: Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 111.82,
+      "targets": [
+        111.82
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 1.1815\nTime Frame : 4H\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 1.1815,
+      "targets": [
+        1.1815
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD What Next? SELL!\nBias - Bearish\nGoal - 1.2624\nTime Frame : H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 1.2624,
+      "targets": [
+        1.2624
+      ]
+    }
+  },
+  {
+    "rawText": "📊 GOLD my opinion! BUY\nMarket bias: bullish\nTarget - 2442\nTF: D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2442,
+      "targets": [
+        2442
+      ]
+    }
+  },
+  {
+    "rawText": "#USD/JPY analysis\nBEARISH pressure still valid.\nForecast target 154.82\nTimeframe 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 154.82,
+      "targets": [
+        154.82
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 73080\nTime Frame - Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 73080,
+      "targets": [
+        73080
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on AUDJPY: bearish while price holds structure. SELL idea only. Target - 111.64. Time Frame : 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 111.64,
+      "targets": [
+        111.64
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 EUR/USD BUY zone in focus\nBias - BULLISH\nPotential goal 1.1836\nTF H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 1.1836,
+      "targets": [
+        1.1836
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD update\nSellers/buyers momentum: BEARISH\nExpected target: 1.26\nTimeframe: D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.26,
+      "targets": [
+        1.26
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 2448\nTime Frame : 1H\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 2448,
+      "targets": [
+        2448
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY What Next? SELL!\nBias - Bearish\nGoal - 154.6\nTime Frame : Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 154.6,
+      "targets": [
+        154.6
+      ]
+    }
+  },
+  {
+    "rawText": "📊 #BTCUSD my opinion! BUY\nMarket bias: bullish\nTarget - 73600\nTF: 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 73600,
+      "targets": [
+        73600
+      ]
+    }
+  },
+  {
+    "rawText": "#AUDJPY analysis\nBEARISH pressure still valid.\nForecast target 111.46\nTimeframe H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 111.46,
+      "targets": [
+        111.46
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 1.1857\nTime Frame - D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1857,
+      "targets": [
+        1.1857
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on #GBPUSD: bearish while price holds structure. SELL idea only. Target - 1.2576. Time Frame : 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 1.2576,
+      "targets": [
+        1.2576
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 GOLD BUY zone in focus\nBias - BULLISH\nPotential goal 2454\nTF Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2454,
+      "targets": [
+        2454
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY update\nSellers/buyers momentum: BEARISH\nExpected target: 154.38\nTimeframe: 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 154.38,
+      "targets": [
+        154.38
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 74120\nTime Frame : H1\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 74120,
+      "targets": [
+        74120
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY What Next? SELL!\nBias - Bearish\nGoal - 111.28\nTime Frame : D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 111.28,
+      "targets": [
+        111.28
+      ]
+    }
+  },
+  {
+    "rawText": "📊 EUR/USD my opinion! BUY\nMarket bias: bullish\nTarget - 1.1878\nTF: 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 1.1878,
+      "targets": [
+        1.1878
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD analysis\nBEARISH pressure still valid.\nForecast target 1.2552\nTimeframe Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.2552,
+      "targets": [
+        1.2552
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 2460\nTime Frame - 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 2460,
+      "targets": [
+        2460
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on USD/JPY: bearish while price holds structure. SELL idea only. Target - 154.16. Time Frame : H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 154.16,
+      "targets": [
+        154.16
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 #BTCUSD BUY zone in focus\nBias - BULLISH\nPotential goal 74640\nTF D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 74640,
+      "targets": [
+        74640
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY update\nSellers/buyers momentum: BEARISH\nExpected target: 111.1\nTimeframe: 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 111.1,
+      "targets": [
+        111.1
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 1.1899\nTime Frame : Daily\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1899,
+      "targets": [
+        1.1899
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD What Next? SELL!\nBias - Bearish\nGoal - 1.2528\nTime Frame : 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 1.2528,
+      "targets": [
+        1.2528
+      ]
+    }
+  },
+  {
+    "rawText": "📊 GOLD my opinion! BUY\nMarket bias: bullish\nTarget - 2466\nTF: H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 2466,
+      "targets": [
+        2466
+      ]
+    }
+  },
+  {
+    "rawText": "#USD/JPY analysis\nBEARISH pressure still valid.\nForecast target 153.94\nTimeframe D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 153.94,
+      "targets": [
+        153.94
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 75160\nTime Frame - 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 75160,
+      "targets": [
+        75160
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on AUDJPY: bearish while price holds structure. SELL idea only. Target - 110.92. Time Frame : Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 110.92,
+      "targets": [
+        110.92
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 EUR/USD BUY zone in focus\nBias - BULLISH\nPotential goal 1.192\nTF 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 1.192,
+      "targets": [
+        1.192
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD update\nSellers/buyers momentum: BEARISH\nExpected target: 1.2504\nTimeframe: H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 1.2504,
+      "targets": [
+        1.2504
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 2472\nTime Frame : D1\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2472,
+      "targets": [
+        2472
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY What Next? SELL!\nBias - Bearish\nGoal - 153.72\nTime Frame : 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 153.72,
+      "targets": [
+        153.72
+      ]
+    }
+  },
+  {
+    "rawText": "📊 #BTCUSD my opinion! BUY\nMarket bias: bullish\nTarget - 75680\nTF: Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 75680,
+      "targets": [
+        75680
+      ]
+    }
+  },
+  {
+    "rawText": "#AUDJPY analysis\nBEARISH pressure still valid.\nForecast target 110.74\nTimeframe 4H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "4H",
+      "target": 110.74,
+      "targets": [
+        110.74
+      ]
+    }
+  },
+  {
+    "rawText": "EUR/USD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 1.1941\nTime Frame - H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "H1",
+      "target": 1.1941,
+      "targets": [
+        1.1941
+      ]
+    }
+  },
+  {
+    "rawText": "Morning view on #GBPUSD: bearish while price holds structure. SELL idea only. Target - 1.248. Time Frame : D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 1.248,
+      "targets": [
+        1.248
+      ]
+    }
+  },
+  {
+    "rawText": "🔥 GOLD BUY zone in focus\nBias - BULLISH\nPotential goal 2478\nTF 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "1H",
+      "target": 2478,
+      "targets": [
+        2478
+      ]
+    }
+  },
+  {
+    "rawText": "USD/JPY update\nSellers/buyers momentum: BEARISH\nExpected target: 153.5\nTimeframe: Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "USDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "D1",
+      "target": 153.5,
+      "targets": [
+        153.5
+      ]
+    }
+  },
+  {
+    "rawText": "#BTCUSD chart idea\nDirection: BUY\nBias - BULLISH\nGoal - 76200\nTime Frame : 4H\nwait confirmation",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "BTCUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "4H",
+      "target": 76200,
+      "targets": [
+        76200
+      ]
+    }
+  },
+  {
+    "rawText": "AUDJPY What Next? SELL!\nBias - Bearish\nGoal - 110.56\nTime Frame : H1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "AUDJPY",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "H1",
+      "target": 110.56,
+      "targets": [
+        110.56
+      ]
+    }
+  },
+  {
+    "rawText": "📊 EUR/USD my opinion! BUY\nMarket bias: bullish\nTarget - 1.1962\nTF: D1",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "EURUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 1.1962,
+      "targets": [
+        1.1962
+      ]
+    }
+  },
+  {
+    "rawText": "#GBPUSD analysis\nBEARISH pressure still valid.\nForecast target 1.2456\nTimeframe 1H",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "GBPUSD",
+      "action": "SELL",
+      "bias": "BEARISH",
+      "timeframe": "1H",
+      "target": 1.2456,
+      "targets": [
+        1.2456
+      ]
+    }
+  },
+  {
+    "rawText": "GOLD\nBias : BULLISH\nNo clean entry yet, watching pullback.\nGoal: 2484\nTime Frame - Daily",
+    "expectedClassification": "MARKET_ANALYSIS",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "BUY",
+      "bias": "BULLISH",
+      "timeframe": "D1",
+      "target": 2484,
+      "targets": [
+        2484
+      ]
+    }
+  }
+]
