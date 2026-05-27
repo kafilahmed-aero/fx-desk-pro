@@ -4,7 +4,10 @@ import {
   signalChartData,
   strengthChartData,
 } from "../data/signals";
-import { frontendConfig } from "../config/env";
+import {
+  createCredentialedEventSource,
+  fetchWithCredentials,
+} from "./apiClient";
 
 const API_DELAY = 900;
 
@@ -25,13 +28,8 @@ export const getChartData = () =>
     strengthChartData,
   });
 
-const API_BASE_URL = frontendConfig.apiBaseUrl.replace(/\/+$/, "");
-const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
-const API_URL = `${API_ORIGIN}/api`;
-
 async function fetchJson(path, errorLabel, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    credentials: "include",
+  const response = await fetchWithCredentials(path, {
     signal: options.signal,
   });
 
@@ -83,9 +81,7 @@ export async function getLiveMarketOverview(options = {}) {
 }
 
 export function subscribeToConsensusEvents(onMessage, onError) {
-  const events = new EventSource(`${API_URL}/consensus/events`, {
-    withCredentials: true,
-  });
+  const events = createCredentialedEventSource("/consensus/events");
 
   events.addEventListener("pair-state-updated", (event) => {
     onMessage?.(JSON.parse(event.data));

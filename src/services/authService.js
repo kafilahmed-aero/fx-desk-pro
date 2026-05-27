@@ -1,8 +1,4 @@
-import { frontendConfig } from "../config/env";
-
-const API_BASE_URL = frontendConfig.apiBaseUrl.replace(/\/+$/, "");
-const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
-const AUTH_BASE_URL = `${API_ORIGIN}/api/auth`;
+import { fetchWithCredentials } from "./apiClient";
 
 async function parseJsonResponse(response) {
   const payload = await response.json().catch(() => ({}));
@@ -15,9 +11,8 @@ async function parseJsonResponse(response) {
 }
 
 export async function login({ email, password, remember = true }) {
-  const response = await fetch(`${AUTH_BASE_URL}/login`, {
+  const response = await fetchWithCredentials("/auth/login", {
     method: "POST",
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -29,16 +24,13 @@ export async function login({ email, password, remember = true }) {
 }
 
 export async function logout() {
-  await fetch(`${AUTH_BASE_URL}/logout`, {
+  await fetchWithCredentials("/auth/logout", {
     method: "POST",
-    credentials: "include",
   });
 }
 
 export async function getCurrentUser() {
-  const response = await fetch(`${AUTH_BASE_URL}/me`, {
-    credentials: "include",
-  });
+  const response = await fetchWithCredentials("/auth/me");
 
   if (response.status === 401) {
     return null;
