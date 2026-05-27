@@ -66,11 +66,27 @@ export function broadcastPairStateUpdate(pairState) {
   });
 }
 
+export function broadcastSmartAlert(alert) {
+  if (!alert?.pair || clients.size === 0) {
+    return;
+  }
+
+  logger.debug("realtime.smart_alert_broadcast", {
+    pair: alert.pair,
+    alertType: alert.type,
+    clientCount: clients.size,
+  });
+
+  for (const client of clients) {
+    sendEvent(client, "smart-alert", alert);
+  }
+}
+
 function sendEvent(client, eventName, payload) {
   try {
     client.response.write(`event: ${eventName}\n`);
     client.response.write(`data: ${JSON.stringify(payload)}\n\n`);
-  } catch (_error) {
+  } catch {
     clearInterval(client.heartbeat);
     clients.delete(client);
   }

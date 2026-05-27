@@ -14,6 +14,10 @@ import {
   getWeightedConsensus,
   subscribeToConsensusEvents,
 } from "../services/signalService";
+import {
+  initializeBrowserNotifications,
+  showSmartAlertNotification,
+} from "../services/browserNotificationService";
 
 const fallbackRefreshMs = 30000;
 
@@ -101,11 +105,15 @@ function Dashboard() {
       }
     }
 
+    initializeBrowserNotifications();
     loadLiveIntelligence();
     const stopLiveUpdates = subscribeToConsensusEvents(
       (event) => {
         if (import.meta.env.DEV) {
           console.info("[REALTIME EVENT]", event);
+        }
+        if (event?.type && event?.pair && event?.confidence !== undefined) {
+          showSmartAlertNotification(event);
         }
         loadLiveIntelligence();
       },

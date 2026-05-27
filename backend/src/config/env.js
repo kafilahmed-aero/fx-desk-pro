@@ -74,6 +74,28 @@ export const config = {
       Number(process.env.MARKET_ENGINE_MAX_SIGNALS_PER_PAIR) || 250
     ),
   },
+  smartAlerts: {
+    cooldownMs: Math.max(
+      60000,
+      Number(process.env.SMART_ALERT_COOLDOWN_MS) || 10 * 60 * 1000
+    ),
+    rapidRiseThreshold: Math.max(
+      1,
+      Number(process.env.SMART_ALERT_RAPID_RISE_THRESHOLD) || 15
+    ),
+    rapidRiseWindowMs: Math.max(
+      60000,
+      Number(process.env.SMART_ALERT_RAPID_RISE_WINDOW_MS) || 5 * 60 * 1000
+    ),
+    strongConsensusConfidence: Math.max(
+      1,
+      Number(process.env.SMART_ALERT_STRONG_CONSENSUS_CONFIDENCE) || 75
+    ),
+    strongConsensusSignalCount: Math.max(
+      1,
+      Number(process.env.SMART_ALERT_STRONG_CONSENSUS_SIGNAL_COUNT) || 3
+    ),
+  },
   liveValidation: {
     intervalMs: Math.max(
       10000,

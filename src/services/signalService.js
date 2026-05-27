@@ -87,6 +87,10 @@ export function subscribeToConsensusEvents(onMessage, onError) {
     onMessage?.(JSON.parse(event.data));
   });
 
+  events.addEventListener("smart-alert", (event) => {
+    onMessage?.(JSON.parse(event.data));
+  });
+
   events.onerror = (event) => {
     onError?.(event);
   };

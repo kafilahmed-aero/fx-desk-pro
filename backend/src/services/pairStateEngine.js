@@ -14,7 +14,8 @@ import {
 } from "./signalStateEngine.js";
 import { isExpiredTestSignal } from "./testSignalExpiry.js";
 import { normalizeTradingPair } from "../parsers/pairDetector.js";
-import { broadcastPairStateUpdate } from "./liveUpdateService.js";
+import { broadcastPairStateUpdate, broadcastSmartAlert } from "./liveUpdateService.js";
+import { evaluateSmartAlerts } from "./smartAlertEngine.js";
 import { logger } from "../utils/logger.js";
 
 const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60;
@@ -97,6 +98,7 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
     return null;
   }
 
+  const previousSnapshot = createPairStateSnapshot(pairState);
   const previousDirection = pairState.marketDirection;
 
   if (isNewTradeSignal(signal)) {
@@ -115,13 +117,25 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
 
   savePairState(pairState);
   logPairUpdate(pairState, previousDirection);
+  const alerts = evaluateSmartAlerts(pairState, previousSnapshot, now);
   broadcastPairStateUpdate(pairState);
+  alerts.forEach(broadcastSmartAlert);
 
   return pairState;
 }
 
 function isPrivateTestSignal(signal) {
   return String(signal?.channel || "").startsWith("private-test-channel:");
+}
+
+function createPairStateSnapshot(pairState) {
+  return {
+    marketDirection: pairState.marketDirection,
+    confidenceScore: pairState.confidenceScore,
+    buyConfidence: pairState.buyConfidence,
+    sellConfidence: pairState.sellConfidence,
+    signalCount: pairState.signalCount,
+  };
 }
 
 function isPairStateSignal(signal) {
