@@ -12,7 +12,7 @@ function buildCookieOptions(maxAgeSeconds) {
   const options = [
     "HttpOnly",
     "Path=/",
-    "SameSite=Lax",
+    `SameSite=${isProduction ? "None" : "Lax"}`,
     `Max-Age=${maxAgeSeconds}`,
   ];
 
@@ -35,9 +35,7 @@ function setSessionCookie(response, token, maxAgeSeconds) {
 function clearSessionCookie(response) {
   response.setHeader(
     "Set-Cookie",
-    `${config.auth.cookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0${
-      isProduction ? "; Secure" : ""
-    }`
+    `${config.auth.cookieName}=; ${buildCookieOptions(0)}`
   );
 }
 

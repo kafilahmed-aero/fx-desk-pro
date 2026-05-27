@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import { config } from "../config/env.js";
+import { logger } from "../utils/logger.js";
 
 const TOKEN_VERSION = 1;
+const AUTH_DEBUG_ENABLED = process.env.AUTH_DEBUG_LOGIN === "true";
 
 function base64UrlEncode(value) {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -35,13 +37,34 @@ function sanitizeUser(user) {
   };
 }
 
+function logAuthDebug(details) {
+  if (AUTH_DEBUG_ENABLED) {
+    logger.info("auth.login_debug", details);
+  }
+}
+
 export function authenticateUser(email, password) {
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const submittedPassword = String(password || "");
+  const envEmail = String(process.env.AUTH_EMAIL || "").trim().toLowerCase();
+  const envPasswordExists = Boolean(process.env.AUTH_PASSWORD);
   const user = config.auth.users.find(
     (configuredUser) => configuredUser.email === normalizedEmail
   );
+  const emailMatches = Boolean(user);
+  const envEmailMatches = Boolean(envEmail && normalizedEmail === envEmail);
+  const passwordMatches = Boolean(user && safeCompare(submittedPassword, user.password));
 
-  if (!user || !safeCompare(password, user.password)) {
+  logAuthDebug({
+    authEmailEnvExists: Boolean(process.env.AUTH_EMAIL),
+    authPasswordEnvExists: envPasswordExists,
+    configuredUserCount: config.auth.users.length,
+    submittedEmailMatchesConfiguredUser: emailMatches,
+    submittedEmailMatchesAuthEmailEnv: envEmailMatches,
+    passwordComparisonSucceeded: passwordMatches,
+  });
+
+  if (!user || !passwordMatches) {
     return null;
   }
 

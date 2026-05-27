@@ -1,5 +1,9 @@
 import { frontendConfig } from "../config/env";
 
+const API_BASE_URL = frontendConfig.apiBaseUrl.replace(/\/+$/, "");
+const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
+const AUTH_BASE_URL = `${API_ORIGIN}/api/auth`;
+
 async function parseJsonResponse(response) {
   const payload = await response.json().catch(() => ({}));
 
@@ -11,7 +15,7 @@ async function parseJsonResponse(response) {
 }
 
 export async function login({ email, password, remember = true }) {
-  const response = await fetch(`${frontendConfig.apiBaseUrl}/auth/login`, {
+  const response = await fetch(`${AUTH_BASE_URL}/login`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -25,14 +29,14 @@ export async function login({ email, password, remember = true }) {
 }
 
 export async function logout() {
-  await fetch(`${frontendConfig.apiBaseUrl}/auth/logout`, {
+  await fetch(`${AUTH_BASE_URL}/logout`, {
     method: "POST",
     credentials: "include",
   });
 }
 
 export async function getCurrentUser() {
-  const response = await fetch(`${frontendConfig.apiBaseUrl}/auth/me`, {
+  const response = await fetch(`${AUTH_BASE_URL}/me`, {
     credentials: "include",
   });
 
