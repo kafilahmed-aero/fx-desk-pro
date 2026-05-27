@@ -15,6 +15,7 @@ const clientUrls = [
     ...(!isProduction ? developmentClientUrls : []),
   ]),
 ];
+const authUsers = parseAuthUsers();
 
 export const config = {
   port: process.env.PORT || 5000,
@@ -29,7 +30,7 @@ export const config = {
       (isProduction ? "" : "development-only-change-this-private-beta-secret"),
     cookieName: process.env.AUTH_COOKIE_NAME || "fx_desk_session",
     tokenIssuer: "fx-desk-pro",
-    users: parseAuthUsers(),
+    users: authUsers,
   },
   mongoUri:
     process.env.MONGODB_URI ||
@@ -111,6 +112,12 @@ export const config = {
 validateProductionConfig();
 
 function parseAuthUsers() {
+  const jsonUsers = parseAuthUsersJson();
+
+  if (jsonUsers) {
+    return jsonUsers;
+  }
+
   const simpleEnvUser =
     process.env.AUTH_EMAIL && process.env.AUTH_PASSWORD
       ? {
@@ -120,30 +127,8 @@ function parseAuthUsers() {
         }
       : null;
 
-  const configuredUsers = (process.env.AUTH_USERS || "")
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((entry) => {
-      const [email, password, name] = entry.split(":").map((value) => value?.trim());
-
-      if (!email || !password) {
-        return null;
-      }
-
-      return {
-        email: email.toLowerCase(),
-        password,
-        name: name || "FX Trader",
-      };
-    })
-    .filter(Boolean);
-
   if (simpleEnvUser) {
-    return [
-      simpleEnvUser,
-      ...configuredUsers.filter((user) => user.email !== simpleEnvUser.email),
-    ];
+    return [simpleEnvUser];
   }
 
   if (isProduction) {
@@ -157,6 +142,82 @@ function parseAuthUsers() {
       name: process.env.AUTH_NAME || "FX Trader",
     },
   ];
+}
+
+function parseAuthUsersJson() {
+  const rawValue = String(process.env.AUTH_USERS_JSON || "").trim();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  let parsedUsers;
+
+  try {
+    parsedUsers = JSON.parse(rawValue);
+  } catch {
+    throw new Error(
+      "AUTH_USERS_JSON must be valid JSON: an array of { email, password, name } objects."
+    );
+  }
+
+  if (!Array.isArray(parsedUsers)) {
+    throw new Error("AUTH_USERS_JSON must be an array of user objects.");
+  }
+
+  const users = parsedUsers.map(normalizeAuthUser).filter(Boolean);
+
+  if (users.length !== parsedUsers.length) {
+    throw new Error(
+      "AUTH_USERS_JSON contains an invalid user. Each user needs a valid email and password."
+    );
+  }
+
+  const duplicateEmail = findDuplicateEmail(users);
+
+  if (duplicateEmail) {
+    throw new Error(`AUTH_USERS_JSON contains a duplicate email: ${duplicateEmail}.`);
+  }
+
+  return users;
+}
+
+function normalizeAuthUser(user) {
+  if (!user || typeof user !== "object" || Array.isArray(user)) {
+    return null;
+  }
+
+  const email = String(user.email || "").trim().toLowerCase();
+  const password = typeof user.password === "string" ? user.password : "";
+  const name = String(user.name || "").trim() || "FX Trader";
+
+  if (!isValidEmail(email) || !password) {
+    return null;
+  }
+
+  return {
+    email,
+    password,
+    name,
+  };
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function findDuplicateEmail(users) {
+  const seenEmails = new Set();
+
+  for (const user of users) {
+    if (seenEmails.has(user.email)) {
+      return user.email;
+    }
+
+    seenEmails.add(user.email);
+  }
+
+  return null;
 }
 
 function validateProductionConfig() {
@@ -175,7 +236,7 @@ function validateProductionConfig() {
   }
 
   if (config.auth.users.length === 0) {
-    errors.push("AUTH_USERS or AUTH_EMAIL/AUTH_PASSWORD must be set for private beta access.");
+    errors.push("AUTH_USERS_JSON or AUTH_EMAIL/AUTH_PASSWORD must be set for private beta access.");
   }
 
   if (config.telegram.channels.length > 0) {

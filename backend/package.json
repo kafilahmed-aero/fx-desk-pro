@@ -9,6 +9,7 @@
     "dev": "node --watch server.js",
     "start": "node server.js",
     "telegram:test": "node src/scripts/testTelegramConnection.js",
+    "telegram:regenerate-session": "node src/scripts/regenerateTelegramSession.js",
     "parser:test": "node src/scripts/testParserFixtures.js",
     "parser:replay": "node src/scripts/replayParserFixtures.js",
     "parser:baseline": "node src/scripts/replayParserFixtures.js --write-baseline test-messages/regression-baseline.json",
