@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { ParsedSignal } from "../models/parsedSignalModel.js";
 import { enrichPossibleDuplicate } from "./duplicateSignalDetection.js";
 import { updatePairStateFromSignal } from "./pairStateEngine.js";
+import { isExpiredTestSignal } from "./testSignalExpiry.js";
 
 const parsedSignals = [];
 const signalKeys = new Set();
@@ -125,6 +126,14 @@ function createSignalQuery(filters) {
     query.signalState = {
       $in: ["ACTIVE", "PARTIAL"],
     };
+    query.$and = [
+      {
+        $or: [
+          { isTestSignal: { $ne: true } },
+          { expiresAt: { $gt: filters.now || new Date() } },
+        ],
+      },
+    ];
   }
 
   if (filters.hideStale) {
@@ -138,6 +147,10 @@ function createSignalQuery(filters) {
 
 function signalMatchesFilters(signal, filters) {
   if (filters.activeOnly && !["ACTIVE", "PARTIAL"].includes(signal.signalState)) {
+    return false;
+  }
+
+  if (filters.activeOnly && isExpiredTestSignal(signal, filters.now || new Date())) {
     return false;
   }
 

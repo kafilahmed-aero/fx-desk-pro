@@ -1,3 +1,5 @@
+import { isExpiredTestSignal } from "./testSignalExpiry.js";
+
 export const consensusSignalStates = new Set(["ACTIVE", "PARTIAL"]);
 
 export function getSignalStateTransition(signal) {
@@ -33,10 +35,17 @@ export function canAffectConsensus(signal) {
   return consensusSignalStates.has(signal?.signalState);
 }
 
-export function shouldExpireSignal(signal, expirationAgeMinutes) {
+export function shouldExpireSignal(signal, expirationAgeMinutes, now = new Date()) {
+  if (!canAffectConsensus(signal)) {
+    return false;
+  }
+
+  if (isExpiredTestSignal(signal, now)) {
+    return true;
+  }
+
   return (
-    canAffectConsensus(signal) &&
-    (Number(signal?.freshnessWeight) === 0 ||
-      Number(signal?.ageMinutes) >= expirationAgeMinutes)
+    Number(signal?.freshnessWeight) === 0 ||
+    Number(signal?.ageMinutes) >= expirationAgeMinutes
   );
 }

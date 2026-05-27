@@ -6,6 +6,7 @@ import {
   createDedupeFoundation,
   createUpdateContextFoundation,
 } from "./signalIntelligenceMetadata.js";
+import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { logger } from "../utils/logger.js";
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
@@ -53,6 +54,8 @@ export async function processRawMessage(rawMessage) {
     );
     const parsedSignal = {
       ...extractedSignal,
+      ...createTestSignalMetadata(rawMessage),
+      channelTitle: rawMessage.channelTitle || null,
       classification: classificationResult.classification,
       classificationReasons: classificationResult.reasons,
       dedupe: createDedupeFoundation(extractedSignal),
@@ -83,6 +86,8 @@ export async function processRawMessage(rawMessage) {
       missingFields: storedParsedSignal.missingFields,
       extractionConfidence: storedParsedSignal.extractionConfidence,
       freshnessScore: storedParsedSignal.freshnessScore,
+      isTestSignal: Boolean(storedParsedSignal.isTestSignal),
+      expiresAt: storedParsedSignal.expiresAt || null,
       possibleDuplicate: storedParsedSignal.possibleDuplicate,
       duplicateMatch: storedParsedSignal.duplicateMatch,
       dedupe: storedParsedSignal.dedupe,

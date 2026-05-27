@@ -7,6 +7,11 @@ const rawMessageSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    channelTitle: {
+      type: String,
+      default: null,
+      index: true,
+    },
     messageId: {
       type: Number,
       required: true,
@@ -40,6 +45,11 @@ const rawMessageSchema = new mongoose.Schema(
     fetchedAt: {
       type: Date,
       required: true,
+    },
+    isTestSignal: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
   },
   {

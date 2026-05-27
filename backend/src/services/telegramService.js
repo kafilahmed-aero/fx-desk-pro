@@ -145,11 +145,13 @@ export async function fetchRecentChannelMessages(
 
 export async function resolveTelegramChannelEntity(client, channelRef) {
   if (!isTelegramInviteLink(channelRef)) {
-    return {
-      entity: channelRef,
-      channelLabel: channelRef,
-      isPrivateInvite: false,
-    };
+    if (channelEntityCache.has(channelRef)) {
+      return channelEntityCache.get(channelRef);
+    }
+
+    const resolved = await resolvePublicChannelEntity(client, channelRef);
+    channelEntityCache.set(channelRef, resolved);
+    return resolved;
   }
 
   if (channelEntityCache.has(channelRef)) {
@@ -166,6 +168,7 @@ export async function resolveTelegramChannelEntity(client, channelRef) {
   const resolved = {
     entity: joinedEntity,
     channelLabel: createPrivateChannelLabel(joinedEntity),
+    channelTitle: getEntityDisplayName(joinedEntity),
     isPrivateInvite: true,
   };
 
@@ -173,6 +176,31 @@ export async function resolveTelegramChannelEntity(client, channelRef) {
   logger.debug("telegram.private_channel_connected");
 
   return resolved;
+}
+
+async function resolvePublicChannelEntity(client, channelRef) {
+  try {
+    const entity = await client.getEntity(channelRef);
+
+    return {
+      entity,
+      channelLabel: channelRef,
+      channelTitle: getEntityDisplayName(entity),
+      isPrivateInvite: false,
+    };
+  } catch (error) {
+    logger.debug("telegram.public_channel_entity_resolution_skipped", {
+      channel: channelRef,
+      error: formatTelegramError(error),
+    });
+
+    return {
+      entity: channelRef,
+      channelLabel: channelRef,
+      channelTitle: channelRef,
+      isPrivateInvite: false,
+    };
+  }
 }
 
 async function joinOrResolvePrivateInvite(client, inviteHash) {
@@ -286,6 +314,16 @@ function extractTelegramInviteHash(value) {
 function createPrivateChannelLabel(entity) {
   const id = entity?.id || entity?.channelId || entity?.chatId || "unknown";
   return `private-test-channel:${id}`;
+}
+
+function getEntityDisplayName(entity) {
+  return (
+    entity?.title ||
+    entity?.username ||
+    entity?.firstName ||
+    entity?.id ||
+    null
+  );
 }
 
 function formatTelegramError(error) {

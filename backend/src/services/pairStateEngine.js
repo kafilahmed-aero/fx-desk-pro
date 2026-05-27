@@ -12,6 +12,7 @@ import {
   getSignalStateTransition,
   shouldExpireSignal,
 } from "./signalStateEngine.js";
+import { isExpiredTestSignal } from "./testSignalExpiry.js";
 import { normalizeTradingPair } from "../parsers/pairDetector.js";
 import { broadcastPairStateUpdate } from "./liveUpdateService.js";
 import { logger } from "../utils/logger.js";
@@ -147,8 +148,11 @@ function createStoredSignal(signal) {
     stopLoss: signal.stopLoss,
     timestamp: signal.createdAt || signal.timestamp || null,
     sourceChannel: signal.channel || "unknown",
+    sourceChannelTitle: signal.channelTitle || null,
     rawMessage: signal.rawText || "",
     signalState: signal.signalState || signal.signalStatus || "ACTIVE",
+    isTestSignal: Boolean(signal.isTestSignal),
+    expiresAt: signal.expiresAt || null,
   };
 }
 
@@ -165,7 +169,7 @@ function recalculatePairState(pairState, now) {
   pairState.activeSignals = pairState.activeSignals.map((signal) =>
     refreshSignalFreshness(signal, now)
   );
-  expireStaleSignals(pairState);
+  expireStaleSignals(pairState, now);
   const consensus = calculateWeightedConsensus(pairState.activeSignals);
   const zones = calculatePairZones(pairState.activeSignals);
 
@@ -289,16 +293,32 @@ function findLatestMatchingLiveSignal(signals, updateSignal) {
     .sort((left, right) => getSignalTime(right) - getSignalTime(left))[0] || null;
 }
 
-function expireStaleSignals(pairState) {
+function expireStaleSignals(pairState, now) {
   for (const signal of pairState.activeSignals) {
-    if (!shouldExpireSignal(signal, signalExpirationAgeMinutes)) {
+    if (!shouldExpireSignal(signal, signalExpirationAgeMinutes, now)) {
       continue;
     }
 
     signal.signalState = "EXPIRED";
+    logTestSignalExpired(signal, now);
     debugLog("[SIGNAL EXPIRED]");
     debugLog(`${signal.pair} signal removed from active consensus`);
   }
+}
+
+function logTestSignalExpired(signal, now) {
+  if (!isExpiredTestSignal(signal, now) || signal.testSignalExpirationLogged) {
+    return;
+  }
+
+  signal.testSignalExpirationLogged = true;
+  logger.info("[TEST_SIGNAL_EXPIRED]", {
+    pair: signal.pair,
+    action: signal.action,
+    sourceChannel: signal.sourceChannel,
+    sourceChannelTitle: signal.sourceChannelTitle,
+    expiresAt: signal.expiresAt,
+  });
 }
 
 function logPairUpdate(pairState, previousDirection) {

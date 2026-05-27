@@ -61,6 +61,11 @@ const parsedSignalSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    channelTitle: {
+      type: String,
+      default: null,
+      index: true,
+    },
     messageId: {
       type: Number,
       required: true,
@@ -172,6 +177,16 @@ const parsedSignalSchema = new mongoose.Schema(
     parserError: {
       type: String,
       default: null,
+    },
+    isTestSignal: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    expiresAt: {
+      type: Date,
+      default: null,
+      index: true,
     },
   },
   {

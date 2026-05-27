@@ -6,6 +6,7 @@ import {
 } from "./telegramService.js";
 import { storeRawMessage } from "./rawMessageStore.js";
 import { enqueueRawMessageProcessing } from "./messageProcessingQueue.js";
+import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { logger } from "../utils/logger.js";
 
 let listenerTimer = null;
@@ -143,8 +144,11 @@ async function fetchAndStoreChannelMessages(client, channel) {
     for (const message of messages) {
       const text = message.message || "";
       const hasMedia = Boolean(message.media);
+      const channelTitle =
+        resolvedChannel.channelTitle || message.chat?.title || message.sender?.username || null;
       const rawMessage = {
         channel: resolvedChannel.channelLabel,
+        channelTitle,
         messageId: message.id,
         text,
         hasText: text.trim().length > 0,
@@ -154,6 +158,8 @@ async function fetchAndStoreChannelMessages(client, channel) {
         timestamp: formatMessageDate(message.date),
         fetchedAt: new Date().toISOString(),
       };
+      const testSignalMetadata = createTestSignalMetadata(rawMessage);
+      rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
 
       if (resolvedChannel.isPrivateInvite) {
         logger.debug("telegram.private_channel_message_received", {
@@ -172,6 +178,7 @@ async function fetchAndStoreChannelMessages(client, channel) {
           hasText: rawMessage.hasText,
           hasMedia: rawMessage.hasMedia,
           mediaType: rawMessage.mediaType,
+          isTestSignal: rawMessage.isTestSignal,
         });
         const queueResult = enqueueRawMessageProcessing(rawMessage);
         if (resolvedChannel.isPrivateInvite && queueResult.queued) {
