@@ -12,8 +12,17 @@ import {
   getSignalStateTransition,
   shouldExpireSignal,
 } from "./signalStateEngine.js";
+import { normalizeTradingPair } from "../parsers/pairDetector.js";
+import { broadcastPairStateUpdate } from "./liveUpdateService.js";
+import { logger } from "../utils/logger.js";
 
 const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60;
+
+function debugLog(message) {
+  logger.debug("pair_state.engine", {
+    message: String(message),
+  });
+}
 
 export { resetPairStateStore };
 
@@ -35,8 +44,8 @@ export function getPairStates(now = new Date()) {
 export function refreshAllPairStates(now = new Date()) {
   return getStoredPairStates().map((pairState) => {
     recalculatePairState(pairState, now);
-    console.log("[CONSENSUS REFRESH]");
-    console.log(`${pairState.pair} recalculated`);
+    debugLog("[CONSENSUS REFRESH]");
+    debugLog(`${pairState.pair} recalculated`);
     return savePairState(pairState);
   });
 }
@@ -60,8 +69,8 @@ export function cleanupExpiredSignals(options = {}) {
 
     const removedCount = beforeCount - pairState.activeSignals.length;
     if (removedCount > 0) {
-      console.log("[STALE CLEANUP]");
-      console.log(`Removed expired ${pairState.pair} signals: ${removedCount}`);
+      debugLog("[STALE CLEANUP]");
+      debugLog(`Removed expired ${pairState.pair} signals: ${removedCount}`);
     }
 
     cleanupResults.push({
@@ -79,13 +88,24 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
     return null;
   }
 
-  const pairState = getOrCreatePairState(signal.pair);
+  const normalizedPair = normalizeTradingPair(signal.pair);
+  signal.pair = normalizedPair;
+  const pairState = getOrCreatePairState(normalizedPair);
+
+  if (!pairState) {
+    return null;
+  }
+
   const previousDirection = pairState.marketDirection;
 
   if (isNewTradeSignal(signal)) {
     pairState.activeSignals.push(createStoredSignal(signal));
-    console.log("[LIVE UPDATE]");
-    console.log(`New ${signal.pair} signal processed`);
+    debugLog("[LIVE UPDATE]");
+    debugLog(`New ${signal.pair} signal processed`);
+    if (isPrivateTestSignal(signal)) {
+      debugLog("[LIVE TEST]");
+      debugLog(`New ${signal.pair} signal processed from test channel`);
+    }
   } else {
     applySignalStateUpdate(pairState, signal);
   }
@@ -94,8 +114,13 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
 
   savePairState(pairState);
   logPairUpdate(pairState, previousDirection);
+  broadcastPairStateUpdate(pairState);
 
   return pairState;
+}
+
+function isPrivateTestSignal(signal) {
+  return String(signal?.channel || "").startsWith("private-test-channel:");
 }
 
 function isPairStateSignal(signal) {
@@ -128,11 +153,21 @@ function createStoredSignal(signal) {
 }
 
 function recalculatePairState(pairState, now) {
+  const previousZones = {
+    buyZones: pairState.buyZones || createEmptyDirectionalZones(),
+    sellZones: pairState.sellZones || createEmptyDirectionalZones(),
+  };
+  const previousConfidence = {
+    buyConfidence: Number(pairState.buyConfidence) || 0,
+    sellConfidence: Number(pairState.sellConfidence) || 0,
+  };
+
   pairState.activeSignals = pairState.activeSignals.map((signal) =>
     refreshSignalFreshness(signal, now)
   );
   expireStaleSignals(pairState);
   const consensus = calculateWeightedConsensus(pairState.activeSignals);
+  const zones = calculatePairZones(pairState.activeSignals);
 
   pairState.signalCount = pairState.activeSignals.filter((signal) =>
     canAffectConsensus(signal)
@@ -142,9 +177,82 @@ function recalculatePairState(pairState, now) {
   pairState.totalWeight = consensus.totalWeight;
   pairState.marketDirection = consensus.marketDirection;
   pairState.confidenceScore = consensus.confidenceScore;
+  pairState.buyConfidence = consensus.buyConfidence;
+  pairState.sellConfidence = consensus.sellConfidence;
+  pairState.buyZones = zones.buyZones;
+  pairState.sellZones = zones.sellZones;
+  const primaryZones = getPrimaryDirectionalZones(pairState.marketDirection, zones);
+  pairState.entryZone = primaryZones.entryZone;
+  pairState.tpZone = primaryZones.tpZone;
+  pairState.slZone = primaryZones.slZone;
   pairState.lastUpdated = new Date().toISOString();
 
+  logZoneUpdates(pairState, previousZones);
+  logConfidenceUpdates(pairState, previousConfidence);
   logConsensusUpdate(pairState);
+}
+
+function calculatePairZones(signals) {
+  const consensusSignals = signals.filter((signal) => canAffectConsensus(signal));
+  const buySignals = consensusSignals.filter((signal) => signal.action === "BUY");
+  const sellSignals = consensusSignals.filter((signal) => signal.action === "SELL");
+
+  return {
+    buyZones: buildDirectionalZones(buySignals),
+    sellZones: buildDirectionalZones(sellSignals),
+  };
+}
+
+function buildDirectionalZones(signals) {
+  return {
+    entryZone: buildZone(signals.flatMap(getEntryValues)),
+    tpZone: buildZone(signals.flatMap((signal) => signal.targets || [])),
+    slZone: buildZone(signals.map((signal) => signal.stopLoss)),
+  };
+}
+
+function getPrimaryDirectionalZones(marketDirection, zones) {
+  if (String(marketDirection || "").includes("BUY")) {
+    return zones.buyZones;
+  }
+
+  if (String(marketDirection || "").includes("SELL")) {
+    return zones.sellZones;
+  }
+
+  return createEmptyDirectionalZones();
+}
+
+function createEmptyDirectionalZones() {
+  return {
+    entryZone: null,
+    tpZone: null,
+    slZone: null,
+  };
+}
+
+function getEntryValues(signal) {
+  if (Array.isArray(signal.entryRange) && signal.entryRange.length > 0) {
+    return signal.entryRange;
+  }
+
+  return [signal.entry];
+}
+
+function buildZone(values) {
+  const numericValues = values
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+
+  if (numericValues.length === 0) {
+    return null;
+  }
+
+  return {
+    min: Math.min(...numericValues),
+    max: Math.max(...numericValues),
+  };
 }
 
 function applySignalStateUpdate(pairState, updateSignal) {
@@ -164,13 +272,13 @@ function applySignalStateUpdate(pairState, updateSignal) {
   targetSignal.signalState = transition;
 
   if (previousState !== transition) {
-    console.log("[STATE UPDATE]");
-    console.log(`${targetSignal.pair} ${previousState} -> ${transition}`);
+    debugLog("[STATE UPDATE]");
+    debugLog(`${targetSignal.pair} ${previousState} -> ${transition}`);
   }
 
   if (transition === "CLOSED") {
-    console.log("[SIGNAL CLOSED]");
-    console.log(`${targetSignal.pair} trade closed`);
+    debugLog("[SIGNAL CLOSED]");
+    debugLog(`${targetSignal.pair} trade closed`);
   }
 }
 
@@ -188,18 +296,20 @@ function expireStaleSignals(pairState) {
     }
 
     signal.signalState = "EXPIRED";
-    console.log("[SIGNAL EXPIRED]");
-    console.log(`${signal.pair} signal removed from active consensus`);
+    debugLog("[SIGNAL EXPIRED]");
+    debugLog(`${signal.pair} signal removed from active consensus`);
   }
 }
 
 function logPairUpdate(pairState, previousDirection) {
-  console.log("[PAIR UPDATE]");
-  console.log(`${pairState.pair} signals: ${pairState.signalCount}`);
+  debugLog("[PAIR UPDATE]");
+  debugLog(`${pairState.pair} signals: ${pairState.signalCount}`);
+  debugLog("[PAIR STATE UPDATED]");
+  debugLog(`${pairState.pair} ACTIVE signals: ${pairState.signalCount}`);
 
   if (previousDirection !== pairState.marketDirection) {
-    console.log("[PAIR UPDATE]");
-    console.log(`${pairState.pair} direction changed to ${pairState.marketDirection}`);
+    debugLog("[PAIR UPDATE]");
+    debugLog(`${pairState.pair} direction changed to ${pairState.marketDirection}`);
   }
 }
 
@@ -211,13 +321,13 @@ function refreshSignalFreshness(signal, now) {
   signal.freshnessWeight = freshness.freshnessWeight;
   signal.freshnessLevel = freshness.freshnessLevel;
 
-  console.log("[FRESHNESS UPDATE]");
-  console.log(`${signal.pair} signal age: ${signal.ageMinutes} min`);
-  console.log(`weight: ${signal.freshnessWeight}`);
+  debugLog("[FRESHNESS UPDATE]");
+  debugLog(`${signal.pair} signal age: ${signal.ageMinutes} min`);
+  debugLog(`weight: ${signal.freshnessWeight}`);
 
   if (previousLevel !== "STALE" && signal.freshnessLevel === "STALE") {
-    console.log("[SIGNAL STALE]");
-    console.log(`${signal.pair} signal expired influence`);
+    debugLog("[SIGNAL STALE]");
+    debugLog(`${signal.pair} signal expired influence`);
   }
 
   return signal;
@@ -238,11 +348,80 @@ function logConsensusUpdate(pairState) {
       ? Math.round((pairState.sellWeight / pairState.totalWeight) * 100)
       : 0;
 
-  console.log("[CONSENSUS UPDATE]");
-  console.log(pairState.pair);
-  console.log(`BUY: ${buyPercent}`);
-  console.log(`SELL: ${sellPercent}`);
-  console.log(`Direction: ${pairState.marketDirection}`);
+  debugLog("[CONSENSUS UPDATE]");
+  debugLog(pairState.pair);
+  debugLog(`BUY: ${buyPercent}`);
+  debugLog(`SELL: ${sellPercent}`);
+  debugLog(`Direction: ${pairState.marketDirection}`);
+  debugLog("[CONSENSUS UPDATED]");
+  debugLog(`BUY ${buyPercent}%`);
+  debugLog(`SELL ${sellPercent}%`);
+}
+
+function logConfidenceUpdates(pairState, previousConfidence) {
+  logConfidenceUpdate(
+    pairState.pair,
+    "BUY",
+    previousConfidence.buyConfidence,
+    pairState.buyConfidence
+  );
+  logConfidenceUpdate(
+    pairState.pair,
+    "SELL",
+    previousConfidence.sellConfidence,
+    pairState.sellConfidence
+  );
+}
+
+function logConfidenceUpdate(pair, direction, previousConfidence, nextConfidence) {
+  if (previousConfidence === nextConfidence) {
+    return;
+  }
+
+  if (nextConfidence < previousConfidence) {
+    debugLog("[CONFIDENCE DECAY]");
+    debugLog(`${pair} ${direction} confidence dropped to ${nextConfidence}%`);
+    return;
+  }
+
+  debugLog("[CONFIDENCE UPDATE]");
+  debugLog(`${pair} ${direction} confidence: ${nextConfidence}%`);
+}
+
+function logZoneUpdates(pairState, previousZones) {
+  logDirectionalZoneUpdates(pairState.pair, "BUY", previousZones.buyZones, pairState.buyZones);
+  logDirectionalZoneUpdates(pairState.pair, "SELL", previousZones.sellZones, pairState.sellZones);
+}
+
+function logDirectionalZoneUpdates(pair, direction, previousZones, nextZones) {
+  logZoneUpdate(pair, direction, "Entry", previousZones?.entryZone, nextZones?.entryZone);
+  logZoneUpdate(pair, direction, "TP", previousZones?.tpZone, nextZones?.tpZone);
+  logZoneUpdate(pair, direction, "SL", previousZones?.slZone, nextZones?.slZone);
+}
+
+function logZoneUpdate(pair, direction, label, previousZone, nextZone) {
+  if (zonesAreEqual(previousZone, nextZone)) {
+    return;
+  }
+
+  debugLog(`[${direction} ZONE UPDATE]`);
+  debugLog(`${pair} ${direction} ${label}: ${formatZone(nextZone)}`);
+}
+
+function zonesAreEqual(left, right) {
+  if (!left && !right) {
+    return true;
+  }
+
+  return left?.min === right?.min && left?.max === right?.max;
+}
+
+function formatZone(zone) {
+  if (!zone) {
+    return "none";
+  }
+
+  return `${zone.min}-${zone.max}`;
 }
 
 function shouldKeepSignal(signal, cutoffTime) {

@@ -1,9 +1,27 @@
 // src/config keeps environment-backed settings in one place.
 // Other files import this object instead of reading process.env directly.
+const nodeEnv = process.env.NODE_ENV || "development";
+const isProduction = nodeEnv === "production";
+const clientUrls = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+
 export const config = {
   port: process.env.PORT || 5000,
-  nodeEnv: process.env.NODE_ENV || "development",
-  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  nodeEnv,
+  isProduction,
+  logLevel: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
+  clientUrl: clientUrls[0],
+  clientUrls,
+  auth: {
+    jwtSecret:
+      process.env.AUTH_JWT_SECRET ||
+      (isProduction ? "" : "development-only-change-this-private-beta-secret"),
+    cookieName: process.env.AUTH_COOKIE_NAME || "fx_desk_session",
+    tokenIssuer: "fx-desk-pro",
+    users: parseAuthUsers(),
+  },
   mongoUri:
     process.env.MONGODB_URI ||
     "mongodb://127.0.0.1:27017/telegram_signal_consensus",
@@ -47,4 +65,97 @@ export const config = {
       Number(process.env.MARKET_ENGINE_MAX_SIGNALS_PER_PAIR) || 250
     ),
   },
+  liveValidation: {
+    intervalMs: Math.max(
+      10000,
+      Number(process.env.LIVE_VALIDATION_INTERVAL_MS) || 60000
+    ),
+    durationMs: Math.max(
+      0,
+      Number(process.env.LIVE_VALIDATION_DURATION_MS) || 0
+    ),
+  },
 };
+
+validateProductionConfig();
+
+function parseAuthUsers() {
+  const configuredUsers = (process.env.AUTH_USERS || "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [email, password, name] = entry.split(":").map((value) => value?.trim());
+
+      if (!email || !password) {
+        return null;
+      }
+
+      return {
+        email: email.toLowerCase(),
+        password,
+        name: name || "FX Trader",
+      };
+    })
+    .filter(Boolean);
+
+  if (configuredUsers.length > 0) {
+    return configuredUsers;
+  }
+
+  if (process.env.AUTH_EMAIL && process.env.AUTH_PASSWORD) {
+    return [
+      {
+        email: process.env.AUTH_EMAIL.toLowerCase(),
+        password: process.env.AUTH_PASSWORD,
+        name: process.env.AUTH_NAME || "FX Trader",
+      },
+    ];
+  }
+
+  if (isProduction) {
+    return [];
+  }
+
+  return [
+    {
+      email: (process.env.AUTH_EMAIL || "trader@example.com").toLowerCase(),
+      password: process.env.AUTH_PASSWORD || "password",
+      name: process.env.AUTH_NAME || "FX Trader",
+    },
+  ];
+}
+
+function validateProductionConfig() {
+  if (!isProduction) {
+    return;
+  }
+
+  const errors = [];
+
+  if (!process.env.CLIENT_URL || config.clientUrls.some((url) => url.includes("localhost"))) {
+    errors.push("CLIENT_URL must be set to the production frontend origin.");
+  }
+
+  if (!config.auth.jwtSecret || config.auth.jwtSecret.length < 32) {
+    errors.push("AUTH_JWT_SECRET must be set to a strong secret of at least 32 characters.");
+  }
+
+  if (config.auth.users.length === 0) {
+    errors.push("AUTH_USERS or AUTH_EMAIL/AUTH_PASSWORD must be set for private beta access.");
+  }
+
+  if (config.telegram.channels.length > 0) {
+    if (!config.telegram.apiId || !config.telegram.apiHash) {
+      errors.push("TELEGRAM_API_ID and TELEGRAM_API_HASH are required when TELEGRAM_CHANNELS is set.");
+    }
+
+    if (!config.telegram.session) {
+      errors.push("TELEGRAM_SESSION is required when TELEGRAM_CHANNELS is set.");
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Production configuration error: ${errors.join(" ")}`);
+  }
+}

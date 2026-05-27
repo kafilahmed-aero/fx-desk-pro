@@ -14,7 +14,8 @@
     "parser:baseline": "node src/scripts/replayParserFixtures.js --write-baseline test-messages/regression-baseline.json",
     "parser:regression": "node src/scripts/replayParserFixtures.js --baseline test-messages/regression-baseline.json",
     "consensus:test": "node src/scripts/testConsensusSummary.js",
-    "telegram:beta": "node src/scripts/liveBetaIngestion.js"
+    "telegram:beta": "node src/scripts/liveBetaIngestion.js",
+    "live:validate": "node src/scripts/liveStabilityValidation.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

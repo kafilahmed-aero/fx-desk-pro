@@ -63,8 +63,8 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
     };
   }, [isMobileMenuOpen]);
 
-  const handleLogout = () => {
-    onLogout();
+  const handleLogout = async () => {
+    await onLogout();
     setIsMobileMenuOpen(false);
     setIsMobileAccountOpen(false);
     navigate("/login", { replace: true });
@@ -309,17 +309,53 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
 }
 
 function App() {
-  const [user, setUser] = useState(() => getCurrentUser());
+  const [user, setUser] = useState(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const isAuthenticated = Boolean(user);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getCurrentUser()
+      .then((currentUser) => {
+        if (isMounted) {
+          setUser(currentUser);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsCheckingSession(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogin = (loggedInUser) => {
     setUser(loggedInUser);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout().catch(() => {});
     setUser(null);
   };
+
+  if (isCheckingSession) {
+    return (
+      <ThemeProvider>
+        <div className="flex min-h-screen items-center justify-center bg-[#050B16] text-sm font-semibold text-slate-300">
+          Checking session
+        </div>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider>

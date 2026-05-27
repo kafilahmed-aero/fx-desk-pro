@@ -1,5 +1,6 @@
 import { normalizeMessageText } from "./messageNormalizer.js";
-import { supportedPairs } from "./supportedPairs.js";
+import { createPairTokenPattern, detectTradingPair } from "./pairDetector.js";
+import { logger } from "../utils/logger.js";
 
 const numberPattern = "\\d{1,6}(?:\\.\\d{1,5})?";
 const numberRegex = new RegExp(numberPattern, "g");
@@ -160,19 +161,13 @@ function runConfidenceScoringStage(
 }
 
 function extractPair(text) {
-  const aliases = supportedPairs.flatMap((pair) =>
-    pair.aliases.map((alias) => ({
-      canonical: pair.canonical,
-      alias,
-    }))
-  );
+  const pair = detectTradingPair(text);
 
-  aliases.sort((a, b) => b.alias.length - a.alias.length);
+  if (pair) {
+    logger.debug("parser.pair_detected", { pair });
+  }
 
-  const match = aliases.find(({ alias }) => {
-    return createLooseTokenPattern(alias).test(text) || createCompactPairPattern(alias).test(text);
-  });
-  return match?.canonical || null;
+  return pair;
 }
 
 function extractAction(text, bias = null) {
@@ -256,7 +251,9 @@ function extractEntry(normalized, action) {
     };
   }
 
-  const entrySegment = actionLine.split(/\b(TP|TARGET|TAKE PROFIT|SL|STOP LOSS)\b/)[0];
+  const entrySegment = stripPairTokens(
+    actionLine.split(/\b(TP|TARGET|TAKE PROFIT|SL|STOP LOSS)\b/)[0]
+  );
   const numbers = extractNumbers(entrySegment);
   const entry = numbers[0] || null;
   const entryRange = getEntryRangeFromLine(entrySegment, numbers, entry);
@@ -269,7 +266,7 @@ function extractEntry(normalized, action) {
 
 function extractTargets(text) {
   const targets = [];
-  const groupedTargets = text.match(/\b(TP|TARGETS?|TAKE PROFIT)\b[\s\S]{0,80}/gi) || [];
+  const groupedTargets = text.match(/\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,80}/gi) || [];
 
   for (const group of groupedTargets) {
     if (containsPipTarget(group)) {
@@ -283,9 +280,10 @@ function extractTargets(text) {
   }
 
   const directPatterns = [
-    new RegExp(`\\bTP\\s*\\d*\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTAKE\\s+PROFIT\\s*\\d*\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTARGET\\s*\\d*\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTP\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTAKE\\s+PROFIT\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTAKE\\s+PROFITS\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTARGET\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bGOAL\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
   ];
 
@@ -302,7 +300,7 @@ function extractTargets(text) {
 
 function extractPipTargets(text) {
   const pipTargets = [];
-  const pipGroups = text.match(/\b(TP|TARGETS?|TAKE PROFIT)\b[\s\S]{0,45}(?:\b|(?<=\d))PIPS?\b/gi) || [];
+  const pipGroups = text.match(/\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,45}(?:\b|(?<=\d))PIPS?\b/gi) || [];
 
   for (const group of pipGroups) {
     for (const value of extractTargetNumbers(group)) {
@@ -318,6 +316,7 @@ function extractStopLoss(text) {
     new RegExp(`\\bSL\\b\\s*(?:PRICE)?\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSL(?=${numberPattern})\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSTOP\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bSTOPLOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bINVALID(?:ATION)?\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
   ];
 
@@ -568,15 +567,31 @@ function extractTargetNumbers(text) {
   const numbers = extractNumbers(text);
 
   if (isSpacedTargetIndex(text)) {
-    return numbers.slice(1);
+    const indexedTargets = extractIndexedTargetNumbers(text);
+    return indexedTargets.length > 0 ? indexedTargets : numbers.slice(1);
   }
 
   return numbers;
 }
 
+function stripPairTokens(text) {
+  return String(text || "").replace(new RegExp(createPairTokenPattern().source, "g"), " ");
+}
+
+function extractIndexedTargetNumbers(text) {
+  const indexedTargetPattern = new RegExp(
+    `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(${numberPattern})\\b`,
+    "gi"
+  );
+
+  return [...String(text).matchAll(indexedTargetPattern)]
+    .map((match) => toNumber(match[1]))
+    .filter((value) => value !== null);
+}
+
 function isSpacedTargetIndex(text) {
   return new RegExp(
-    `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}\\s+(?:${numberPattern}|OPEN\\+?)\\b`,
+    `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(?:${numberPattern}|OPEN\\+?)\\b`,
     "i"
   ).test(text);
 }
@@ -795,23 +810,8 @@ function createCorrelationKey(pair, action) {
   return [pair || "UNKNOWN_PAIR", action || "UNKNOWN_ACTION"].join(":");
 }
 
-function createLooseTokenPattern(value) {
-  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(^|\\b)${escaped.replace(/\s+/g, "\\s+")}(\\b|$)`);
-}
-
-function createCompactPairPattern(value) {
-  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`\\b(?:BUY|SELL)${escaped.replace(/\s+/g, "\\s+")}\\b`);
-}
-
 function createCompactActionPattern(action) {
-  const aliases = supportedPairs.flatMap((pair) => pair.aliases);
-  const aliasPattern = aliases
-    .map((alias) => alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("|");
-
-  return new RegExp(`\\b${action}(?:${aliasPattern})\\b`);
+  return new RegExp(`\\b${action}(?:${createPairTokenPattern().source})\\b`);
 }
 
 function createParserFailure(rawMessage, parserClassification, error) {

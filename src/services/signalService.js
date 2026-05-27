@@ -4,6 +4,7 @@ import {
   signalChartData,
   strengthChartData,
 } from "../data/signals";
+import { frontendConfig } from "../config/env";
 
 const API_DELAY = 900;
 
@@ -24,27 +25,76 @@ export const getChartData = () =>
     strengthChartData,
   });
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = frontendConfig.apiBaseUrl;
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
-export async function getActiveOpportunities() {
-  const response = await fetch(`${API_BASE_URL}/consensus/opportunities`);
+async function fetchJson(path, errorLabel, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
+    signal: options.signal,
+  });
 
   if (!response.ok) {
-    throw new Error(`Failed to load active opportunities: ${response.status}`);
+    throw new Error(`${errorLabel}: ${response.status}`);
   }
 
-  const payload = await response.json();
+  return response.json();
+}
+
+export async function getActiveOpportunities(options = {}) {
+  const payload = await fetchJson(
+    "/consensus/opportunities",
+    "Failed to load active opportunities",
+    options
+  );
+
   return payload.opportunities || [];
 }
 
-export async function getActivePairStates() {
-  const response = await fetch(`${API_BASE_URL}/consensus/active-pairs`);
+export async function getActivePairStates(options = {}) {
+  const payload = await fetchJson(
+    "/consensus/active-pairs",
+    "Failed to load active pair states",
+    options
+  );
 
-  if (!response.ok) {
-    throw new Error(`Failed to load active pair states: ${response.status}`);
-  }
-
-  const payload = await response.json();
   return payload.pairs || [];
+}
+
+export async function getWeightedConsensus(options = {}) {
+  const payload = await fetchJson(
+    "/consensus/weighted-consensus",
+    "Failed to load weighted consensus",
+    options
+  );
+
+  return payload.pairs || [];
+}
+
+export async function getLiveMarketOverview(options = {}) {
+  const payload = await fetchJson(
+    "/consensus/overview",
+    "Failed to load live market overview",
+    options
+  );
+
+  return payload.overview || null;
+}
+
+export function subscribeToConsensusEvents(onMessage, onError) {
+  const events = new EventSource(`${API_ORIGIN}/api/consensus/events`, {
+    withCredentials: true,
+  });
+
+  events.addEventListener("pair-state-updated", (event) => {
+    onMessage?.(JSON.parse(event.data));
+  });
+
+  events.onerror = (event) => {
+    onError?.(event);
+  };
+
+  return () => {
+    events.close();
+  };
 }

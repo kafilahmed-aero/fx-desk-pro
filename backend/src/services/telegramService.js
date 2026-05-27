@@ -1,11 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import input from "input";
-import { TelegramClient } from "telegram";
+import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 import { config } from "../config/env.js";
+import { logger } from "../utils/logger.js";
 
 let telegramClient = null;
+const channelEntityCache = new Map();
 
 // telegramService prepares GramJS and owns Telegram login/fetch workflows.
 // Future noise filtering, parsing, and consensus services should call this file
@@ -16,7 +18,7 @@ export function createTelegramClient() {
   }
 
   if (!config.telegram.apiId || !config.telegram.apiHash) {
-    console.log("Telegram client status: waiting for API credentials");
+    logger.info("telegram.credentials_missing");
     return null;
   }
 
@@ -29,7 +31,7 @@ export function createTelegramClient() {
     }
   );
 
-  console.log("Starting Telegram client");
+  logger.debug("telegram.client_created");
   return telegramClient;
 }
 
@@ -47,32 +49,33 @@ export async function connectTelegramClient() {
   try {
     await client.start({
       phoneNumber: async () => {
-        console.log("Waiting for phone number");
+        logger.debug("telegram.login_waiting_for_phone_number");
         const phoneNumber = await input.text(
           "Enter your Telegram phone number with country code: "
         );
-        console.log("Sending OTP");
+        logger.debug("telegram.login_sending_otp");
         return phoneNumber;
       },
       phoneCode: async () => {
-        console.log("Waiting for OTP");
+        logger.debug("telegram.login_waiting_for_otp");
         return input.text("Enter the Telegram OTP code: ");
       },
       password: async () => {
-        console.log("Waiting for 2FA password");
+        logger.debug("telegram.login_waiting_for_2fa_password");
         return input.password("Enter your Telegram 2FA password: ");
       },
       onError: (error) => {
-        console.error(`Telegram login error: ${formatTelegramError(error)}`);
+        logger.error("telegram.login_error", {
+          error: formatTelegramError(error),
+        });
       },
     });
 
-    console.log("Telegram client connected");
-    console.log("Telegram login successful");
+    logger.info("telegram.login_successful");
 
     const session = client.session.save();
     saveTelegramSession(session);
-    console.log("Telegram session saved successfully");
+    logger.info("telegram.session_saved");
 
     return client;
   } catch (error) {
@@ -118,14 +121,17 @@ export async function fetchRecentChannelMessages(
   const client = await connectTelegramClient();
 
   try {
-    console.log(`Fetching messages from ${channel}`);
+    logger.info("telegram.fetch_recent_started", { channel });
+    const channelEntity = await resolveTelegramChannelEntity(client, channel);
 
-    const messages = await client.getMessages(channel, {
+    const messages = await client.getMessages(channelEntity.entity, {
       limit,
     });
 
-    console.log("Messages fetched successfully");
-    console.log(`Latest ${messages.length} messages from ${channel}:`);
+    logger.info("telegram.fetch_recent_complete", {
+      channel,
+      messageCount: messages.length,
+    });
 
     messages.forEach((message, index) => {
       printMessageSummary(message, index, channel);
@@ -135,6 +141,75 @@ export async function fetchRecentChannelMessages(
   } catch (error) {
     throw new Error(`Failed to fetch Telegram messages: ${formatTelegramError(error)}`);
   }
+}
+
+export async function resolveTelegramChannelEntity(client, channelRef) {
+  if (!isTelegramInviteLink(channelRef)) {
+    return {
+      entity: channelRef,
+      channelLabel: channelRef,
+      isPrivateInvite: false,
+    };
+  }
+
+  if (channelEntityCache.has(channelRef)) {
+    return channelEntityCache.get(channelRef);
+  }
+
+  const inviteHash = extractTelegramInviteHash(channelRef);
+
+  if (!inviteHash) {
+    throw new Error(`Invalid Telegram invite link: ${channelRef}`);
+  }
+
+  const joinedEntity = await joinOrResolvePrivateInvite(client, inviteHash);
+  const resolved = {
+    entity: joinedEntity,
+    channelLabel: createPrivateChannelLabel(joinedEntity),
+    isPrivateInvite: true,
+  };
+
+  channelEntityCache.set(channelRef, resolved);
+  logger.debug("telegram.private_channel_connected");
+
+  return resolved;
+}
+
+async function joinOrResolvePrivateInvite(client, inviteHash) {
+  try {
+    const result = await client.invoke(
+      new Api.messages.ImportChatInvite({
+        hash: inviteHash,
+      })
+    );
+    const joinedChat = result?.chats?.[0];
+
+    if (joinedChat) {
+      return joinedChat;
+    }
+  } catch (error) {
+    const message = error?.message || String(error);
+
+    if (!message.includes("USER_ALREADY_PARTICIPANT")) {
+      if (message.includes("INVITE_REQUEST_SENT")) {
+        throw new Error("Private Telegram test channel requires admin approval");
+      }
+
+      throw error;
+    }
+  }
+
+  const invite = await client.invoke(
+    new Api.messages.CheckChatInvite({
+      hash: inviteHash,
+    })
+  );
+
+  if (invite?.chat) {
+    return invite.chat;
+  }
+
+  throw new Error("Private Telegram test channel is not readable by the saved session");
 }
 
 function saveTelegramSession(session) {
@@ -158,10 +233,12 @@ function printMessageSummary(message, index, fallbackChannel) {
   const sender = getMessageSender(message, fallbackChannel);
   const text = message.message || "[non-text message]";
 
-  console.log(`\nMessage ${index + 1}`);
-  console.log(`Timestamp: ${timestamp}`);
-  console.log(`Sender/Channel: ${sender}`);
-  console.log(`Text: ${text}`);
+  logger.debug("telegram.message_summary", {
+    index: index + 1,
+    timestamp,
+    sender,
+    text,
+  });
 }
 
 function formatMessageDate(date) {
@@ -190,6 +267,25 @@ function getMessageSender(message, fallbackChannel) {
   }
 
   return fallbackChannel;
+}
+
+function isTelegramInviteLink(value) {
+  return /(?:https?:\/\/)?t\.me\/(?:\+|joinchat\/)[A-Za-z0-9_-]+/i.test(
+    String(value || "")
+  );
+}
+
+function extractTelegramInviteHash(value) {
+  const match = String(value || "").match(
+    /(?:https?:\/\/)?t\.me\/(?:\+|joinchat\/)([A-Za-z0-9_-]+)/i
+  );
+
+  return match?.[1] || null;
+}
+
+function createPrivateChannelLabel(entity) {
+  const id = entity?.id || entity?.channelId || entity?.chatId || "unknown";
+  return `private-test-channel:${id}`;
 }
 
 function formatTelegramError(error) {

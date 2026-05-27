@@ -55,6 +55,57 @@ export const parserFixtures = [
     },
   },
   {
+    name: "dynamic crypto quoted pair",
+    rawMessage: {
+      channel: "fixture-dynamic-pair",
+      messageId: 15,
+      text: "BUY SOLUSDT @ 142.50\nTP1 146\nSL 139",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "SOLUSDT",
+      action: "BUY",
+      entry: 142.5,
+      targets: [146],
+      stopLoss: 139,
+    },
+  },
+  {
+    name: "dynamic index pair",
+    rawMessage: {
+      channel: "fixture-dynamic-pair",
+      messageId: 16,
+      text: "GER40 SELL 18850\nTP 18790\nSL 18910",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "GER40",
+      action: "SELL",
+      entry: 18850,
+      targets: [18790],
+      stopLoss: 18910,
+    },
+  },
+  {
+    name: "silver alias normalizes to xagusd",
+    rawMessage: {
+      channel: "fixture-dynamic-pair",
+      messageId: 17,
+      text: "SILVER BUY @ 31.25\nTP1 31.80\nSL 30.90",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAGUSD",
+      action: "BUY",
+      entry: 31.25,
+      targets: [31.8],
+      stopLoss: 30.9,
+    },
+  },
+  {
     name: "update breakeven",
     rawMessage: {
       channel: "fixture-update",
@@ -145,6 +196,59 @@ export const parserFixtures = [
       entryRange: [4565],
       targets: [4560],
       stopLoss: 4590,
+    },
+  },
+  {
+    name: "hyphenated tp indexes do not become targets",
+    rawMessage: {
+      channel: "fixture-real-telegram",
+      messageId: 12,
+      text: "Gold sell now at 4569 - 4579\nSL - 4585\nTP 1 - 4559\nTP 2 - 4549\nTP 3 - 4539",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "SELL",
+      entry: 4569,
+      entryRange: [4569, 4579],
+      targets: [4559, 4549, 4539],
+      stopLoss: 4585,
+    },
+  },
+  {
+    name: "single tp price does not split into suffix target",
+    rawMessage: {
+      channel: "fixture-real-telegram",
+      messageId: 13,
+      text: "BUY XAUUSD 3345\nTP 3365\nSL 3330",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 3345,
+      targets: [3365],
+      stopLoss: 3330,
+    },
+  },
+  {
+    name: "plural take profits and compact stoploss",
+    rawMessage: {
+      channel: "fixture-real-telegram",
+      messageId: 14,
+      text: "Gold Buy Now @ 4510-4515\n\nStoploss: 4495\nTake profits: 4520 / 4522 / 4524",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4510,
+      entryRange: [4510, 4515],
+      targets: [4520, 4522, 4524],
+      stopLoss: 4495,
     },
   },
   {

@@ -6,6 +6,8 @@ const queue = [];
 const queuedKeys = new Set();
 let activeWorkers = 0;
 let droppedCount = 0;
+let processedCount = 0;
+let failedCount = 0;
 
 export function enqueueRawMessageProcessing(rawMessage) {
   const key = createMessageKey(rawMessage);
@@ -48,13 +50,7 @@ export function enqueueRawMessageProcessing(rawMessage) {
 }
 
 export function getProcessingQueueStatus() {
-  return {
-    queued: queue.length,
-    activeWorkers,
-    droppedCount,
-    maxQueueSize: config.pipeline.maxQueueSize,
-    concurrency: config.pipeline.processingConcurrency,
-  };
+  return getProcessingQueueMetrics();
 }
 
 function drainQueue() {
@@ -67,6 +63,7 @@ function drainQueue() {
 
     processQueueItem(item)
       .catch((error) => {
+        failedCount += 1;
         logger.error("pipeline.worker_failed", {
           messageKey: item.key,
           error: error.message,
@@ -88,6 +85,20 @@ async function processQueueItem(item) {
   });
 
   await processRawMessage(item.rawMessage);
+  processedCount += 1;
+}
+
+export function getProcessingQueueMetrics() {
+  return {
+    queued: queue.length,
+    activeWorkers,
+    processedCount,
+    failedCount,
+    droppedCount,
+    queuedKeyCount: queuedKeys.size,
+    maxQueueSize: config.pipeline.maxQueueSize,
+    concurrency: config.pipeline.processingConcurrency,
+  };
 }
 
 function createMessageKey(rawMessage) {

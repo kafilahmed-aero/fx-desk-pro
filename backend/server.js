@@ -10,6 +10,7 @@ import {
   startMarketEngine,
   stopMarketEngine,
 } from "./src/services/marketEngineService.js";
+import { logger } from "./src/utils/logger.js";
 
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
@@ -19,9 +20,10 @@ async function startServer() {
   await connectDatabase();
 
   const server = app.listen(config.port, () => {
-    console.log("Backend running");
-    console.log(`Server port: ${config.port}`);
-    console.log(`Local URL: http://localhost:${config.port}`);
+    logger.info("server.started", {
+      port: config.port,
+      nodeEnv: config.nodeEnv,
+    });
   });
 
   // Telegram ingestion runs in the backend process, not in the frontend.
@@ -33,7 +35,7 @@ async function startServer() {
     stopMarketEngine();
     await stopTelegramListener();
     server.close(() => {
-      console.log("Backend stopped");
+      logger.info("server.stopped");
       process.exit(0);
     });
   };
@@ -43,6 +45,8 @@ async function startServer() {
 }
 
 startServer().catch((error) => {
-  console.error("Failed to start backend:", error);
+  logger.error("server.start_failed", {
+    error: error.message,
+  });
   process.exit(1);
 });

@@ -1,5 +1,5 @@
 import { normalizeMessageText } from "./messageNormalizer.js";
-import { supportedPairs } from "./supportedPairs.js";
+import { hasTradingPair } from "./pairDetector.js";
 
 const signalKeywords = [
   "BUY",
@@ -423,12 +423,6 @@ function getNoiseScore(text, rawMessage, promoScore) {
 function getMessageText(rawMessage) {
   return [rawMessage?.text, rawMessage?.caption, rawMessage?.captionText, rawMessage?.message]
     .find((value) => String(value || "").trim().length > 0) || "";
-}
-
-function hasTradingPair(text) {
-  return supportedPairs.some((pair) =>
-    pair.aliases.some((alias) => createKeywordPattern(alias).test(text))
-  );
 }
 
 function countMatches(text, keywords) {

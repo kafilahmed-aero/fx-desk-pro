@@ -1,61 +1,46 @@
-const AUTH_STORAGE_KEY = "forex-dashboard-auth";
-const AUTH_SESSION_KEY = "forex-dashboard-session-auth";
-const AUTH_DELAY = 700;
+import { frontendConfig } from "../config/env";
 
-const fakeUser = {
-  email: "trader@example.com",
-  name: "FX Trader",
-};
+async function parseJsonResponse(response) {
+  const payload = await response.json().catch(() => ({}));
 
-const delay = (callback) =>
-  new Promise((resolve) => {
-    window.setTimeout(() => resolve(callback()), AUTH_DELAY);
+  if (!response.ok) {
+    throw new Error(payload.error || "Authentication failed.");
+  }
+
+  return payload;
+}
+
+export async function login({ email, password, remember = true }) {
+  const response = await fetch(`${frontendConfig.apiBaseUrl}/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password, remember }),
+  });
+  const payload = await parseJsonResponse(response);
+
+  return payload.user;
+}
+
+export async function logout() {
+  await fetch(`${frontendConfig.apiBaseUrl}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export async function getCurrentUser() {
+  const response = await fetch(`${frontendConfig.apiBaseUrl}/auth/me`, {
+    credentials: "include",
   });
 
-const getStorage = (remember) => (remember ? window.localStorage : window.sessionStorage);
-
-const parseStoredUser = (storedUser) => {
-  if (!storedUser) {
+  if (response.status === 401) {
     return null;
   }
 
-  try {
-    return JSON.parse(storedUser);
-  } catch {
-    return null;
-  }
-};
+  const payload = await parseJsonResponse(response);
 
-export const login = ({ email, password, remember = true }) =>
-  delay(() => {
-    const trimmedEmail = email.trim();
-
-    if (!trimmedEmail || !password) {
-      throw new Error("Email and password are required.");
-    }
-
-    const user = { ...fakeUser, email: trimmedEmail };
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
-    window.sessionStorage.removeItem(AUTH_SESSION_KEY);
-    getStorage(remember).setItem(
-      remember ? AUTH_STORAGE_KEY : AUTH_SESSION_KEY,
-      JSON.stringify(user)
-    );
-
-    return user;
-  });
-
-export const logout = () => {
-  window.localStorage.removeItem(AUTH_STORAGE_KEY);
-  window.sessionStorage.removeItem(AUTH_SESSION_KEY);
-};
-
-export const getCurrentUser = () => {
-  const storedUser =
-    window.localStorage.getItem(AUTH_STORAGE_KEY) ||
-    window.sessionStorage.getItem(AUTH_SESSION_KEY);
-
-  return parseStoredUser(storedUser);
-};
-
-export const isAuthenticated = () => Boolean(getCurrentUser());
+  return payload.user;
+}

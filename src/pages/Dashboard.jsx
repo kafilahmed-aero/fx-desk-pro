@@ -8,9 +8,14 @@ import {
   RefreshCw,
   RadioTower,
 } from "lucide-react";
-import { getActiveOpportunities } from "../services/signalService";
+import {
+  getActiveOpportunities,
+  getLiveMarketOverview,
+  getWeightedConsensus,
+  subscribeToConsensusEvents,
+} from "../services/signalService";
 
-const refreshMs = 10000;
+const fallbackRefreshMs = 30000;
 
 const directionStyles = {
   STRONG_BUY:
@@ -37,42 +42,93 @@ const freshnessStyles = {
 
 function Dashboard() {
   const [opportunities, setOpportunities] = useState([]);
+  const [consensusPairs, setConsensusPairs] = useState([]);
+  const [marketOverview, setMarketOverview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
+    let isRequestActive = false;
+    let hasPendingRefresh = false;
+    let activeController = null;
 
-    async function loadOpportunities() {
+    async function loadLiveIntelligence() {
+      if (isRequestActive) {
+        hasPendingRefresh = true;
+        return;
+      }
+
+      activeController = new AbortController();
+      isRequestActive = true;
+      hasPendingRefresh = false;
+
       try {
-        const nextOpportunities = await getActiveOpportunities();
+        const [nextOverview, nextOpportunities, nextConsensusPairs] =
+          await Promise.all([
+            getLiveMarketOverview({ signal: activeController.signal }),
+            getActiveOpportunities({ signal: activeController.signal }),
+            getWeightedConsensus({ signal: activeController.signal }),
+          ]);
 
         if (!isMounted) return;
 
         setOpportunities(nextOpportunities);
+        setConsensusPairs(nextConsensusPairs);
+        setMarketOverview(nextOverview);
         setError("");
         setLastLoadedAt(new Date());
+        if (import.meta.env.DEV) {
+          console.info("[DASHBOARD REFRESH]", {
+            opportunityCount: nextOpportunities.length,
+            consensusPairs: nextConsensusPairs.length,
+            marketBias: nextOverview?.marketBias || "NEUTRAL",
+          });
+        }
       } catch (loadError) {
         if (!isMounted) return;
+        if (loadError.name === "AbortError") return;
         setError(loadError.message);
       } finally {
+        isRequestActive = false;
         if (isMounted) {
           setIsLoading(false);
+        }
+        if (isMounted && hasPendingRefresh) {
+          window.setTimeout(loadLiveIntelligence, 150);
         }
       }
     }
 
-    loadOpportunities();
-    const timer = window.setInterval(loadOpportunities, refreshMs);
+    loadLiveIntelligence();
+    const stopLiveUpdates = subscribeToConsensusEvents(
+      (event) => {
+        if (import.meta.env.DEV) {
+          console.info("[REALTIME EVENT]", event);
+        }
+        loadLiveIntelligence();
+      },
+      () => {
+        if (import.meta.env.DEV) {
+          console.warn("[REALTIME EVENT] stream reconnecting");
+        }
+      }
+    );
+    const timer = window.setInterval(loadLiveIntelligence, fallbackRefreshMs);
 
     return () => {
       isMounted = false;
+      stopLiveUpdates();
+      activeController?.abort();
       window.clearInterval(timer);
     };
   }, []);
 
-  const summary = useMemo(() => buildSummary(opportunities), [opportunities]);
+  const summary = useMemo(
+    () => buildSummary(opportunities, marketOverview),
+    [opportunities, marketOverview]
+  );
 
   return (
     <div className="animate-dashboard-in space-y-4 pb-8">
@@ -91,8 +147,9 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-sm lg:min-w-[24rem]">
-            <SummaryStat label="Pairs" value={isLoading ? "--" : opportunities.length} />
+          <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4 lg:min-w-[30rem]">
+            <SummaryStat label="Market" value={isLoading ? "--" : summary.marketBias} />
+            <SummaryStat label="Pairs" value={isLoading ? "--" : summary.pairCount} />
             <SummaryStat label="Signals" value={isLoading ? "--" : summary.signalCount} />
             <SummaryStat label="Updated" value={formatUpdatedAt(lastLoadedAt)} />
           </div>
@@ -113,12 +170,12 @@ function Dashboard() {
               Weighted Consensus
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Active and partial signals only. Closed, expired, promo, and noise are excluded.
+              {formatConsensusSummary(consensusPairs)}
             </p>
           </div>
           <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             <RefreshCw size={15} />
-            Live refresh every {refreshMs / 1000}s
+            Realtime push with {fallbackRefreshMs / 1000}s fallback
           </p>
         </div>
 
@@ -132,9 +189,8 @@ function Dashboard() {
                 <th className="px-4 py-3 font-semibold">Buy / Sell Weight</th>
                 <th className="px-4 py-3 font-semibold">Signals</th>
                 <th className="px-4 py-3 font-semibold">Freshness</th>
-                <th className="px-4 py-3 font-semibold">Entry Zone</th>
-                <th className="px-4 py-3 font-semibold">TP Zone</th>
-                <th className="px-4 py-3 font-semibold">SL Zone</th>
+                <th className="px-4 py-3 font-semibold">BUY Zones</th>
+                <th className="px-4 py-3 font-semibold">SELL Zones</th>
                 <th className="px-4 py-3 font-semibold">Last Updated</th>
               </tr>
             </thead>
@@ -147,7 +203,7 @@ function Dashboard() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={10} className="px-4 py-10 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={9} className="px-4 py-10 text-center text-slate-500 dark:text-slate-400">
                     No active fresh opportunities right now.
                   </td>
                 </tr>
@@ -170,7 +226,7 @@ function OpportunityRow({ opportunity }) {
         <DirectionBadge direction={opportunity.marketDirection} />
       </td>
       <td className="px-4 py-4">
-        <ConfidenceMeter value={opportunity.confidenceScore} />
+        <DirectionalConfidence opportunity={opportunity} />
       </td>
       <td className="px-4 py-4">
         <WeightSplit opportunity={opportunity} />
@@ -181,9 +237,12 @@ function OpportunityRow({ opportunity }) {
       <td className="px-4 py-4">
         <FreshnessBadge freshnessLevel={opportunity.freshnessLevel} />
       </td>
-      <td className="px-4 py-4 font-medium">{formatZone(opportunity.entryZone)}</td>
-      <td className="px-4 py-4 font-medium">{formatZone(opportunity.tpZone)}</td>
-      <td className="px-4 py-4 font-medium">{formatZone(opportunity.slZone)}</td>
+      <td className="px-4 py-4">
+        <DirectionalZones direction="BUY" zones={opportunity.buyZones} />
+      </td>
+      <td className="px-4 py-4">
+        <DirectionalZones direction="SELL" zones={opportunity.sellZones} />
+      </td>
       <td className="px-4 py-4 text-slate-500 dark:text-slate-400">
         {formatTime(opportunity.lastUpdated)}
       </td>
@@ -191,21 +250,47 @@ function OpportunityRow({ opportunity }) {
   );
 }
 
+function DirectionalZones({ direction, zones }) {
+  const tone =
+    direction === "BUY"
+      ? "text-emerald-700 dark:text-emerald-300"
+      : "text-rose-700 dark:text-rose-300";
+
+  return (
+    <div className="min-w-[9rem] space-y-1 text-xs">
+      <p className={`font-bold ${tone}`}>{direction}</p>
+      <ZoneLine label="Entry" zone={zones?.entryZone} />
+      <ZoneLine label="TP" zone={zones?.tpZone} />
+      <ZoneLine label="SL" zone={zones?.slZone} />
+    </div>
+  );
+}
+
+function ZoneLine({ label, zone }) {
+  return (
+    <p className="flex justify-between gap-3 text-slate-600 dark:text-slate-300">
+      <span className="text-slate-400 dark:text-slate-500">{label}</span>
+      <span className="font-semibold text-slate-800 dark:text-slate-100">{formatZone(zone)}</span>
+    </p>
+  );
+}
+
 function DirectionBadge({ direction }) {
-  const Icon = direction.includes("BUY")
+  const safeDirection = direction || "NEUTRAL";
+  const Icon = safeDirection.includes("BUY")
     ? ArrowUpRight
-    : direction.includes("SELL")
+    : safeDirection.includes("SELL")
     ? ArrowDownRight
     : Minus;
 
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold ${
-        directionStyles[direction] || directionStyles.NEUTRAL
+        directionStyles[safeDirection] || directionStyles.NEUTRAL
       }`}
     >
       <Icon size={13} />
-      {direction}
+      {safeDirection}
     </span>
   );
 }
@@ -223,14 +308,38 @@ function FreshnessBadge({ freshnessLevel }) {
   );
 }
 
-function ConfidenceMeter({ value }) {
+function DirectionalConfidence({ opportunity }) {
   return (
-    <div className="flex min-w-[8rem] items-center gap-3">
-      <span className="w-10 font-bold text-slate-950 dark:text-slate-100">{value}%</span>
-      <span className="h-2 w-full min-w-24 rounded-full bg-slate-200 dark:bg-slate-800">
+    <div className="min-w-[9rem] space-y-2">
+      <ConfidenceMeter
+        label="BUY"
+        value={Number(opportunity.buyConfidence) || 0}
+        colorClass="bg-emerald-500 dark:bg-emerald-400"
+        textClass="text-emerald-700 dark:text-emerald-300"
+      />
+      <ConfidenceMeter
+        label="SELL"
+        value={Number(opportunity.sellConfidence) || 0}
+        colorClass="bg-rose-500 dark:bg-rose-400"
+        textClass="text-rose-700 dark:text-rose-300"
+      />
+    </div>
+  );
+}
+
+function ConfidenceMeter({ label, value, colorClass, textClass }) {
+  const safeValue = Math.min(Math.max(Number(value) || 0, 0), 100);
+
+  return (
+    <div>
+      <div className="flex justify-between gap-3 text-xs font-bold">
+        <span className={textClass}>{label}</span>
+        <span className="text-slate-900 dark:text-slate-100">{safeValue}%</span>
+      </div>
+      <span className="mt-1 block h-2 w-full min-w-24 rounded-full bg-slate-200 dark:bg-slate-800">
         <span
-          className="block h-2 rounded-full bg-blue-500 dark:bg-sky-400"
-          style={{ width: `${Math.min(Math.max(value, 0), 100)}%` }}
+          className={`block h-2 rounded-full ${colorClass}`}
+          style={{ width: `${safeValue}%` }}
         ></span>
       </span>
     </div>
@@ -238,7 +347,10 @@ function ConfidenceMeter({ value }) {
 }
 
 function WeightSplit({ opportunity }) {
-  const total = Number(opportunity.totalWeight) || 0;
+  const total =
+    Number(opportunity.totalWeight) ||
+    Number(opportunity.buyWeight) + Number(opportunity.sellWeight) ||
+    0;
   const buyPercent = total > 0 ? Math.round((opportunity.buyWeight / total) * 100) : 0;
   const sellPercent = total > 0 ? 100 - buyPercent : 0;
 
@@ -268,7 +380,7 @@ function SummaryStat({ label, value }) {
 function OpportunitySkeleton() {
   return (
     <tr>
-      {[68, 112, 128, 160, 52, 96, 92, 92, 92, 96].map((width, index) => (
+      {[68, 112, 128, 160, 52, 96, 132, 132, 96].map((width, index) => (
         <td key={index} className="px-4 py-4">
           <div
             className="h-4 animate-pulse rounded bg-slate-100 dark:bg-slate-800"
@@ -280,24 +392,64 @@ function OpportunitySkeleton() {
   );
 }
 
-function buildSummary(opportunities) {
+function buildSummary(opportunities, marketOverview) {
+  const overviewPairCount = Number(marketOverview?.pairCount);
+  const overviewSignalCount = Number(marketOverview?.signalCount);
+  const pairCount = Number.isFinite(overviewPairCount)
+    ? overviewPairCount
+    : opportunities.length;
+  const signalCount = Number.isFinite(overviewSignalCount)
+    ? overviewSignalCount
+    : opportunities.reduce((sum, opportunity) => sum + opportunity.signalCount, 0);
+  const marketBias = marketOverview?.marketBias || getMarketBias(opportunities);
+  const top = marketOverview?.strongestOpportunity || opportunities[0];
+
   if (opportunities.length === 0) {
     return {
-      signalCount: 0,
+      pairCount,
+      signalCount,
+      marketBias,
       text: "No fresh active opportunities are available right now. The engine is still listening and will surface pairs when live consensus appears.",
     };
   }
 
-  const signalCount = opportunities.reduce(
-    (sum, opportunity) => sum + opportunity.signalCount,
+  return {
+    pairCount,
+    signalCount,
+    marketBias,
+    text: `${top.pair} is currently the strongest live setup: ${top.marketDirection}, BUY confidence ${top.buyConfidence || 0}%, SELL confidence ${top.sellConfidence || 0}%, ${top.signalCount} active signals. This is live Telegram consensus, not a prediction.`,
+  };
+}
+
+function getMarketBias(opportunities) {
+  const buyWeight = opportunities.reduce(
+    (sum, opportunity) => sum + Number(opportunity.buyWeight || 0),
     0
   );
-  const top = opportunities[0];
+  const sellWeight = opportunities.reduce(
+    (sum, opportunity) => sum + Number(opportunity.sellWeight || 0),
+    0
+  );
 
-  return {
-    signalCount,
-    text: `${top.pair} is currently the strongest live setup: ${top.marketDirection}, ${top.confidenceScore}% confidence, ${top.signalCount} active signals. This is live Telegram consensus, not a prediction.`,
-  };
+  if (buyWeight === sellWeight) {
+    return "NEUTRAL";
+  }
+
+  return buyWeight > sellWeight ? "BUY" : "SELL";
+}
+
+function formatConsensusSummary(consensusPairs) {
+  const pairCount = consensusPairs.length;
+  const signalCount = consensusPairs.reduce(
+    (sum, pair) => sum + Number(pair.signalCount || 0),
+    0
+  );
+
+  if (pairCount === 0) {
+    return "Active and partial signals only. No fresh weighted consensus is available.";
+  }
+
+  return `${pairCount} fresh pair${pairCount === 1 ? "" : "s"}, ${signalCount} active/partial signal${signalCount === 1 ? "" : "s"}. Closed, expired, promo, and noise are excluded.`;
 }
 
 function formatZone(zone) {

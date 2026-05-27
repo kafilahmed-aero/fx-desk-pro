@@ -16,8 +16,8 @@ import { login } from "../services/authService";
 
 function Login({ isAuthenticated, onLogin }) {
   const { isDark, toggleTheme } = useTheme();
-  const [email, setEmail] = useState("trader@example.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -204,7 +204,7 @@ function Login({ isAuthenticated, onLogin }) {
                     Remember this device
                   </label>
                   <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Demo auth
+                    Private beta
                   </span>
                 </div>
 
