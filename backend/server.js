@@ -15,21 +15,33 @@ import { logger } from "./src/utils/logger.js";
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
 const app = createApp();
+const bindHost = "0.0.0.0";
 
 async function startServer() {
-  await connectDatabase();
-
-  const server = app.listen(config.port, () => {
+  const server = app.listen(config.port, bindHost, () => {
+    const address = server.address();
     logger.info("server.started", {
-      port: config.port,
+      host: bindHost,
+      port: typeof address === "object" ? address.port : config.port,
       nodeEnv: config.nodeEnv,
     });
   });
 
+  server.on("error", (error) => {
+    logger.error("server.listen_failed", {
+      error: error.message,
+      port: config.port,
+    });
+    process.exit(1);
+  });
+
   // Telegram ingestion runs in the backend process, not in the frontend.
   // If no saved session is available yet, the API still runs and logs the setup gap.
-  startMarketEngine();
-  await startTelegramListener();
+  initializeBackgroundServices().catch((error) => {
+    logger.error("server.background_services_failed", {
+      error: error.message,
+    });
+  });
 
   const shutdown = async () => {
     stopMarketEngine();
@@ -42,6 +54,12 @@ async function startServer() {
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
+}
+
+async function initializeBackgroundServices() {
+  await connectDatabase();
+  startMarketEngine();
+  await startTelegramListener();
 }
 
 startServer().catch((error) => {

@@ -2,10 +2,19 @@
 // Other files import this object instead of reading process.env directly.
 const nodeEnv = process.env.NODE_ENV || "development";
 const isProduction = nodeEnv === "production";
-const clientUrls = (process.env.CLIENT_URL || "http://localhost:5173")
+const productionClientUrl = "https://fx-desk-pro.vercel.app";
+const developmentClientUrls = ["http://localhost:5173", "http://127.0.0.1:5173"];
+const configuredClientUrls = (process.env.CLIENT_URL || "")
   .split(",")
   .map((url) => url.trim())
   .filter(Boolean);
+const clientUrls = [
+  ...new Set([
+    ...configuredClientUrls,
+    productionClientUrl,
+    ...(!isProduction ? developmentClientUrls : []),
+  ]),
+];
 
 export const config = {
   port: process.env.PORT || 5000,
@@ -133,8 +142,8 @@ function validateProductionConfig() {
 
   const errors = [];
 
-  if (!process.env.CLIENT_URL || config.clientUrls.some((url) => url.includes("localhost"))) {
-    errors.push("CLIENT_URL must be set to the production frontend origin.");
+  if (!config.clientUrls.includes(productionClientUrl)) {
+    errors.push(`CLIENT_URL must allow the production frontend origin: ${productionClientUrl}.`);
   }
 
   if (!config.auth.jwtSecret || config.auth.jwtSecret.length < 32) {
