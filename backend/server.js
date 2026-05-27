@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createApp } from "./src/app.js";
 import { connectDatabase } from "./src/config/database.js";
 import { config } from "./src/config/env.js";
+import { getSessionCookieStartupLogDetails } from "./src/config/sessionCookie.js";
 import {
   startTelegramListener,
   stopTelegramListener,
@@ -25,6 +26,7 @@ async function startServer() {
       port: typeof address === "object" ? address.port : config.port,
       nodeEnv: config.nodeEnv,
     });
+    logger.info("auth.cookie_config_resolved", getSessionCookieStartupLogDetails());
   });
 
   server.on("error", (error) => {

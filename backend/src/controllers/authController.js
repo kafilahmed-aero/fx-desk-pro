@@ -5,28 +5,12 @@ import {
   verifySessionToken,
 } from "../services/authService.js";
 import { getTokenFromRequest } from "../middleware/authMiddleware.js";
-
-const isProduction = config.nodeEnv === "production";
-
-function buildCookieOptions(maxAgeSeconds) {
-  const options = [
-    "HttpOnly",
-    "Path=/",
-    `SameSite=${isProduction ? "None" : "Lax"}`,
-    `Max-Age=${maxAgeSeconds}`,
-  ];
-
-  if (isProduction) {
-    options.push("Secure");
-  }
-
-  return options.join("; ");
-}
+import { buildSessionCookieOptions } from "../config/sessionCookie.js";
 
 function setSessionCookie(response, token, maxAgeSeconds) {
   response.setHeader(
     "Set-Cookie",
-    `${config.auth.cookieName}=${encodeURIComponent(token)}; ${buildCookieOptions(
+    `${config.auth.cookieName}=${encodeURIComponent(token)}; ${buildSessionCookieOptions(
       maxAgeSeconds
     )}`
   );
@@ -35,7 +19,7 @@ function setSessionCookie(response, token, maxAgeSeconds) {
 function clearSessionCookie(response) {
   response.setHeader(
     "Set-Cookie",
-    `${config.auth.cookieName}=; ${buildCookieOptions(0)}`
+    `${config.auth.cookieName}=; ${buildSessionCookieOptions(0)}`
   );
 }
 
