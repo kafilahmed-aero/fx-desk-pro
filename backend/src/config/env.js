@@ -89,6 +89,15 @@ export const config = {
 validateProductionConfig();
 
 function parseAuthUsers() {
+  const simpleEnvUser =
+    process.env.AUTH_EMAIL && process.env.AUTH_PASSWORD
+      ? {
+          email: process.env.AUTH_EMAIL.trim().toLowerCase(),
+          password: process.env.AUTH_PASSWORD,
+          name: process.env.AUTH_NAME || "FX Trader",
+        }
+      : null;
+
   const configuredUsers = (process.env.AUTH_USERS || "")
     .split(",")
     .map((entry) => entry.trim())
@@ -108,17 +117,10 @@ function parseAuthUsers() {
     })
     .filter(Boolean);
 
-  if (configuredUsers.length > 0) {
-    return configuredUsers;
-  }
-
-  if (process.env.AUTH_EMAIL && process.env.AUTH_PASSWORD) {
+  if (simpleEnvUser) {
     return [
-      {
-        email: process.env.AUTH_EMAIL.toLowerCase(),
-        password: process.env.AUTH_PASSWORD,
-        name: process.env.AUTH_NAME || "FX Trader",
-      },
+      simpleEnvUser,
+      ...configuredUsers.filter((user) => user.email !== simpleEnvUser.email),
     ];
   }
 
