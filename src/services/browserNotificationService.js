@@ -48,6 +48,17 @@ export async function initializeBrowserNotifications() {
 }
 
 export function showSmartAlertNotification(alert) {
+  const fallbackTitle = alert?.pair
+    ? alert.title || buildFallbackTitle(alert)
+    : alert?.title || "Smart Alert";
+
+  console.info(`${smartAlertDebugPrefix} browser notification dispatch attempt`, {
+    pair: alert?.pair,
+    alertType: alert?.type,
+    title: fallbackTitle,
+    permission: supportsBrowserNotifications() ? Notification.permission : "unsupported",
+  });
+
   if (!supportsBrowserNotifications()) {
     console.info(`${smartAlertDebugPrefix} alert filtered/skipped reason`, {
       reason: "Notification API is unavailable",

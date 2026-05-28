@@ -54,6 +54,12 @@ function Dashboard() {
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
 
   useEffect(() => {
+    console.info(`${smartAlertDebugPrefix} frontend initialized`);
+    console.info(`${smartAlertDebugPrefix} notification service import verified`, {
+      initializeBrowserNotifications: typeof initializeBrowserNotifications,
+      showSmartAlertNotification: typeof showSmartAlertNotification,
+    });
+
     let isMounted = true;
     let isRequestActive = false;
     let hasPendingRefresh = false;
@@ -106,14 +112,23 @@ function Dashboard() {
       }
     }
 
+    console.info(`${smartAlertDebugPrefix} notification service initialization requested`);
     initializeBrowserNotifications();
     loadLiveIntelligence();
+    console.info(`${smartAlertDebugPrefix} dashboard subscribing to smart-alert SSE events`);
     const stopLiveUpdates = subscribeToConsensusEvents(
       (event) => {
-        if (import.meta.env.DEV) {
-          console.info("[REALTIME EVENT]", event);
-        }
+        console.info(`${smartAlertDebugPrefix} dashboard received SSE payload`, {
+          pair: event?.pair,
+          eventType: event?.type,
+          payload: event,
+        });
         if (event?.type && event?.pair && event?.confidence !== undefined) {
+          console.info(`${smartAlertDebugPrefix} smart-alert event detected`, {
+            pair: event.pair,
+            alertType: event.type,
+            confidence: event.confidence,
+          });
           showSmartAlertNotification(event);
         } else {
           console.info(`${smartAlertDebugPrefix} alert filtered/skipped reason`, {
@@ -135,6 +150,7 @@ function Dashboard() {
 
     return () => {
       isMounted = false;
+      console.info(`${smartAlertDebugPrefix} dashboard closing SSE subscription`);
       stopLiveUpdates();
       activeController?.abort();
       window.clearInterval(timer);

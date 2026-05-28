@@ -82,6 +82,11 @@ export async function getLiveMarketOverview(options = {}) {
 }
 
 export function subscribeToConsensusEvents(onMessage, onError) {
+  console.info(`${smartAlertDebugPrefix} SSE subscription initializing`, {
+    path: "/consensus/events",
+    smartAlertEventName: "smart-alert",
+  });
+
   const events = createCredentialedEventSource("/consensus/events");
 
   events.onopen = () => {
@@ -91,30 +96,88 @@ export function subscribeToConsensusEvents(onMessage, onError) {
     });
   };
 
-  events.addEventListener("pair-state-updated", (event) => {
-    onMessage?.(JSON.parse(event.data));
+  events.addEventListener("connected", (event) => {
+    const payload = parseSsePayload(event, "connected");
+    if (payload === null) return;
+    console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
+      eventName: "connected",
+      payload,
+    });
   });
 
-  events.addEventListener("smart-alert", (event) => {
-    const payload = JSON.parse(event.data);
-    console.info(`${smartAlertDebugPrefix} incoming smart-alert event received`, {
-      pair: payload?.pair,
-      alertType: payload?.type,
-      confidence: payload?.confidence,
+  events.addEventListener("heartbeat", (event) => {
+    const payload = parseSsePayload(event, "heartbeat");
+    if (payload === null) return;
+    console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
+      eventName: "heartbeat",
+      payload,
+    });
+  });
+
+  events.addEventListener("pair-state-updated", (event) => {
+    const payload = parseSsePayload(event, "pair-state-updated");
+    if (payload === null) return;
+    console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
+      eventName: "pair-state-updated",
       payload,
     });
     onMessage?.(payload);
   });
 
+  events.addEventListener("smart-alert", (event) => {
+    const payload = parseSsePayload(event, "smart-alert");
+    if (payload === null) return;
+    console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
+      eventName: "smart-alert",
+      pair: payload?.pair,
+      alertType: payload?.type,
+      confidence: payload?.confidence,
+      payload,
+    });
+    console.info(`${smartAlertDebugPrefix} smart-alert SSE event detected`, {
+      pair: payload?.pair,
+      alertType: payload?.type,
+      confidence: payload?.confidence,
+    });
+    onMessage?.(payload);
+  });
+
   events.onerror = (event) => {
-    console.warn(`${smartAlertDebugPrefix} alert filtered/skipped reason`, {
+    console.warn(`${smartAlertDebugPrefix} SSE connection error`, {
       reason: "SSE stream error or reconnect",
       readyState: events.readyState,
+      event,
     });
     onError?.(event);
   };
 
   return () => {
+    console.info(`${smartAlertDebugPrefix} SSE connection closing`, {
+      path: "/consensus/events",
+      readyState: events.readyState,
+    });
     events.close();
+    console.info(`${smartAlertDebugPrefix} SSE connection closed`, {
+      path: "/consensus/events",
+      readyState: events.readyState,
+    });
   };
+}
+
+function parseSsePayload(event, eventName) {
+  console.info(`${smartAlertDebugPrefix} raw SSE payload received`, {
+    eventName,
+    data: event.data,
+  });
+
+  try {
+    return JSON.parse(event.data);
+  } catch (error) {
+    console.warn(`${smartAlertDebugPrefix} SSE payload parse failed`, {
+      eventName,
+      data: event.data,
+      error: error.message,
+    });
+    return null;
+  }
 }
