@@ -10,6 +10,7 @@ import {
 } from "./apiClient";
 
 const API_DELAY = 900;
+const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 const simulateRequest = (data, delay = API_DELAY) =>
   new Promise((resolve) => {
@@ -83,15 +84,33 @@ export async function getLiveMarketOverview(options = {}) {
 export function subscribeToConsensusEvents(onMessage, onError) {
   const events = createCredentialedEventSource("/consensus/events");
 
+  events.onopen = () => {
+    console.info(`${smartAlertDebugPrefix} SSE connection opened`, {
+      path: "/consensus/events",
+      readyState: events.readyState,
+    });
+  };
+
   events.addEventListener("pair-state-updated", (event) => {
     onMessage?.(JSON.parse(event.data));
   });
 
   events.addEventListener("smart-alert", (event) => {
-    onMessage?.(JSON.parse(event.data));
+    const payload = JSON.parse(event.data);
+    console.info(`${smartAlertDebugPrefix} incoming smart-alert event received`, {
+      pair: payload?.pair,
+      alertType: payload?.type,
+      confidence: payload?.confidence,
+      payload,
+    });
+    onMessage?.(payload);
   });
 
   events.onerror = (event) => {
+    console.warn(`${smartAlertDebugPrefix} alert filtered/skipped reason`, {
+      reason: "SSE stream error or reconnect",
+      readyState: events.readyState,
+    });
     onError?.(event);
   };
 

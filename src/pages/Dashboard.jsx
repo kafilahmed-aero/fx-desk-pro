@@ -20,6 +20,7 @@ import {
 } from "../services/browserNotificationService";
 
 const fallbackRefreshMs = 30000;
+const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 const directionStyles = {
   STRONG_BUY:
@@ -114,6 +115,13 @@ function Dashboard() {
         }
         if (event?.type && event?.pair && event?.confidence !== undefined) {
           showSmartAlertNotification(event);
+        } else {
+          console.info(`${smartAlertDebugPrefix} alert filtered/skipped reason`, {
+            reason: "SSE event is not a complete smart alert payload",
+            eventType: event?.type,
+            pair: event?.pair,
+            hasConfidence: event?.confidence !== undefined,
+          });
         }
         loadLiveIntelligence();
       },

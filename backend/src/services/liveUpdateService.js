@@ -2,6 +2,7 @@ import { logger } from "../utils/logger.js";
 
 const clients = new Set();
 let nextClientId = 1;
+const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 export function subscribeToLiveUpdates(request, response) {
   const client = {
@@ -67,7 +68,24 @@ export function broadcastPairStateUpdate(pairState) {
 }
 
 export function broadcastSmartAlert(alert) {
-  if (!alert?.pair || clients.size === 0) {
+  if (!alert?.pair) {
+    logger.info(smartAlertDebugPrefix, {
+      stage: "SSE broadcast sent",
+      sent: false,
+      reason: "missing alert pair",
+      alertType: alert?.type,
+    });
+    return;
+  }
+
+  if (clients.size === 0) {
+    logger.info(smartAlertDebugPrefix, {
+      stage: "SSE broadcast sent",
+      sent: false,
+      reason: "no SSE clients connected",
+      pair: alert.pair,
+      alertType: alert.type,
+    });
     return;
   }
 
@@ -80,6 +98,14 @@ export function broadcastSmartAlert(alert) {
   for (const client of clients) {
     sendEvent(client, "smart-alert", alert);
   }
+
+  logger.info(smartAlertDebugPrefix, {
+    stage: "SSE broadcast sent",
+    sent: true,
+    pair: alert.pair,
+    alertType: alert.type,
+    clientCount: clients.size,
+  });
 }
 
 function sendEvent(client, eventName, payload) {
