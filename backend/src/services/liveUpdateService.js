@@ -99,10 +99,21 @@ export function broadcastSmartAlert(alert) {
     sendEvent(client, "smart-alert", alert);
   }
 
+  logger.info(`${smartAlertDebugPrefix} smart-alert SSE broadcasted`, {
+    pair: alert.pair,
+    direction: alert.direction,
+    confidence: alert.confidence,
+    activeSignals: alert.activeSignals,
+    alertType: alert.type,
+    clientCount: clients.size,
+  });
   logger.info(smartAlertDebugPrefix, {
     stage: "SSE broadcast sent",
     sent: true,
     pair: alert.pair,
+    direction: alert.direction,
+    confidence: alert.confidence,
+    activeSignals: alert.activeSignals,
     alertType: alert.type,
     clientCount: clients.size,
   });

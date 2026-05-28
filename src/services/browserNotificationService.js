@@ -109,9 +109,10 @@ function supportsBrowserNotifications() {
 }
 
 function buildFallbackTitle(alert) {
-  return `${alert.pair} ${alert.direction} Alert`;
+  return `${alert.pair} ${alert.direction} Smart Alert`;
 }
 
 function buildFallbackBody(alert) {
-  return `Confidence: ${alert.confidence}%\n${alert.type}`;
+  const signalCount = alert.signalCount ?? alert.activeSignals ?? "--";
+  return `Direction: ${alert.direction}\nConfidence: ${alert.confidence}%\nSignals: ${signalCount}`;
 }

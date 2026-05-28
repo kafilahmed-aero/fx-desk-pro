@@ -1,19 +1,26 @@
-import { config } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 import { canAffectConsensus } from "./signalStateEngine.js";
 
 export const smartAlertTypes = {
+  BOOTSTRAP_CONSENSUS: "BOOTSTRAP_CONSENSUS",
   RAPID_CONFIDENCE_RISE: "RAPID_CONFIDENCE_RISE",
   STRONG_CONSENSUS: "STRONG_CONSENSUS",
   CONSENSUS_FLIP: "CONSENSUS_FLIP",
 };
 
 const cooldowns = new Map();
-const confidenceHistory = new Map();
 const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
+const bootstrapAlertCriteria = {
+  minActiveSignals: 2,
+  minDirectionalConfidence: 55,
+  freshnessLevels: ["FRESH", "VERY_FRESH"],
+  cooldownMs: 60 * 1000,
+};
 
-export function evaluateSmartAlerts(pairState, previousPairState = null, now = new Date()) {
+export function evaluateSmartAlerts(pairState, _previousPairState = null, now = new Date()) {
   try {
+    void _previousPairState;
+
     if (!pairState?.pair) {
       logger.info(smartAlertDebugPrefix, {
         stage: "alert condition evaluated",
@@ -24,21 +31,17 @@ export function evaluateSmartAlerts(pairState, previousPairState = null, now = n
     }
 
     const snapshot = createAlertSnapshot(pairState);
-    rememberConfidence(snapshot, now);
-
-    const alertCandidates = [
-      createStrongConsensusAlert(snapshot),
-      createRapidConfidenceRiseAlert(snapshot, now),
-      createConsensusFlipAlert(snapshot, previousPairState),
-    ].filter(Boolean);
-
+    const alertCandidates = [createBootstrapConsensusAlert(snapshot)].filter(Boolean);
     const alerts = alertCandidates.filter((alert) => canNotify(alert, now));
+
     logger.info(smartAlertDebugPrefix, {
       stage: "alert condition evaluated",
+      mode: "bootstrap",
       pair: snapshot.pair,
       candidateCount: alertCandidates.length,
       emittedCount: alerts.length,
     });
+
     return alerts;
   } catch (error) {
     logger.warn("smart_alert.evaluate_failed", {
@@ -50,7 +53,9 @@ export function evaluateSmartAlerts(pairState, previousPairState = null, now = n
 }
 
 function createAlertSnapshot(pairState) {
-  const direction = normalizeDirection(pairState.marketDirection);
+  const buyConfidence = Number(pairState.buyConfidence) || 0;
+  const sellConfidence = Number(pairState.sellConfidence) || 0;
+  const direction = getBootstrapDirection(pairState.marketDirection, buyConfidence, sellConfidence);
   const confidence = getDirectionalConfidence(pairState, direction);
   const activeSignals = Number(pairState.signalCount) || 0;
   const freshnessLevel = getPairFreshnessLevel(pairState);
@@ -60,105 +65,47 @@ function createAlertSnapshot(pairState) {
     direction,
     marketDirection: pairState.marketDirection || "NEUTRAL",
     confidence,
+    buyConfidence,
+    sellConfidence,
     activeSignals,
     freshnessLevel,
   };
 }
 
-function createStrongConsensusAlert(snapshot) {
+function createBootstrapConsensusAlert(snapshot) {
   const failedReason =
     snapshot.direction === "NEUTRAL"
       ? "neutral direction"
-      : snapshot.confidence < config.smartAlerts.strongConsensusConfidence
-      ? "confidence below strong consensus threshold"
-      : snapshot.activeSignals < config.smartAlerts.strongConsensusSignalCount
-      ? "active signal count below strong consensus threshold"
-      : !isHighFreshness(snapshot.freshnessLevel)
-      ? "freshness below strong consensus threshold"
+      : snapshot.activeSignals < bootstrapAlertCriteria.minActiveSignals
+      ? "active signal count below bootstrap threshold"
+      : !bootstrapAlertCriteria.freshnessLevels.includes(snapshot.freshnessLevel)
+      ? "freshness below bootstrap threshold"
+      : snapshot.confidence < bootstrapAlertCriteria.minDirectionalConfidence
+      ? "directional confidence below bootstrap threshold"
       : null;
 
-  logConditionEvaluation(smartAlertTypes.STRONG_CONSENSUS, snapshot, !failedReason, failedReason);
-
-  if (failedReason) {
-    return null;
-  }
-
-  return buildAlert(smartAlertTypes.STRONG_CONSENSUS, snapshot, {
-    title: `${snapshot.pair} Strong ${snapshot.direction} Consensus`,
-    body: `Confidence: ${snapshot.confidence}%\nFresh momentum detected.`,
-  });
-}
-
-function createRapidConfidenceRiseAlert(snapshot, now) {
-  if (snapshot.direction === "NEUTRAL") {
-    logConditionEvaluation(
-      smartAlertTypes.RAPID_CONFIDENCE_RISE,
-      snapshot,
-      false,
-      "neutral direction"
-    );
-    return null;
-  }
-
-  const history = getRecentConfidenceHistory(snapshot, now);
-  const previousLow = Math.min(
-    ...history
-      .filter((point) => point.timestamp < now.getTime())
-      .map((point) => point.confidence)
+  logConditionEvaluation(
+    smartAlertTypes.BOOTSTRAP_CONSENSUS,
+    snapshot,
+    !failedReason,
+    failedReason
+      ? {
+          reason: failedReason,
+          criteria: bootstrapAlertCriteria,
+        }
+      : {
+          reason: "bootstrap criteria passed",
+          criteria: bootstrapAlertCriteria,
+        }
   );
-  const confidenceDelta = Number.isFinite(previousLow)
-    ? snapshot.confidence - previousLow
-    : null;
-
-  if (
-    !Number.isFinite(previousLow) ||
-    confidenceDelta < config.smartAlerts.rapidRiseThreshold
-  ) {
-    logConditionEvaluation(smartAlertTypes.RAPID_CONFIDENCE_RISE, snapshot, false, {
-      reason: "confidence rise below rapid rise threshold",
-      previousLow: Number.isFinite(previousLow) ? previousLow : null,
-      confidenceDelta,
-      threshold: config.smartAlerts.rapidRiseThreshold,
-    });
-    return null;
-  }
-
-  logConditionEvaluation(smartAlertTypes.RAPID_CONFIDENCE_RISE, snapshot, true, {
-    previousLow,
-    confidenceDelta,
-    threshold: config.smartAlerts.rapidRiseThreshold,
-  });
-
-  return buildAlert(smartAlertTypes.RAPID_CONFIDENCE_RISE, snapshot, {
-    title: `${snapshot.pair} Rapid ${snapshot.direction} Confidence Rise`,
-    body: `Confidence: ${snapshot.confidence}%\nMomentum increased quickly.`,
-  });
-}
-
-function createConsensusFlipAlert(snapshot, previousPairState) {
-  const previousDirection = normalizeDirection(previousPairState?.marketDirection);
-  const failedReason =
-    snapshot.direction === "NEUTRAL"
-      ? "neutral direction"
-      : previousDirection === "NEUTRAL"
-      ? "previous direction neutral or missing"
-      : previousDirection === snapshot.direction
-      ? "direction did not change"
-      : null;
-
-  logConditionEvaluation(smartAlertTypes.CONSENSUS_FLIP, snapshot, !failedReason, {
-    reason: failedReason,
-    previousDirection,
-    nextDirection: snapshot.direction,
-  });
 
   if (failedReason) {
     return null;
   }
 
-  return buildAlert(smartAlertTypes.CONSENSUS_FLIP, snapshot, {
-    title: `${snapshot.pair} Consensus Flip: ${previousDirection} to ${snapshot.direction}`,
-    body: `Confidence: ${snapshot.confidence}%\nMarket direction changed.`,
+  return buildAlert(smartAlertTypes.BOOTSTRAP_CONSENSUS, snapshot, {
+    title: `${snapshot.pair} ${snapshot.direction} Smart Alert`,
+    body: `Direction: ${snapshot.direction}\nConfidence: ${snapshot.confidence}%\nSignals: ${snapshot.activeSignals}`,
   });
 }
 
@@ -170,7 +117,10 @@ function buildAlert(type, snapshot, message) {
     direction: snapshot.direction,
     confidence: snapshot.confidence,
     activeSignals: snapshot.activeSignals,
+    signalCount: snapshot.activeSignals,
     freshnessLevel: snapshot.freshnessLevel,
+    buyConfidence: snapshot.buyConfidence,
+    sellConfidence: snapshot.sellConfidence,
     title: message.title,
     body: message.body,
     timestamp: new Date().toISOString(),
@@ -178,35 +128,49 @@ function buildAlert(type, snapshot, message) {
 }
 
 function canNotify(alert, now) {
-  const key = `${alert.pair}:${alert.type}`;
+  const key = alert.pair;
   const previousNotificationAt = cooldowns.get(key) || 0;
+  const elapsedMs = now.getTime() - previousNotificationAt;
 
-  if (now.getTime() - previousNotificationAt < config.smartAlerts.cooldownMs) {
+  if (elapsedMs < bootstrapAlertCriteria.cooldownMs) {
     logger.info(smartAlertDebugPrefix, {
       stage: "alert condition evaluated",
       passed: false,
       reason: "cooldown active",
       pair: alert.pair,
       alertType: alert.type,
-      cooldownMs: config.smartAlerts.cooldownMs,
-      elapsedMs: now.getTime() - previousNotificationAt,
+      cooldownMs: bootstrapAlertCriteria.cooldownMs,
+      elapsedMs,
+      mode: "bootstrap",
     });
     return false;
   }
 
   cooldowns.set(key, now.getTime());
+  logger.info(`${smartAlertDebugPrefix} alert emitted`, {
+    pair: alert.pair,
+    direction: alert.direction,
+    confidence: alert.confidence,
+    activeSignals: alert.activeSignals,
+    alertType: alert.type,
+    alertId: alert.id,
+    mode: "bootstrap",
+  });
   logger.info(smartAlertDebugPrefix, {
     stage: "alert emitted",
     pair: alert.pair,
     direction: alert.direction,
     confidence: alert.confidence,
+    activeSignals: alert.activeSignals,
     alertType: alert.type,
     alertId: alert.id,
+    mode: "bootstrap",
   });
   logger.info("[ALERT_TRIGGERED]", {
     pair: alert.pair,
     direction: alert.direction,
     confidence: alert.confidence,
+    activeSignals: alert.activeSignals,
     alertType: alert.type,
   });
   return true;
@@ -215,39 +179,18 @@ function canNotify(alert, now) {
 function logConditionEvaluation(alertType, snapshot, passed, details = null) {
   logger.info(smartAlertDebugPrefix, {
     stage: "alert condition evaluated",
+    mode: "bootstrap",
     pair: snapshot.pair,
     alertType,
     passed,
     direction: snapshot.direction,
     confidence: snapshot.confidence,
+    buyConfidence: snapshot.buyConfidence,
+    sellConfidence: snapshot.sellConfidence,
     activeSignals: snapshot.activeSignals,
     freshnessLevel: snapshot.freshnessLevel,
     details,
   });
-}
-
-function rememberConfidence(snapshot, now) {
-  if (snapshot.direction === "NEUTRAL") {
-    return;
-  }
-
-  const key = `${snapshot.pair}:${snapshot.direction}`;
-  const cutoff = now.getTime() - config.smartAlerts.rapidRiseWindowMs;
-  const history = (confidenceHistory.get(key) || []).filter(
-    (point) => point.timestamp >= cutoff
-  );
-
-  history.push({
-    timestamp: now.getTime(),
-    confidence: snapshot.confidence,
-  });
-  confidenceHistory.set(key, history);
-}
-
-function getRecentConfidenceHistory(snapshot, now) {
-  const key = `${snapshot.pair}:${snapshot.direction}`;
-  const cutoff = now.getTime() - config.smartAlerts.rapidRiseWindowMs;
-  return (confidenceHistory.get(key) || []).filter((point) => point.timestamp >= cutoff);
 }
 
 function getDirectionalConfidence(pairState, direction) {
@@ -276,6 +219,23 @@ function normalizeDirection(direction) {
   return "NEUTRAL";
 }
 
+function getBootstrapDirection(marketDirection, buyConfidence, sellConfidence) {
+  const normalizedDirection = normalizeDirection(marketDirection);
+
+  if (normalizedDirection !== "NEUTRAL") {
+    return normalizedDirection;
+  }
+
+  if (
+    buyConfidence >= bootstrapAlertCriteria.minDirectionalConfidence ||
+    sellConfidence >= bootstrapAlertCriteria.minDirectionalConfidence
+  ) {
+    return buyConfidence >= sellConfidence ? "BUY" : "SELL";
+  }
+
+  return "NEUTRAL";
+}
+
 function getPairFreshnessLevel(pairState) {
   const activeSignals = (pairState.activeSignals || []).filter((signal) =>
     canAffectConsensus(signal)
@@ -294,8 +254,4 @@ function getPairFreshnessLevel(pairState) {
   if (strongestWeight >= 0.5) return "AGING";
   if (strongestWeight > 0) return "WEAK";
   return "STALE";
-}
-
-function isHighFreshness(freshnessLevel) {
-  return ["HIGH", "VERY_FRESH", "FRESH"].includes(freshnessLevel);
 }
