@@ -21,13 +21,13 @@ export function subscribeToLiveUpdates(request, response) {
   response.write("retry: 5000\n\n");
 
   clients.add(client);
-  sendEvent(client, "connected", {
+  sendEventToClient(client, "connected", {
     connected: true,
     timestamp: new Date().toISOString(),
   });
 
   client.heartbeat = setInterval(() => {
-    sendEvent(client, "heartbeat", {
+    sendEventToClient(client, "heartbeat", {
       timestamp: new Date().toISOString(),
     });
   }, 25000);
@@ -58,9 +58,7 @@ export function broadcastPairStateUpdate(pairState) {
     clientCount: clients.size,
   });
 
-  for (const client of clients) {
-    sendEvent(client, "pair-state-updated", payload);
-  }
+  broadcastToLiveUpdateClients("pair-state-updated", payload);
 
   logger.debug("realtime.pair_state_update_sent", {
     pair: pairState.pair,
@@ -112,14 +110,7 @@ export function broadcastSmartAlert(alert) {
     return false;
   }
 
-  logger.info(smartAlertDebugPrefix, {
-    stage: "before SSE emit",
-    pair: alert.pair,
-    direction: alert.direction,
-    confidence: alert.confidence,
-    activeSignals: alert.activeSignals,
-    freshnessLevel: alert.freshnessLevel,
-    alertType: alert.type,
+  logSmartAlertSseStage("before SSE emit", alert, {
     clientCount: clients.size,
   });
   logger.debug("realtime.smart_alert_broadcast", {
@@ -128,23 +119,10 @@ export function broadcastSmartAlert(alert) {
     clientCount: clients.size,
   });
 
-  let sentCount = 0;
-  for (const client of clients) {
-    if (sendEvent(client, "smart-alert", alert)) {
-      sentCount += 1;
-    }
-  }
-
+  const sentCount = broadcastToLiveUpdateClients("smart-alert", alert);
   const sent = sentCount > 0;
-  logger.info(smartAlertDebugPrefix, {
-    stage: "after SSE emit",
+  logSmartAlertSseStage("after SSE emit", alert, {
     sent,
-    pair: alert.pair,
-    direction: alert.direction,
-    confidence: alert.confidence,
-    activeSignals: alert.activeSignals,
-    freshnessLevel: alert.freshnessLevel,
-    alertType: alert.type,
     clientCount: clients.size,
     sentCount,
   });
@@ -160,6 +138,16 @@ export function broadcastSmartAlert(alert) {
     activeSignals: alert.activeSignals,
     freshnessLevel: alert.freshnessLevel,
     alertType: alert.type,
+    sentCount,
+  });
+  logger.info(`${smartAlertDebugPrefix} smart-alert broadcasted to SSE clients`, {
+    pair: alert.pair,
+    direction: alert.direction,
+    confidence: alert.confidence,
+    activeSignals: alert.activeSignals,
+    freshnessLevel: alert.freshnessLevel,
+    alertType: alert.type,
+    clientCount: clients.size,
     sentCount,
   });
   logger.info(`${smartAlertDebugPrefix} smart-alert SSE broadcasted`, {
@@ -183,7 +171,52 @@ export function broadcastSmartAlert(alert) {
   return true;
 }
 
-function sendEvent(client, eventName, payload) {
+export function broadcastDebugSmartAlert(alert) {
+  logSmartAlertSseStage("before SSE emit", alert, {
+    bypassedCooldown: true,
+    clientCount: clients.size,
+  });
+
+  const sentCount = broadcastToLiveUpdateClients("smart-alert", alert);
+  const sent = sentCount > 0;
+
+  logSmartAlertSseStage("after SSE emit", alert, {
+    bypassedCooldown: true,
+    sent,
+    clientCount: clients.size,
+    sentCount,
+  });
+
+  if (sent) {
+    logger.info(`${smartAlertDebugPrefix} smart-alert broadcasted to SSE clients`, {
+      pair: alert.pair,
+      direction: alert.direction,
+      confidence: alert.confidence,
+      activeSignals: alert.activeSignals,
+      freshnessLevel: alert.freshnessLevel,
+      alertType: alert.type,
+      bypassedCooldown: true,
+      clientCount: clients.size,
+      sentCount,
+    });
+  }
+
+  return sent;
+}
+
+function broadcastToLiveUpdateClients(eventName, payload) {
+  let sentCount = 0;
+
+  for (const client of clients) {
+    if (sendEventToClient(client, eventName, payload)) {
+      sentCount += 1;
+    }
+  }
+
+  return sentCount;
+}
+
+function sendEventToClient(client, eventName, payload) {
   try {
     client.response.write(`event: ${eventName}\n`);
     client.response.write(`data: ${JSON.stringify(payload)}\n\n`);
@@ -193,4 +226,17 @@ function sendEvent(client, eventName, payload) {
     clients.delete(client);
     return false;
   }
+}
+
+function logSmartAlertSseStage(stage, alert, details = {}) {
+  logger.info(smartAlertDebugPrefix, {
+    stage,
+    pair: alert?.pair,
+    direction: alert?.direction,
+    confidence: alert?.confidence,
+    activeSignals: alert?.activeSignals,
+    freshnessLevel: alert?.freshnessLevel,
+    alertType: alert?.type,
+    ...details,
+  });
 }

@@ -1,4 +1,4 @@
-import { broadcastSmartAlert } from "../services/liveUpdateService.js";
+import { broadcastDebugSmartAlert } from "../services/liveUpdateService.js";
 
 export function emitDebugSmartAlertController(_request, response) {
   const alert = {
@@ -15,7 +15,7 @@ export function emitDebugSmartAlertController(_request, response) {
     body: "Direction: BUY\nConfidence: 99%\nSignals: 2",
   };
 
-  const sent = broadcastSmartAlert(alert);
+  const sent = broadcastDebugSmartAlert(alert);
 
   response.json({
     ok: sent,
