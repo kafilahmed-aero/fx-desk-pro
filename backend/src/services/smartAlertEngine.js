@@ -12,7 +12,6 @@ const cooldowns = new Map();
 const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 const bootstrapAlertCriteria = {
   minActiveSignals: 2,
-  minDirectionalConfidence: 55,
   freshnessLevels: ["FRESH", "VERY_FRESH"],
   cooldownMs: 60 * 1000,
 };
@@ -74,14 +73,10 @@ function createAlertSnapshot(pairState) {
 
 function createBootstrapConsensusAlert(snapshot) {
   const failedReason =
-    snapshot.direction === "NEUTRAL"
-      ? "neutral direction"
-      : snapshot.activeSignals < bootstrapAlertCriteria.minActiveSignals
+    snapshot.activeSignals < bootstrapAlertCriteria.minActiveSignals
       ? "active signal count below bootstrap threshold"
       : !bootstrapAlertCriteria.freshnessLevels.includes(snapshot.freshnessLevel)
       ? "freshness below bootstrap threshold"
-      : snapshot.confidence < bootstrapAlertCriteria.minDirectionalConfidence
-      ? "directional confidence below bootstrap threshold"
       : null;
 
   logConditionEvaluation(
@@ -202,7 +197,10 @@ function getDirectionalConfidence(pairState, direction) {
     return Number(pairState.sellConfidence) || 0;
   }
 
-  return Number(pairState.confidenceScore) || 0;
+  return (
+    Number(pairState.confidenceScore) ||
+    Math.max(Number(pairState.buyConfidence) || 0, Number(pairState.sellConfidence) || 0)
+  );
 }
 
 function normalizeDirection(direction) {
@@ -226,10 +224,7 @@ function getBootstrapDirection(marketDirection, buyConfidence, sellConfidence) {
     return normalizedDirection;
   }
 
-  if (
-    buyConfidence >= bootstrapAlertCriteria.minDirectionalConfidence ||
-    sellConfidence >= bootstrapAlertCriteria.minDirectionalConfidence
-  ) {
+  if (buyConfidence !== sellConfidence) {
     return buyConfidence >= sellConfidence ? "BUY" : "SELL";
   }
 
