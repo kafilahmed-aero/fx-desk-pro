@@ -15,7 +15,7 @@ import {
 import { isExpiredTestSignal } from "./testSignalExpiry.js";
 import { normalizeTradingPair } from "../parsers/pairDetector.js";
 import { broadcastPairStateUpdate, broadcastSmartAlert } from "./liveUpdateService.js";
-import { evaluateSmartAlerts } from "./smartAlertEngine.js";
+import { evaluateSmartAlerts, markSmartAlertCooldown } from "./smartAlertEngine.js";
 import { logger } from "../utils/logger.js";
 
 const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60;
@@ -119,7 +119,11 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
   logPairUpdate(pairState, previousDirection);
   const alerts = evaluateSmartAlerts(pairState, previousSnapshot, now);
   broadcastPairStateUpdate(pairState);
-  alerts.forEach(broadcastSmartAlert);
+  alerts.forEach((alert) => {
+    if (broadcastSmartAlert(alert)) {
+      markSmartAlertCooldown(alert, now);
+    }
+  });
 
   return pairState;
 }

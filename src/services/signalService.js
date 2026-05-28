@@ -127,6 +127,14 @@ export function subscribeToConsensusEvents(onMessage, onError) {
   events.addEventListener("smart-alert", (event) => {
     const payload = parseSsePayload(event, "smart-alert");
     if (payload === null) return;
+    console.info(`${smartAlertDebugPrefix} smart-alert SSE received`, {
+      pair: payload?.pair,
+      direction: payload?.direction,
+      confidence: payload?.confidence,
+      activeSignals: payload?.activeSignals,
+      freshnessLevel: payload?.freshnessLevel,
+      payload,
+    });
     console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
       eventName: "smart-alert",
       pair: payload?.pair,

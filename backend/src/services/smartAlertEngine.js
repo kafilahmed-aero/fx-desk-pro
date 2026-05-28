@@ -127,9 +127,19 @@ function canNotify(alert, now) {
   const previousNotificationAt = cooldowns.get(key) || 0;
   const elapsedMs = now.getTime() - previousNotificationAt;
 
+  logger.info(smartAlertDebugPrefix, {
+    stage: "before cooldown check",
+    pair: alert.pair,
+    alertType: alert.type,
+    cooldownMs: bootstrapAlertCriteria.cooldownMs,
+    elapsedMs,
+    previousNotificationAt: previousNotificationAt || null,
+    mode: "bootstrap",
+  });
+
   if (elapsedMs < bootstrapAlertCriteria.cooldownMs) {
     logger.info(smartAlertDebugPrefix, {
-      stage: "alert condition evaluated",
+      stage: "after cooldown check",
       passed: false,
       reason: "cooldown active",
       pair: alert.pair,
@@ -141,7 +151,15 @@ function canNotify(alert, now) {
     return false;
   }
 
-  cooldowns.set(key, now.getTime());
+  logger.info(smartAlertDebugPrefix, {
+    stage: "after cooldown check",
+    passed: true,
+    pair: alert.pair,
+    alertType: alert.type,
+    cooldownMs: bootstrapAlertCriteria.cooldownMs,
+    elapsedMs,
+    mode: "bootstrap",
+  });
   logger.info(`${smartAlertDebugPrefix} alert emitted`, {
     pair: alert.pair,
     direction: alert.direction,
@@ -167,6 +185,30 @@ function canNotify(alert, now) {
     confidence: alert.confidence,
     activeSignals: alert.activeSignals,
     alertType: alert.type,
+  });
+  return true;
+}
+
+export function markSmartAlertCooldown(alert, now = new Date()) {
+  if (!alert?.pair) {
+    logger.info(smartAlertDebugPrefix, {
+      stage: "after cooldown timestamp update",
+      updated: false,
+      reason: "missing alert pair",
+      alertType: alert?.type,
+      mode: "bootstrap",
+    });
+    return false;
+  }
+
+  cooldowns.set(alert.pair, now.getTime());
+  logger.info(smartAlertDebugPrefix, {
+    stage: "after cooldown timestamp update",
+    updated: true,
+    pair: alert.pair,
+    alertType: alert.type,
+    cooldownAt: now.toISOString(),
+    mode: "bootstrap",
   });
   return true;
 }
