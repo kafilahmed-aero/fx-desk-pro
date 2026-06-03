@@ -12,6 +12,9 @@ import { logger } from "../utils/logger.js";
 let listenerTimer = null;
 let listenerRunning = false;
 let pollingInProgress = false;
+const discoveredChannels = new Set();
+const subscribedChannels = new Set();
+const activePollingChannels = new Set();
 const ingestionMetrics = {
   pollCycles: 0,
   reconnectAttempts: 0,
@@ -136,9 +139,12 @@ async function pollTelegramChannels() {
 async function fetchAndStoreChannelMessages(client, channel) {
   try {
     const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
+    logChannelDiscovered(channel, resolvedChannel);
     const messages = await client.getMessages(resolvedChannel.entity, {
       limit: config.telegram.pollLimit,
     });
+    logChannelSubscribed(channel, resolvedChannel);
+    logChannelPollingActive(channel, resolvedChannel);
     ingestionMetrics.messagesFetched += messages.length;
 
     for (const message of messages) {
@@ -158,6 +164,11 @@ async function fetchAndStoreChannelMessages(client, channel) {
         timestamp: formatMessageDate(message.date),
         fetchedAt: new Date().toISOString(),
       };
+      logger.info("telegram.channel_message_received", {
+        sourceChannel: resolvedChannel.channelLabel,
+        messageId: message.id,
+        messageTimestamp: rawMessage.timestamp,
+      });
       const testSignalMetadata = createTestSignalMetadata(rawMessage);
       rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
 
@@ -209,6 +220,57 @@ async function fetchAndStoreChannelMessages(client, channel) {
       error: error.message,
     });
   }
+}
+
+function logChannelDiscovered(channelRef, resolvedChannel) {
+  const key = resolvedChannel.channelLabel || channelRef;
+
+  if (discoveredChannels.has(key)) {
+    return;
+  }
+
+  discoveredChannels.add(key);
+  logger.info("telegram.channel_discovered", {
+    channelRef,
+    sourceChannel: resolvedChannel.channelLabel,
+    channelId: resolvedChannel.channelId,
+    channelUsername: resolvedChannel.channelUsername,
+    channelTitle: resolvedChannel.channelTitle,
+  });
+}
+
+function logChannelSubscribed(channelRef, resolvedChannel) {
+  const key = resolvedChannel.channelLabel || channelRef;
+
+  if (subscribedChannels.has(key)) {
+    return;
+  }
+
+  subscribedChannels.add(key);
+  logger.info("telegram.channel_subscribed", {
+    channelRef,
+    sourceChannel: resolvedChannel.channelLabel,
+    channelId: resolvedChannel.channelId,
+    channelUsername: resolvedChannel.channelUsername,
+    channelTitle: resolvedChannel.channelTitle,
+  });
+}
+
+function logChannelPollingActive(channelRef, resolvedChannel) {
+  const key = resolvedChannel.channelLabel || channelRef;
+
+  if (activePollingChannels.has(key)) {
+    return;
+  }
+
+  activePollingChannels.add(key);
+  logger.info("telegram.channel_polling_active", {
+    channelRef,
+    sourceChannel: resolvedChannel.channelLabel,
+    channelId: resolvedChannel.channelId,
+    channelUsername: resolvedChannel.channelUsername,
+    channelTitle: resolvedChannel.channelTitle,
+  });
 }
 
 function scheduleReconnect() {

@@ -145,12 +145,14 @@ export async function fetchRecentChannelMessages(
 
 export async function resolveTelegramChannelEntity(client, channelRef) {
   if (!isTelegramInviteLink(channelRef)) {
-    if (channelEntityCache.has(channelRef)) {
-      return channelEntityCache.get(channelRef);
+    const normalizedChannelRef = normalizePublicChannelRef(channelRef);
+
+    if (channelEntityCache.has(normalizedChannelRef)) {
+      return channelEntityCache.get(normalizedChannelRef);
     }
 
-    const resolved = await resolvePublicChannelEntity(client, channelRef);
-    channelEntityCache.set(channelRef, resolved);
+    const resolved = await resolvePublicChannelEntity(client, normalizedChannelRef);
+    channelEntityCache.set(normalizedChannelRef, resolved);
     return resolved;
   }
 
@@ -167,7 +169,9 @@ export async function resolveTelegramChannelEntity(client, channelRef) {
   const joinedEntity = await joinOrResolvePrivateInvite(client, inviteHash);
   const resolved = {
     entity: joinedEntity,
+    channelId: getEntityId(joinedEntity),
     channelLabel: createPrivateChannelLabel(joinedEntity),
+    channelUsername: getEntityUsername(joinedEntity),
     channelTitle: getEntityDisplayName(joinedEntity),
     isPrivateInvite: true,
   };
@@ -184,7 +188,9 @@ async function resolvePublicChannelEntity(client, channelRef) {
 
     return {
       entity,
-      channelLabel: channelRef,
+      channelId: getEntityId(entity),
+      channelLabel: getEntityUsername(entity) || channelRef,
+      channelUsername: getEntityUsername(entity),
       channelTitle: getEntityDisplayName(entity),
       isPrivateInvite: false,
     };
@@ -196,7 +202,9 @@ async function resolvePublicChannelEntity(client, channelRef) {
 
     return {
       entity: channelRef,
+      channelId: null,
       channelLabel: channelRef,
+      channelUsername: channelRef,
       channelTitle: channelRef,
       isPrivateInvite: false,
     };
@@ -303,6 +311,13 @@ function isTelegramInviteLink(value) {
   );
 }
 
+function normalizePublicChannelRef(value) {
+  const trimmedValue = String(value || "").trim();
+  const match = trimmedValue.match(/^(?:https?:\/\/)?t\.me\/([A-Za-z0-9_]+)\/?$/i);
+
+  return match?.[1] || trimmedValue.replace(/^@/, "");
+}
+
 function extractTelegramInviteHash(value) {
   const match = String(value || "").match(
     /(?:https?:\/\/)?t\.me\/(?:\+|joinchat\/)([A-Za-z0-9_-]+)/i
@@ -324,6 +339,16 @@ function getEntityDisplayName(entity) {
     entity?.id ||
     null
   );
+}
+
+function getEntityUsername(entity) {
+  return entity?.username || entity?.usernames?.[0]?.username || null;
+}
+
+function getEntityId(entity) {
+  const id = entity?.id || entity?.channelId || entity?.chatId || null;
+
+  return id === null ? null : String(id);
 }
 
 function formatTelegramError(error) {

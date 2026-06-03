@@ -8,6 +8,7 @@ const configuredClientUrls = (process.env.CLIENT_URL || "")
   .split(",")
   .map((url) => url.trim())
   .filter(Boolean);
+const requiredTelegramChannels = ["tradewithpatfree"];
 const clientUrls = [
   ...new Set([
     ...configuredClientUrls,
@@ -40,10 +41,15 @@ export const config = {
     apiHash: process.env.TELEGRAM_API_HASH || "",
     session: process.env.TELEGRAM_SESSION || "",
     testChannel: process.env.TELEGRAM_TEST_CHANNEL || "telegram",
-    channels: (process.env.TELEGRAM_CHANNELS || "")
-      .split(",")
-      .map((channel) => channel.trim())
-      .filter(Boolean),
+    channels: [
+      ...new Set([
+        ...(process.env.TELEGRAM_CHANNELS || "")
+          .split(",")
+          .map((channel) => channel.trim())
+          .filter(Boolean),
+        ...requiredTelegramChannels,
+      ]),
+    ],
     pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS) || 30000,
     pollLimit: Number(process.env.TELEGRAM_POLL_LIMIT) || 10,
   },
