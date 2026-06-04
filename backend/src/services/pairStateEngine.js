@@ -97,7 +97,6 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
     return null;
   }
 
-  const previousSnapshot = createPairStateSnapshot(pairState);
   const previousDirection = pairState.marketDirection;
 
   if (isNewTradeSignal(signal)) {
@@ -123,16 +122,6 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
 
 function isPrivateTestSignal(signal) {
   return String(signal?.channel || "").startsWith("private-test-channel:");
-}
-
-function createPairStateSnapshot(pairState) {
-  return {
-    marketDirection: pairState.marketDirection,
-    confidenceScore: pairState.confidenceScore,
-    buyConfidence: pairState.buyConfidence,
-    sellConfidence: pairState.sellConfidence,
-    signalCount: pairState.signalCount,
-  };
 }
 
 function isPairStateSignal(signal) {

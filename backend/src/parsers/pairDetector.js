@@ -137,8 +137,18 @@ function findHashtagPair(text) {
 }
 
 function findForexPair(text) {
-  for (const match of text.matchAll(/\b([A-Z]{3})\s*[/]?\s*([A-Z]{3})\b/g)) {
+  for (const match of text.matchAll(/\b([A-Z]{3})\s*\/\s*([A-Z]{3})\b/g)) {
     const [, base, quote] = match;
+
+    if (currencyCodes.has(base) && currencyCodes.has(quote) && base !== quote) {
+      return `${base}${quote}`;
+    }
+  }
+
+  for (const match of text.matchAll(/\b([A-Z]{6})\b/g)) {
+    const token = match[1];
+    const base = token.slice(0, 3);
+    const quote = token.slice(3);
 
     if (currencyCodes.has(base) && currencyCodes.has(quote) && base !== quote) {
       return `${base}${quote}`;
@@ -149,7 +159,16 @@ function findForexPair(text) {
 }
 
 function findQuotedCryptoPair(text) {
-  for (const match of text.matchAll(/\b([A-Z]{2,8})\s*[/]?\s*(USDT|USDC|USD|BTC|ETH)\b/g)) {
+  for (const match of text.matchAll(/\b([A-Z]{2,8})\s*\/\s*(USDT|USDC|USD|BTC|ETH)\b/g)) {
+    const [, base, quote] = match;
+    const compact = `${base}${quote}`;
+
+    if (!currencyCodes.has(base) && !ignoredIndexLikeTokens.has(compact)) {
+      return compact;
+    }
+  }
+
+  for (const match of text.matchAll(/\b([A-Z]{2,8})(USDT|USDC|USD|BTC|ETH)\b/g)) {
     const [, base, quote] = match;
     const compact = `${base}${quote}`;
 
@@ -164,8 +183,9 @@ function findQuotedCryptoPair(text) {
 function findIndexSymbol(text) {
   for (const match of text.matchAll(/\b([A-Z]{2,5}\d{2,3})\b/g)) {
     const symbol = match[1];
+    const nextCharacter = text[match.index + symbol.length];
 
-    if (!ignoredIndexLikeTokens.has(symbol) && !symbol.startsWith("TP")) {
+    if (!ignoredIndexLikeTokens.has(symbol) && !symbol.startsWith("TP") && nextCharacter !== "%") {
       return symbol;
     }
   }

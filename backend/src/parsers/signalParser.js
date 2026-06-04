@@ -622,7 +622,7 @@ function normalizeEntryRange(values) {
 function collectOpenTargets(text, targets) {
   const openTargetPattern = /\b(?:TP|TARGET)\s*\d*\b\s*[:@-]?\s*OPEN\+?\b/gi;
 
-  for (const match of text.matchAll(openTargetPattern)) {
+  if (openTargetPattern.test(text)) {
     addUniqueTarget(targets, "OPEN");
   }
 }

@@ -35,7 +35,7 @@ if (channels.length === 0) {
 }
 
 async function runLiveBetaValidation() {
-  let client = null;
+  let client;
 
   try {
     client = await connectTelegramWithSavedSession();

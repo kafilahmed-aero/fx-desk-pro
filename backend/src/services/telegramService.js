@@ -79,7 +79,9 @@ export async function connectTelegramClient() {
 
     return client;
   } catch (error) {
-    throw new Error(`Telegram connection failed: ${formatTelegramError(error)}`);
+    throw new Error(`Telegram connection failed: ${formatTelegramError(error)}`, {
+      cause: error,
+    });
   }
 }
 
@@ -104,7 +106,9 @@ export async function connectTelegramWithSavedSession() {
     await client.getMe();
     return client;
   } catch (error) {
-    throw new Error(`Saved Telegram session connection failed: ${formatTelegramError(error)}`);
+    throw new Error(`Saved Telegram session connection failed: ${formatTelegramError(error)}`, {
+      cause: error,
+    });
   }
 }
 
@@ -139,7 +143,9 @@ export async function fetchRecentChannelMessages(
 
     return messages;
   } catch (error) {
-    throw new Error(`Failed to fetch Telegram messages: ${formatTelegramError(error)}`);
+    throw new Error(`Failed to fetch Telegram messages: ${formatTelegramError(error)}`, {
+      cause: error,
+    });
   }
 }
 
@@ -228,7 +234,9 @@ async function joinOrResolvePrivateInvite(client, inviteHash) {
 
     if (!message.includes("USER_ALREADY_PARTICIPANT")) {
       if (message.includes("INVITE_REQUEST_SENT")) {
-        throw new Error("Private Telegram test channel requires admin approval");
+        throw new Error("Private Telegram test channel requires admin approval", {
+          cause: error,
+        });
       }
 
       throw error;
