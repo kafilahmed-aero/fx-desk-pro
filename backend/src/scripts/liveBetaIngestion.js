@@ -8,15 +8,9 @@ const { connectTelegramWithSavedSession } = await import("../services/telegramSe
 const { processRawMessage } = await import("../services/signalProcessingService.js");
 const { getConsensusSummary } = await import("../services/consensusService.js");
 
-const channelDisplayNames = {
-  FXTradingVision: "FXTradingVision",
-  UNITED_KINGS_SIGNALSl: "UNITED KINGS SIGNALS",
-  ForexGoldXauusdscalpingSignals: "Forex Gold XAUUSD Scalping Signals",
-  anabelsignals: "AnabelSignals",
-  AltSignals_Gold_Fx_Signals: "AltSignals Gold FX Signals",
-  forexgdp_forex_gdp: "Forex GDP",
-  ForexSignalsFactoryltd: "Forex Signals Factory",
-};
+const channelDisplayNames = Object.fromEntries(
+  config.telegram.channelConfigs.map((channel) => [channel.ref, channel.title || channel.ref])
+);
 
 const actionableClassifications = new Set([
   "NEW_SIGNAL",
@@ -34,7 +28,7 @@ console.log(`Configured channels: ${channels.join(", ") || "(none)"}`);
 console.log(`Fetch limit per channel: ${limit}`);
 
 if (channels.length === 0) {
-  console.log("No TELEGRAM_CHANNELS configured");
+  console.log("No monitored Telegram channels configured");
   process.exitCode = 1;
 } else {
   await runLiveBetaValidation();

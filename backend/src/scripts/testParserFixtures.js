@@ -3,6 +3,7 @@ import { parserFixtures } from "../parsers/parserFixtures.js";
 import { parseSignalMessage } from "../parsers/signalParser.js";
 
 let failed = 0;
+const coverage = createCoverageReport();
 
 for (const fixture of parserFixtures) {
   const classification = classifyMessage(fixture.rawMessage);
@@ -10,6 +11,7 @@ for (const fixture of parserFixtures) {
     ? parseSignalMessage(fixture.rawMessage, classification.classification)
     : null;
   const errors = validateFixture(fixture, classification.classification, parsed);
+  recordCoverage(coverage, classification.classification, parsed, errors);
 
   if (errors.length > 0) {
     failed += 1;
@@ -26,6 +28,8 @@ for (const fixture of parserFixtures) {
     console.log(`PASS ${fixture.name}`);
   }
 }
+
+printCoverageReport(coverage);
 
 if (failed > 0) {
   console.error(`${failed} parser fixture(s) failed`);
@@ -117,4 +121,65 @@ function assertParserMetadata(errors, parsed) {
 
 function isActionable(classification) {
   return ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL"].includes(classification);
+}
+
+function createCoverageReport() {
+  return {
+    totalFixtures: 0,
+    passedFixtures: 0,
+    failedFixtures: 0,
+    classificationCounts: {},
+    pairCounts: {},
+    extractedFields: {
+      pair: 0,
+      action: 0,
+      entry: 0,
+      targets: 0,
+      stopLoss: 0,
+    },
+  };
+}
+
+function recordCoverage(coverageReport, classification, parsed, errors) {
+  coverageReport.totalFixtures += 1;
+
+  if (errors.length === 0) {
+    coverageReport.passedFixtures += 1;
+  } else {
+    coverageReport.failedFixtures += 1;
+  }
+
+  coverageReport.classificationCounts[classification] =
+    (coverageReport.classificationCounts[classification] || 0) + 1;
+
+  if (parsed?.pair) {
+    coverageReport.pairCounts[parsed.pair] = (coverageReport.pairCounts[parsed.pair] || 0) + 1;
+  }
+
+  if (parsed?.pair) coverageReport.extractedFields.pair += 1;
+  if (parsed?.action) coverageReport.extractedFields.action += 1;
+  if (parsed?.entry !== null && parsed?.entry !== undefined) {
+    coverageReport.extractedFields.entry += 1;
+  }
+  if (parsed?.targets?.length > 0) coverageReport.extractedFields.targets += 1;
+  if (parsed?.stopLoss !== null && parsed?.stopLoss !== undefined) {
+    coverageReport.extractedFields.stopLoss += 1;
+  }
+}
+
+function printCoverageReport(coverageReport) {
+  console.log("Parser coverage report");
+  console.log(`- fixtures: ${coverageReport.passedFixtures}/${coverageReport.totalFixtures} passed`);
+  console.log(`- failed: ${coverageReport.failedFixtures}`);
+  console.log(`- classifications: ${formatCounts(coverageReport.classificationCounts)}`);
+  console.log(`- pairs: ${formatCounts(coverageReport.pairCounts)}`);
+  console.log(`- extracted fields: ${formatCounts(coverageReport.extractedFields)}`);
+}
+
+function formatCounts(counts) {
+  const entries = Object.entries(counts);
+
+  return entries.length === 0
+    ? "none"
+    : entries.map(([key, value]) => `${key}=${value}`).join(", ");
 }

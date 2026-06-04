@@ -290,4 +290,72 @@ export const parserFixtures = [
       hiddenStopLoss: true,
     },
   },
+  {
+    name: "top trading style audnzd hashtag labeled fields",
+    rawMessage: {
+      channel: "fixture-top-trading-style",
+      messageId: 18,
+      text: "AUD-NZD Free Signal!\n\nSell!!\n\n#AUDNZD\n\nStop Loss: 1.2139\nTake Profit: 1.2084\nEntry: 1.2117",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "AUDNZD",
+      action: "SELL",
+      entry: 1.2117,
+      targets: [1.2084],
+      stopLoss: 1.2139,
+    },
+  },
+  {
+    name: "top trading style eurusd buy bang entry price",
+    rawMessage: {
+      channel: "fixture-top-trading-style",
+      messageId: 19,
+      text: "EUR-USD Free Signal!\n\nBuy!\n\n#EURUSD\n\nTime Frame: H1\nEntry Price: 1.0842\nTarget: 1.0890\nSL: 1.0810\nJoin VIP: t.me/example",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "EURUSD",
+      action: "BUY",
+      entry: 1.0842,
+      targets: [1.089],
+      stopLoss: 1.081,
+    },
+  },
+  {
+    name: "top trading style gbpjpy sell entry at target label",
+    rawMessage: {
+      channel: "fixture-top-trading-style",
+      messageId: 20,
+      text: "GBP-JPY FREE SIGNAL\n\nSell\n\n#GBPJPY\n\nEntry @ 190.42\nTarget: 189.80\nStop Loss: 190.95\n✅ Free setup",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "GBPJPY",
+      action: "SELL",
+      entry: 190.42,
+      targets: [189.8],
+      stopLoss: 190.95,
+    },
+  },
+  {
+    name: "top trading style xauusd buy double bang tp sl",
+    rawMessage: {
+      channel: "fixture-top-trading-style",
+      messageId: 21,
+      text: "XAU-USD Free Signal!\n\nBuy!!\n\n#XAUUSD\n\nEntry: 2345.50\nTP: 2352.00\nSL: 2339.80\n🚀",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2345.5,
+      targets: [2352],
+      stopLoss: 2339.8,
+    },
+  },
 ];

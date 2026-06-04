@@ -55,13 +55,21 @@ Run a one-time login to save a reusable GramJS session:
 npm run telegram:test
 ```
 
-Then configure the background ingestion channels:
+Then configure the background ingestion channels in one place:
 
-```env
-TELEGRAM_CHANNELS=channel1,channel2,channel3
+```js
+// src/config/telegramChannels.js
+export const monitoredTelegramChannels = [
+  { ref: "channel1", username: "channel1", title: "Channel 1" },
+  { ref: "https://t.me/+privateInviteHash", username: null, title: "Private channel" },
+];
 ```
 
+Adding a channel should only require updating `src/config/telegramChannels.js`; no listener or parser code changes are needed.
+
 When the backend starts, the Telegram listener runs inside the backend process and polls configured channels on `TELEGRAM_POLL_INTERVAL_MS`. This keeps signal collection running even when no frontend user is online. Frontend users should later read stored and processed results from backend APIs.
+
+On startup, the listener validates each configured channel, logs whether it was found, joined, and accessible, samples recent messages for parser coverage stats, and emits a channel startup report with total, active, and inaccessible channel counts.
 
 Verify stored raw messages:
 

@@ -53,6 +53,12 @@ export function detectTradingPair(text = "") {
     }
   }
 
+  const hashtagPair = findHashtagPair(normalizedText);
+
+  if (hashtagPair) {
+    return hashtagPair;
+  }
+
   const aliasMatch = findAliasMatch(normalizedText);
 
   if (aliasMatch) {
@@ -113,6 +119,18 @@ function findStructuredPair(text) {
   const indexSymbol = findIndexSymbol(text);
   if (indexSymbol) {
     return indexSymbol;
+  }
+
+  return null;
+}
+
+function findHashtagPair(text) {
+  for (const match of text.matchAll(/#([A-Z0-9]{5,12})\b/g)) {
+    const pair = findStructuredPair(match[1]);
+
+    if (pair) {
+      return pair;
+    }
   }
 
   return null;

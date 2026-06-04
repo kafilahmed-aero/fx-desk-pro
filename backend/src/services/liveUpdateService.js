@@ -2,7 +2,6 @@ import { logger } from "../utils/logger.js";
 
 const clients = new Set();
 let nextClientId = 1;
-const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 export function subscribeToLiveUpdates(request, response) {
   const client = {
@@ -58,153 +57,14 @@ export function broadcastPairStateUpdate(pairState) {
     clientCount: clients.size,
   });
 
-  broadcastToLiveUpdateClients("pair-state-updated", payload);
+  broadcastLiveUpdateEvent("pair-state-updated", payload);
 
   logger.debug("realtime.pair_state_update_sent", {
     pair: pairState.pair,
   });
 }
 
-export function broadcastSmartAlert(alert) {
-  if (!alert?.pair) {
-    logger.info(smartAlertDebugPrefix, {
-      stage: "SSE broadcast sent",
-      sent: false,
-      reason: "missing alert pair",
-      alertType: alert?.type,
-    });
-    return false;
-  }
-
-  if (clients.size === 0) {
-    logger.info(smartAlertDebugPrefix, {
-      stage: "before SSE emit",
-      pair: alert.pair,
-      direction: alert.direction,
-      confidence: alert.confidence,
-      activeSignals: alert.activeSignals,
-      freshnessLevel: alert.freshnessLevel,
-      alertType: alert.type,
-      clientCount: 0,
-    });
-    logger.info(smartAlertDebugPrefix, {
-      stage: "after SSE emit",
-      sent: false,
-      reason: "no SSE clients connected",
-      pair: alert.pair,
-      direction: alert.direction,
-      confidence: alert.confidence,
-      activeSignals: alert.activeSignals,
-      freshnessLevel: alert.freshnessLevel,
-      alertType: alert.type,
-      clientCount: 0,
-      sentCount: 0,
-    });
-    logger.info(smartAlertDebugPrefix, {
-      stage: "SSE broadcast sent",
-      sent: false,
-      reason: "no SSE clients connected",
-      pair: alert.pair,
-      alertType: alert.type,
-    });
-    return false;
-  }
-
-  logSmartAlertSseStage("before SSE emit", alert, {
-    clientCount: clients.size,
-  });
-  logger.debug("realtime.smart_alert_broadcast", {
-    pair: alert.pair,
-    alertType: alert.type,
-    clientCount: clients.size,
-  });
-
-  const sentCount = broadcastToLiveUpdateClients("smart-alert", alert);
-  const sent = sentCount > 0;
-  logSmartAlertSseStage("after SSE emit", alert, {
-    sent,
-    clientCount: clients.size,
-    sentCount,
-  });
-
-  if (!sent) {
-    return false;
-  }
-
-  logger.info(`${smartAlertDebugPrefix} smart-alert SSE emit success`, {
-    pair: alert.pair,
-    direction: alert.direction,
-    confidence: alert.confidence,
-    activeSignals: alert.activeSignals,
-    freshnessLevel: alert.freshnessLevel,
-    alertType: alert.type,
-    sentCount,
-  });
-  logger.info(`${smartAlertDebugPrefix} smart-alert broadcasted to SSE clients`, {
-    pair: alert.pair,
-    direction: alert.direction,
-    confidence: alert.confidence,
-    activeSignals: alert.activeSignals,
-    freshnessLevel: alert.freshnessLevel,
-    alertType: alert.type,
-    clientCount: clients.size,
-    sentCount,
-  });
-  logger.info(`${smartAlertDebugPrefix} smart-alert SSE broadcasted`, {
-    pair: alert.pair,
-    direction: alert.direction,
-    confidence: alert.confidence,
-    activeSignals: alert.activeSignals,
-    alertType: alert.type,
-    clientCount: clients.size,
-  });
-  logger.info(smartAlertDebugPrefix, {
-    stage: "SSE broadcast sent",
-    sent: true,
-    pair: alert.pair,
-    direction: alert.direction,
-    confidence: alert.confidence,
-    activeSignals: alert.activeSignals,
-    alertType: alert.type,
-    clientCount: clients.size,
-  });
-  return true;
-}
-
-export function broadcastDebugSmartAlert(alert) {
-  logSmartAlertSseStage("before SSE emit", alert, {
-    bypassedCooldown: true,
-    clientCount: clients.size,
-  });
-
-  const sentCount = broadcastToLiveUpdateClients("smart-alert", alert);
-  const sent = sentCount > 0;
-
-  logSmartAlertSseStage("after SSE emit", alert, {
-    bypassedCooldown: true,
-    sent,
-    clientCount: clients.size,
-    sentCount,
-  });
-
-  if (sent) {
-    logger.info(`${smartAlertDebugPrefix} smart-alert broadcasted to SSE clients`, {
-      pair: alert.pair,
-      direction: alert.direction,
-      confidence: alert.confidence,
-      activeSignals: alert.activeSignals,
-      freshnessLevel: alert.freshnessLevel,
-      alertType: alert.type,
-      bypassedCooldown: true,
-      clientCount: clients.size,
-      sentCount,
-    });
-  }
-
-  return sent;
-}
-
-function broadcastToLiveUpdateClients(eventName, payload) {
+export function broadcastLiveUpdateEvent(eventName, payload) {
   let sentCount = 0;
 
   for (const client of clients) {
@@ -226,17 +86,4 @@ function sendEventToClient(client, eventName, payload) {
     clients.delete(client);
     return false;
   }
-}
-
-function logSmartAlertSseStage(stage, alert, details = {}) {
-  logger.info(smartAlertDebugPrefix, {
-    stage,
-    pair: alert?.pair,
-    direction: alert?.direction,
-    confidence: alert?.confidence,
-    activeSignals: alert?.activeSignals,
-    freshnessLevel: alert?.freshnessLevel,
-    alertType: alert?.type,
-    ...details,
-  });
 }

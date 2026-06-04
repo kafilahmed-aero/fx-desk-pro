@@ -1,0 +1,117 @@
+// Add or remove monitored Telegram channels here.
+// Runtime credentials and polling intervals still live in environment variables.
+export const monitoredTelegramChannels = [
+  {
+    ref: "FXTradingVision",
+    username: "FXTradingVision",
+    title: "FXTradingVision",
+  },
+  {
+    ref: "UNITED_KINGS_SIGNALSl",
+    username: "UNITED_KINGS_SIGNALSl",
+    title: "UNITED KINGS SIGNALS",
+  },
+  {
+    ref: "ForexGoldXauusdscalpingSignals",
+    username: "ForexGoldXauusdscalpingSignals",
+    title: "Forex Gold XAUUSD Scalping Signals",
+  },
+  {
+    ref: "anabelsignals",
+    username: "anabelsignals",
+    title: "AnabelSignals",
+  },
+  {
+    ref: "AltSignals_Gold_Fx_Signals",
+    username: "AltSignals_Gold_Fx_Signals",
+    title: "AltSignals Gold FX Signals",
+  },
+  {
+    ref: "forexgdp_forex_gdp",
+    username: "forexgdp_forex_gdp",
+    title: "Forex GDP",
+  },
+  {
+    ref: "ForexSignalsFactoryltd",
+    username: "ForexSignalsFactoryltd",
+    title: "Forex Signals Factory",
+  },
+  {
+    ref: "https://t.me/+Mau70cXi4N1kYWM9",
+    username: null,
+    title: "Private Telegram invite channel",
+  },
+  {
+    ref: "tradewithpatfree",
+    username: "tradewithpatfree",
+    title: "Trade with Pat 🆓 (FRN)",
+  },
+  {
+    ref: "UnitedSignalsFX",
+    username: "UnitedSignalsFX",
+    title: "UnitedSignalsFX",
+  },
+  {
+    ref: "prosignalsfxx",
+    username: "prosignalsfxx",
+    title: "prosignalsfxx",
+  },
+  {
+    ref: "elitetrading_signals",
+    username: "elitetrading_signals",
+    title: "elitetrading_signals",
+  },
+  {
+    ref: "gold_forex_signals_vip",
+    username: "gold_forex_signals_vip",
+    title: "gold_forex_signals_vip",
+  },
+  {
+    ref: "top_tradingsignals",
+    username: "top_tradingsignals",
+    title: "top_tradingsignals",
+  },
+  {
+    ref: "forexsignalstrialgroup",
+    username: "forexsignalstrialgroup",
+    title: "forexsignalstrialgroup",
+  },
+];
+
+validateMonitoredTelegramChannels(monitoredTelegramChannels);
+
+export function getMonitoredTelegramChannelRefs() {
+  return dedupeChannelRefs(monitoredTelegramChannels.map((channel) => channel.ref));
+}
+
+function validateMonitoredTelegramChannels(channels) {
+  if (!Array.isArray(channels)) {
+    throw new Error("monitoredTelegramChannels must be an array.");
+  }
+
+  const seenRefs = new Set();
+
+  for (const channel of channels) {
+    const ref = String(channel?.ref || "").trim();
+
+    if (!ref) {
+      throw new Error("Every monitored Telegram channel needs a non-empty ref.");
+    }
+
+    if (seenRefs.has(ref)) {
+      throw new Error(`Duplicate monitored Telegram channel ref: ${ref}`);
+    }
+
+    seenRefs.add(ref);
+  }
+}
+
+function dedupeChannelRefs(channelRefs) {
+  return [
+    ...new Set(
+      channelRefs
+        .map((channelRef) => String(channelRef || "").trim())
+        .filter(Boolean)
+    ),
+  ];
+}

@@ -1,5 +1,10 @@
 // src/config keeps environment-backed settings in one place.
 // Other files import this object instead of reading process.env directly.
+import {
+  getMonitoredTelegramChannelRefs,
+  monitoredTelegramChannels,
+} from "./telegramChannels.js";
+
 const nodeEnv = process.env.NODE_ENV || "development";
 const isProduction = nodeEnv === "production";
 const productionClientUrl = "https://fx-desk-pro.vercel.app";
@@ -8,7 +13,6 @@ const configuredClientUrls = (process.env.CLIENT_URL || "")
   .split(",")
   .map((url) => url.trim())
   .filter(Boolean);
-const requiredTelegramChannels = ["tradewithpatfree"];
 const clientUrls = [
   ...new Set([
     ...configuredClientUrls,
@@ -41,15 +45,8 @@ export const config = {
     apiHash: process.env.TELEGRAM_API_HASH || "",
     session: process.env.TELEGRAM_SESSION || "",
     testChannel: process.env.TELEGRAM_TEST_CHANNEL || "telegram",
-    channels: [
-      ...new Set([
-        ...(process.env.TELEGRAM_CHANNELS || "")
-          .split(",")
-          .map((channel) => channel.trim())
-          .filter(Boolean),
-        ...requiredTelegramChannels,
-      ]),
-    ],
+    channelConfigs: monitoredTelegramChannels,
+    channels: getMonitoredTelegramChannelRefs(),
     pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS) || 30000,
     pollLimit: Number(process.env.TELEGRAM_POLL_LIMIT) || 10,
   },
@@ -247,11 +244,13 @@ function validateProductionConfig() {
 
   if (config.telegram.channels.length > 0) {
     if (!config.telegram.apiId || !config.telegram.apiHash) {
-      errors.push("TELEGRAM_API_ID and TELEGRAM_API_HASH are required when TELEGRAM_CHANNELS is set.");
+      errors.push(
+        "TELEGRAM_API_ID and TELEGRAM_API_HASH are required when monitored Telegram channels are configured."
+      );
     }
 
     if (!config.telegram.session) {
-      errors.push("TELEGRAM_SESSION is required when TELEGRAM_CHANNELS is set.");
+      errors.push("TELEGRAM_SESSION is required when monitored Telegram channels are configured.");
     }
   }
 

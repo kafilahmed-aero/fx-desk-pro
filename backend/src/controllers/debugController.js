@@ -1,4 +1,8 @@
-import { broadcastDebugSmartAlert } from "../services/liveUpdateService.js";
+import { broadcastLiveUpdateEvent } from "../services/liveUpdateService.js";
+import { markSmartAlertCooldown } from "../services/smartAlertEngine.js";
+import { logger } from "../utils/logger.js";
+
+const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 export function emitDebugSmartAlertController(_request, response) {
   const alert = {
@@ -15,12 +19,29 @@ export function emitDebugSmartAlertController(_request, response) {
     body: "Direction: BUY\nConfidence: 99%\nSignals: 2",
   };
 
-  const sent = broadcastDebugSmartAlert(alert);
+  const sentCount = broadcastLiveUpdateEvent("smart-alert", alert);
+  const sent = sentCount > 0;
+
+  if (sent) {
+    logger.info(`${smartAlertDebugPrefix} smart-alert pushed into live SSE stream`, {
+      pair: alert.pair,
+      direction: alert.direction,
+      confidence: alert.confidence,
+      activeSignals: alert.activeSignals,
+      freshnessLevel: alert.freshnessLevel,
+      alertType: alert.type,
+      eventName: "smart-alert",
+      sentCount,
+      route: "/api/debug/emit-smart-alert",
+    });
+    markSmartAlertCooldown(alert);
+  }
 
   response.json({
     ok: sent,
     event: "smart-alert",
-    bypassedCooldown: true,
+    pushedToLiveSseStream: sent,
+    sentCount,
     alert,
   });
 }
