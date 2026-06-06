@@ -20,28 +20,28 @@ function calculateAgeMinutes(timestamp, now) {
 }
 
 function getFreshnessByAge(ageMinutes) {
-  if (ageMinutes <= 5) {
+  if (ageMinutes <= 15) {
     return {
       weight: 1,
       level: "VERY_FRESH",
     };
   }
 
-  if (ageMinutes <= 15) {
+  if (ageMinutes <= 45) {
     return {
       weight: 0.8,
       level: "FRESH",
     };
   }
 
-  if (ageMinutes <= 30) {
+  if (ageMinutes <= 90) {
     return {
       weight: 0.5,
       level: "AGING",
     };
   }
 
-  if (ageMinutes < 60) {
+  if (ageMinutes < 180) {
     return {
       weight: 0.2,
       level: "WEAK",
