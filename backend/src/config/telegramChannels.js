@@ -76,6 +76,11 @@ export const monitoredTelegramChannels = [
     username: "forexsignalstrialgroup",
     title: "forexsignalstrialgroup",
   },
+  {
+    ref: "BrianTradingForex",
+    username: "BrianTradingForex",
+    title: "BrianTradingForex",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);
