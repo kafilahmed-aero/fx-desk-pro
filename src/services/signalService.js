@@ -10,6 +10,7 @@ import {
 } from "./apiClient";
 
 const API_DELAY = 900;
+const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 const simulateRequest = (data, delay = API_DELAY) =>
   new Promise((resolve) => {
