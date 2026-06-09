@@ -81,7 +81,7 @@ export async function getLiveMarketOverview(options = {}) {
   return payload.overview || null;
 }
 
-export function subscribeToConsensusEvents(onMessage, onError) {
+export function subscribeToConsensusEvents(onMessage, onError, onNewSignal) {
   console.info(`${smartAlertDebugPrefix} SSE subscription initializing`, {
     path: "/consensus/events",
     smartAlertEventName: "smart-alert",
@@ -124,6 +124,15 @@ export function subscribeToConsensusEvents(onMessage, onError) {
     onMessage?.(payload);
   });
 
+  events.addEventListener("new-signal-alert", (event) => {
+    const payload = parseSsePayload(event, "new-signal-alert");
+    if (payload === null) return;
+    console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
+      eventName: "new-signal-alert",
+      payload,
+    });
+    onNewSignal?.(payload);
+  });
 
   events.onerror = (event) => {
     console.warn(`${smartAlertDebugPrefix} SSE connection error`, {

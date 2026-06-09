@@ -8,6 +8,8 @@ import {
 } from "./signalIntelligenceMetadata.js";
 import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { logger } from "../utils/logger.js";
+import { broadcastLiveUpdateEvent } from "./liveUpdateService.js";
+
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
 // This is intentionally transparent: every decision is logged for parser tuning.
@@ -94,6 +96,28 @@ export async function processRawMessage(rawMessage) {
       updateContext: storedParsedSignal.updateContext,
       stored: storeResult.stored,
     });
+
+    if (
+      storeResult.stored &&
+      storedParsedSignal.classification === "NEW_SIGNAL" &&
+      storedParsedSignal.pair &&
+      storedParsedSignal.action
+    ) {
+      try {
+        broadcastLiveUpdateEvent("new-signal-alert", {
+          pair: storedParsedSignal.pair,
+          action: storedParsedSignal.action,
+          messageKey: `${storedParsedSignal.channel}:${storedParsedSignal.messageId}`,
+          timestamp: storedParsedSignal.createdAt || new Date().toISOString(),
+        });
+      } catch (err) {
+        logger.error("notification.broadcast_failed", {
+          pair: storedParsedSignal.pair,
+          action: storedParsedSignal.action,
+          error: err.message,
+        });
+      }
+    }
 
     return {
       classification: classificationResult.classification,
