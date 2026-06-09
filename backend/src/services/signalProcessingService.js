@@ -97,6 +97,14 @@ export async function processRawMessage(rawMessage) {
       stored: storeResult.stored,
     });
 
+    if (storedParsedSignal.classification === "NEW_SIGNAL") {
+      console.log(`[NOTIFICATION TRACE] Parser: classified as ${storedParsedSignal.classification}, pair: ${storedParsedSignal.pair}, action: ${storedParsedSignal.action}`);
+    }
+
+    if (storeResult.stored && storedParsedSignal.classification === "NEW_SIGNAL") {
+      console.log("[NOTIFICATION TRACE] Stored: stored in database");
+    }
+
     console.log("[PARSER OUTPUT]", {
       pair: storedParsedSignal.pair,
       action: storedParsedSignal.action,
@@ -120,6 +128,7 @@ export async function processRawMessage(rawMessage) {
       storedParsedSignal.action
     ) {
       console.log("[NOTIFICATION BROADCASTING]", storedParsedSignal.pair, storedParsedSignal.action);
+      console.log("[NOTIFICATION TRACE] Broadcast: broadcastLiveUpdateEvent new-signal-alert emitted");
       try {
         broadcastLiveUpdateEvent("new-signal-alert", {
           pair: storedParsedSignal.pair,

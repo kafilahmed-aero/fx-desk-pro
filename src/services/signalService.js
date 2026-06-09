@@ -129,6 +129,9 @@ export function subscribeToConsensusEvents(onMessage, onError, onNewSignal) {
     const payload = parseSsePayload(event, "new-signal-alert");
     if (payload === null) return;
     console.log("[SSE EVENT]", event.type, payload);
+    if (payload.pair === "EURUSD" && payload.action === "BUY") {
+      console.log("[NOTIFICATION TRACE] SSE Received:", payload);
+    }
     console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
       eventName: "new-signal-alert",
       payload,

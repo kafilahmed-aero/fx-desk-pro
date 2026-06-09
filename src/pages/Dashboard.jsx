@@ -165,6 +165,9 @@ function Dashboard() {
           localStorage.setItem(lockKey, tabId);
         } catch {
           console.log("[NOTIFICATION FIRING]", newSignal);
+          if (pair === "EURUSD" && action === "BUY") {
+            console.log("[NOTIFICATION TRACE] Notification Fired:", newSignal);
+          }
           new Notification("FX Desk Pro", {
             body: `${pair} ${action}`,
           });
@@ -177,6 +180,9 @@ function Dashboard() {
             const winner = localStorage.getItem(lockKey);
             if (winner === tabId) {
               console.log("[NOTIFICATION FIRING]", newSignal);
+              if (pair === "EURUSD" && action === "BUY") {
+                console.log("[NOTIFICATION TRACE] Notification Fired:", newSignal);
+              }
               new Notification("FX Desk Pro", {
                 body: `${pair} ${action}`,
               });
