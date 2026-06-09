@@ -117,6 +117,7 @@ export function subscribeToConsensusEvents(onMessage, onError, onNewSignal) {
   events.addEventListener("pair-state-updated", (event) => {
     const payload = parseSsePayload(event, "pair-state-updated");
     if (payload === null) return;
+    console.log("[SSE EVENT]", event.type, payload);
     console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
       eventName: "pair-state-updated",
       payload,
@@ -127,6 +128,7 @@ export function subscribeToConsensusEvents(onMessage, onError, onNewSignal) {
   events.addEventListener("new-signal-alert", (event) => {
     const payload = parseSsePayload(event, "new-signal-alert");
     if (payload === null) return;
+    console.log("[SSE EVENT]", event.type, payload);
     console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
       eventName: "new-signal-alert",
       payload,

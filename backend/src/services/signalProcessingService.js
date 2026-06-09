@@ -97,12 +97,29 @@ export async function processRawMessage(rawMessage) {
       stored: storeResult.stored,
     });
 
+    console.log("[PARSER OUTPUT]", {
+      pair: storedParsedSignal.pair,
+      action: storedParsedSignal.action,
+      classification: storedParsedSignal.classification,
+      entry: storedParsedSignal.entry,
+      targets: storedParsedSignal.targets,
+      stopLoss: storedParsedSignal.stopLoss
+    });
+
+    console.log(
+      "[NOTIFICATION GATE]",
+      storedParsedSignal.classification,
+      storedParsedSignal.pair,
+      storedParsedSignal.action
+    );
+
     if (
       storeResult.stored &&
       storedParsedSignal.classification === "NEW_SIGNAL" &&
       storedParsedSignal.pair &&
       storedParsedSignal.action
     ) {
+      console.log("[NOTIFICATION BROADCASTING]", storedParsedSignal.pair, storedParsedSignal.action);
       try {
         broadcastLiveUpdateEvent("new-signal-alert", {
           pair: storedParsedSignal.pair,

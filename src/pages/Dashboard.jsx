@@ -164,6 +164,7 @@ function Dashboard() {
         try {
           localStorage.setItem(lockKey, tabId);
         } catch {
+          console.log("[NOTIFICATION FIRING]", newSignal);
           new Notification("FX Desk Pro", {
             body: `${pair} ${action}`,
           });
@@ -175,6 +176,7 @@ function Dashboard() {
           try {
             const winner = localStorage.getItem(lockKey);
             if (winner === tabId) {
+              console.log("[NOTIFICATION FIRING]", newSignal);
               new Notification("FX Desk Pro", {
                 body: `${pair} ${action}`,
               });
@@ -205,6 +207,7 @@ function Dashboard() {
               }, 1000);
             }
           } catch {
+            console.log("[NOTIFICATION FIRING]", newSignal);
             new Notification("FX Desk Pro", {
               body: `${pair} ${action}`,
             });
