@@ -61,6 +61,9 @@ function getFreshPairStates() {
 }
 
 function formatPairIntelligence(pairState) {
+  const activeSignals = (pairState.activeSignals || []).filter(canAffectConsensus);
+  const channelCount = new Set(activeSignals.map(s => s.sourceChannel).filter(Boolean)).size;
+
   return {
     pair: pairState.pair,
     marketDirection: pairState.marketDirection,
@@ -70,6 +73,7 @@ function formatPairIntelligence(pairState) {
     buyWeight: pairState.buyWeight,
     sellWeight: pairState.sellWeight,
     signalCount: pairState.signalCount,
+    channelCount,
     freshnessLevel: pairState.freshnessLevel,
     buyZones: pairState.buyZones,
     sellZones: pairState.sellZones,

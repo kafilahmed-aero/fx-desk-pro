@@ -8,6 +8,7 @@ import {
   RefreshCw,
   RadioTower,
 } from "lucide-react";
+import PairCard from "../components/PairCard";
 import {
   getActiveOpportunities,
   getLiveMarketOverview,
@@ -241,6 +242,41 @@ function Dashboard() {
             {error}
           </div>
         )}
+
+        {isLoading ? (
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[0, 1, 2, 3].map((index) => (
+              <div
+                key={index}
+                className="animate-pulse rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-xl shadow-slate-200/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]"
+              >
+                <div className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-700"></div>
+                <div className="mt-5 h-8 w-28 rounded bg-slate-200 dark:bg-slate-700"></div>
+                <div className="mt-5 h-3 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                <div className="mt-5 flex justify-between">
+                  <div className="h-3 w-14 rounded bg-slate-200 dark:bg-slate-700"></div>
+                  <div className="h-3 w-14 rounded bg-slate-200 dark:bg-slate-700"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : opportunities.length > 0 ? (
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {opportunities.map((opportunity) => (
+              <PairCard
+                key={opportunity.pair}
+                name={opportunity.pair}
+                signal={`${Math.max(opportunity.buyConfidence, opportunity.sellConfidence)}% ${
+                  opportunity.buyConfidence >= opportunity.sellConfidence ? "BUY" : "SELL"
+                }`}
+                color={opportunity.buyConfidence >= opportunity.sellConfidence ? "green" : "red"}
+                percentage={Math.max(opportunity.buyConfidence, opportunity.sellConfidence)}
+                signalCount={opportunity.signalCount}
+                channelsCount={opportunity.channelCount}
+              />
+            ))}
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220]/90 dark:shadow-black/10">
