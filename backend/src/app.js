@@ -6,7 +6,6 @@ import consensusRoutes from "./routes/consensusRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import rawMessageRoutes from "./routes/rawMessageRoutes.js";
 import signalRoutes from "./routes/signalRoutes.js";
-import debugRoutes from "./routes/debugRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 
 // app.js owns the Express application setup.
@@ -33,7 +32,6 @@ export function createApp() {
   app.use("/api/auth", authRoutes);
   app.use("/api/raw-messages", requireAuth, rawMessageRoutes);
   app.use("/api/signals", requireAuth, signalRoutes);
-  app.use("/api/debug", requireAuth, debugRoutes);
   app.use("/api/consensus", requireAuth, consensusRoutes);
 
   return app;

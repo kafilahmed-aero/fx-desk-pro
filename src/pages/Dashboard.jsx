@@ -47,25 +47,6 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
 
-  const [permissionState, setPermissionState] = useState(
-    "Notification" in window ? Notification.permission : "unsupported"
-  );
-
-  async function handleTestNotification() {
-    const status = "Notification" in window ? Notification.permission : "unsupported";
-    console.info("[NOTIFICATION TEST] permission status", status);
-    if ("Notification" in window) {
-      if (Notification.permission !== "granted") {
-        const result = await Notification.requestPermission();
-        setPermissionState(result);
-      }
-      new Notification("FX Desk Pro", {
-        body: "EURUSD BUY"
-      });
-      console.info("[NOTIFICATION TEST] notification fired");
-    }
-  }
-
   useEffect(() => {
     let isMounted = true;
     let isRequestActive = false;
@@ -165,9 +146,6 @@ function Dashboard() {
           localStorage.setItem(lockKey, tabId);
         } catch {
           console.log("[NOTIFICATION FIRING]", newSignal);
-          if (pair === "EURUSD" && action === "BUY") {
-            console.log("[NOTIFICATION TRACE] Notification Fired:", newSignal);
-          }
           new Notification("FX Desk Pro", {
             body: `${pair} ${action}`,
           });
@@ -180,9 +158,6 @@ function Dashboard() {
             const winner = localStorage.getItem(lockKey);
             if (winner === tabId) {
               console.log("[NOTIFICATION FIRING]", newSignal);
-              if (pair === "EURUSD" && action === "BUY") {
-                console.log("[NOTIFICATION TRACE] Notification Fired:", newSignal);
-              }
               new Notification("FX Desk Pro", {
                 body: `${pair} ${action}`,
               });
@@ -238,21 +213,6 @@ function Dashboard() {
 
   return (
     <div className="animate-dashboard-in space-y-4 pb-8">
-      {/* Developer Tools (Notifications) */}
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-4 dark:border-white/10 dark:bg-[#0B1220]/50">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Developer Tools (Notifications)</h3>
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          <p className="text-slate-600 dark:text-slate-300">
-            Permission Status: <span className="font-bold underline">{permissionState}</span>
-          </p>
-          <button
-            onClick={handleTestNotification}
-            className="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 font-semibold text-white shadow hover:bg-blue-700 transition"
-          >
-            🔔 Test Notification
-          </button>
-        </div>
-      </div>
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220] dark:shadow-black/10 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
