@@ -1,5 +1,6 @@
 import { normalizeMessageText } from "./messageNormalizer.js";
 import { hasTradingPair } from "./pairDetector.js";
+import { parseSignalMessage } from "./signalParser.js";
 
 const signalKeywords = [
   "BUY",
@@ -152,9 +153,66 @@ export function classifyMessage(rawMessage = {}) {
 
   const text = normalized.compactText;
   const reasons = getClassificationReasons(text, rawMessage);
-  const classification = getClassification(reasons);
+  let classification = getClassification(reasons, text);
+
+  // Complete Trade Setup Dominance Rule
+  if (classification === "PROMO" || classification === "NOISE" || classification === "MARKET_ANALYSIS") {
+    const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
+    const hasPair = !!parsed.pair;
+    const hasAction = !!parsed.action;
+    const hasEntry = parsed.entry !== null && parsed.entry !== undefined;
+    const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
+    const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
+
+    if (hasPair && hasAction && hasEntry && hasTP && hasSL) {
+      classification = "NEW_SIGNAL";
+    }
+  }
+
+  if (classification === "NEW_SIGNAL") {
+    const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
+    if (!isValidActiveSignal(parsed, rawMessage)) {
+      if (reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
+        classification = "PROMO";
+      } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS/i.test(normalized.originalText)) {
+        classification = "MARKET_ANALYSIS";
+      } else {
+        classification = "NOISE";
+      }
+    }
+  }
 
   return createResult(classification, normalized, reasons);
+}
+
+function isValidActiveSignal(parsed, rawMessage) {
+  if (!parsed.pair || !parsed.action) return false;
+
+  const hasEntry = parsed.entry !== null && parsed.entry !== undefined;
+  const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
+
+  if (hasEntry && hasTP) {
+    return true;
+  }
+
+  // If partial, check for analysis/promo indicators
+  const text = String(rawMessage.text || "").toUpperCase();
+
+  const analysisIndicators = [
+    "PREDICTION", "PREDICT", "FORECAST", "OUTLOOK", "COMMENTARY", "ANALYSIS", "BIAS", "OPINION"
+  ];
+  const hasAnalysisKeywords = analysisIndicators.some(kw => text.includes(kw));
+
+  const promoIndicators = [
+    "WIN RATE", "ACCURACY", "VIP PRIVILEGES", "SUBSCRIBE", "JOIN NOW", "SIGNALS A DAY", "WINRATE"
+  ];
+  const hasPromoKeywords = promoIndicators.some(kw => text.includes(kw));
+
+  if (hasAnalysisKeywords || hasPromoKeywords) {
+    return false;
+  }
+
+  return true;
 }
 
 function createResult(classification, normalized, reasons) {
@@ -172,7 +230,22 @@ function createResult(classification, normalized, reasons) {
   };
 }
 
-function getClassification(reasons) {
+function getClassification(reasons, text = "") {
+  const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
+  
+  const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text)) &&
+                           reasons.marketAnalysisScore < 2 &&
+                           !(reasons.hasTradingPair && reasons.hasAction && reasons.signalScore >= 3);
+
+  const isExplicitUpdate = explicitUpdatePattern.test(text) || hasGenericUpdate;
+
+  if (isExplicitUpdate) {
+    if (reasons.resultScore >= 2 && reasons.resultScore >= reasons.updateScore) {
+      return "RESULT_SIGNAL";
+    }
+    return "UPDATE_SIGNAL";
+  }
+
   if (reasons.resultScore >= 2 && reasons.resultScore >= reasons.signalScore) {
     return "RESULT_SIGNAL";
   }

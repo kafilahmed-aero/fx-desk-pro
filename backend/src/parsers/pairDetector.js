@@ -59,13 +59,13 @@ export function detectTradingPair(text = "") {
     return hashtagPair;
   }
 
-  const aliasMatch = findAliasMatch(normalizedText);
+  const structuredPair = findStructuredPair(normalizedText);
 
-  if (aliasMatch) {
-    return aliasMatch;
+  if (structuredPair) {
+    return structuredPair;
   }
 
-  return findStructuredPair(normalizedText);
+  return findAliasMatch(normalizedText);
 }
 
 export function hasTradingPair(text = "") {

@@ -10,7 +10,6 @@ import {
 } from "./apiClient";
 
 const API_DELAY = 900;
-const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
 
 const simulateRequest = (data, delay = API_DELAY) =>
   new Promise((resolve) => {
@@ -124,31 +123,6 @@ export function subscribeToConsensusEvents(onMessage, onError) {
     onMessage?.(payload);
   });
 
-  events.addEventListener("smart-alert", (event) => {
-    const payload = parseSsePayload(event, "smart-alert");
-    if (payload === null) return;
-    console.info(`${smartAlertDebugPrefix} smart-alert SSE received`, {
-      pair: payload?.pair,
-      direction: payload?.direction,
-      confidence: payload?.confidence,
-      activeSignals: payload?.activeSignals,
-      freshnessLevel: payload?.freshnessLevel,
-      payload,
-    });
-    console.info(`${smartAlertDebugPrefix} incoming SSE payload`, {
-      eventName: "smart-alert",
-      pair: payload?.pair,
-      alertType: payload?.type,
-      confidence: payload?.confidence,
-      payload,
-    });
-    console.info(`${smartAlertDebugPrefix} smart-alert SSE event detected`, {
-      pair: payload?.pair,
-      alertType: payload?.type,
-      confidence: payload?.confidence,
-    });
-    onMessage?.(payload);
-  });
 
   events.onerror = (event) => {
     console.warn(`${smartAlertDebugPrefix} SSE connection error`, {

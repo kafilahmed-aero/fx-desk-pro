@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Activity,
   BarChart3,
-  Bell,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -203,13 +202,6 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 >
                   <UserCircle size={17} />
                   Account Settings
-                </button>
-                <button
-                  type="button"
-                  className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99] dark:text-slate-200 dark:hover:bg-white/10"
-                >
-                  <Bell size={17} />
-                  Notifications
                 </button>
                 <button
                   type="button"

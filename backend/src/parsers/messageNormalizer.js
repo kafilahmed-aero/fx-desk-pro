@@ -9,7 +9,9 @@ export function normalizeMessageText(text = "") {
   const cleanedText = originalText
     .normalize("NFKC")
     .replace(/\r\n/g, "\n")
-    .replace(/[|,_]+/g, " ")
+    .replace(/[|_]+/g, " ")
+    .replace(/(?<=\d),(?=\d)/g, ".")
+    .replace(/,/g, " ")
     .replace(repeatedSymbolPattern, "$1")
     .replace(/#+/g, " ")
     .replace(emojiAndSymbolsPattern, " ")

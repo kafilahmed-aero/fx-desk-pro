@@ -84,7 +84,7 @@ function runEntityExtractionStage(normalized) {
     entryInfo: extractEntry(normalized, action),
     pipTargets: extractPipTargets(normalized.compactText),
     targets: extractTargets(normalized.compactText),
-    stopLoss: extractStopLoss(normalized.compactText),
+    stopLoss: extractStopLoss(normalized),
     hiddenStopLoss: extractHiddenStopLoss(normalized.compactText),
     timeframe: extractTimeframe(normalized.compactText),
     managementAction: extractManagementAction(normalized.compactText),
@@ -211,17 +211,21 @@ function extractBias(text) {
 }
 
 function extractEntry(normalized, action) {
+  const pairPrefix = `(?:\\s*#?\\s*(?:${createPairTokenPattern().source}))?`;
   const labeledPatterns = [
-    new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA)?\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
-    new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
   ];
 
-  for (const pattern of labeledPatterns) {
-    const match = normalized.compactText.match(pattern);
-    const info = entryFromMatch(match);
+  for (const line of normalized.upperLines) {
+    for (const pattern of labeledPatterns) {
+      const match = line.match(pattern);
+      const info = entryFromMatch(match);
 
-    if (info.entry !== null) {
-      return info;
+      if (info.entry !== null) {
+        return info;
+      }
     }
   }
 
@@ -265,8 +269,9 @@ function extractEntry(normalized, action) {
 }
 
 function extractTargets(text) {
+  const cleanedText = String(text || "").replace(/\b\d+(?:\.\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?\s*%/g, " ");
   const targets = [];
-  const groupedTargets = text.match(/\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,80}/gi) || [];
+  const groupedTargets = cleanedText.match(/\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,80}/gi) || [];
 
   for (const group of groupedTargets) {
     if (containsPipTarget(group)) {
@@ -288,12 +293,12 @@ function extractTargets(text) {
   ];
 
   for (const pattern of directPatterns) {
-    collectPatternNumbers(text, pattern, targets, {
+    collectPatternNumbers(cleanedText, pattern, targets, {
       skipPipTargets: true,
     });
   }
 
-  collectOpenTargets(text, targets);
+  collectOpenTargets(cleanedText, targets);
 
   return targets;
 }
@@ -311,7 +316,7 @@ function extractPipTargets(text) {
   return pipTargets;
 }
 
-function extractStopLoss(text) {
+function extractStopLoss(normalized) {
   const patterns = [
     new RegExp(`\\bSL\\b\\s*(?:PRICE)?\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSL(?=${numberPattern})\\s*(${numberPattern})`, "i"),
@@ -320,7 +325,14 @@ function extractStopLoss(text) {
     new RegExp(`\\bINVALID(?:ATION)?\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
   ];
 
-  return findFirstNumberByPattern(text, patterns);
+  for (const line of normalized.upperLines) {
+    const val = findFirstNumberByPattern(line, patterns);
+    if (val !== null) {
+      return val;
+    }
+  }
+
+  return null;
 }
 
 function extractHiddenStopLoss(text) {
@@ -414,7 +426,7 @@ function extractResultAction(text) {
     };
   }
 
-  if (/\b(PROFIT BOOKED|WIN|WON)\b/.test(text)) {
+  if (/\b(PROFIT BOOKED|WIN(?!\s*RATE)|WON)\b/.test(text)) {
     return {
       type: "PROFIT_BOOKED",
       targetIndex: null,
