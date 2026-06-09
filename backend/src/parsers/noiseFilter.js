@@ -153,7 +153,19 @@ export function classifyMessage(rawMessage = {}) {
 
   const text = normalized.compactText;
   const reasons = getClassificationReasons(text, rawMessage);
-  let classification = getClassification(reasons, text);
+  
+  const teaserPatterns = [
+    /shared\s+in\s+(?:the\s+)?VIP/i,
+    /claim\s+your\s+spot/i,
+    /unlock\s+all\s+(?:the\s+)?trades/i,
+    /premium\s+members/i,
+    /signal\s+sent\s+to\s+VIP/i,
+    /click\s+here/i,
+    /buy\s+or\s+sell/i
+  ];
+  const isTeaser = teaserPatterns.some((pattern) => pattern.test(normalized.originalText));
+  
+  let classification = isTeaser ? "PROMO" : getClassification(reasons, text);
 
   // Complete Trade Setup Dominance Rule
   if (classification === "PROMO" || classification === "NOISE" || classification === "MARKET_ANALYSIS") {
@@ -172,10 +184,17 @@ export function classifyMessage(rawMessage = {}) {
   if (classification === "NEW_SIGNAL") {
     const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
     if (!isValidActiveSignal(parsed, rawMessage)) {
-      if (reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
+      const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
+      const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text));
+      
+      if (explicitUpdatePattern.test(text) || hasGenericUpdate || reasons.updateScore >= 1) {
+        classification = "UPDATE_SIGNAL";
+      } else if (isTeaser || reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
         classification = "PROMO";
       } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS/i.test(normalized.originalText)) {
         classification = "MARKET_ANALYSIS";
+      } else if (reasons.newsScore >= 1) {
+        classification = "NEWS";
       } else {
         classification = "NOISE";
       }
@@ -188,14 +207,22 @@ export function classifyMessage(rawMessage = {}) {
 function isValidActiveSignal(parsed, rawMessage) {
   if (!parsed.pair || !parsed.action) return false;
 
-  const hasEntry = parsed.entry !== null && parsed.entry !== undefined;
+  const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
   const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
+  const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
 
+  const paramCount = (hasEntry ? 1 : 0) + (hasTP ? 1 : 0) + (hasSL ? 1 : 0);
+
+  if (paramCount < 2) {
+    return false;
+  }
+
+  // Fast-path: if it has both entry and TP, it's accepted without checking promo/analysis keywords
   if (hasEntry && hasTP) {
     return true;
   }
 
-  // If partial, check for analysis/promo indicators
+  // If partial (e.g. has Entry + SL or TP + SL, but missing TP or Entry), check for analysis/promo indicators
   const text = String(rawMessage.text || "").toUpperCase();
 
   const analysisIndicators = [
