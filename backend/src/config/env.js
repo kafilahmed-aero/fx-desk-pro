@@ -50,6 +50,10 @@ export const config = {
     pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS) || 30000,
     pollLimit: Number(process.env.TELEGRAM_POLL_LIMIT) || 10,
   },
+  telegramAlert: {
+    botToken: process.env.TELEGRAM_ALERT_BOT_TOKEN || "",
+    channelId: process.env.TELEGRAM_ALERT_CHANNEL_ID || "",
+  },
   pipeline: {
     processingConcurrency: Math.max(
       1,

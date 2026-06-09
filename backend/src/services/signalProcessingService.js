@@ -9,6 +9,7 @@ import {
 import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { logger } from "../utils/logger.js";
 import { broadcastLiveUpdateEvent } from "./liveUpdateService.js";
+import { sendTelegramAlert } from "./telegramAlertService.js";
 
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
@@ -103,11 +104,13 @@ export async function processRawMessage(rawMessage) {
       storedParsedSignal.pair &&
       storedParsedSignal.action
     ) {
+      const messageKey = `${storedParsedSignal.channel}:${storedParsedSignal.messageId}`;
+
       try {
         broadcastLiveUpdateEvent("new-signal-alert", {
           pair: storedParsedSignal.pair,
           action: storedParsedSignal.action,
-          messageKey: `${storedParsedSignal.channel}:${storedParsedSignal.messageId}`,
+          messageKey,
           timestamp: storedParsedSignal.createdAt || new Date().toISOString(),
         });
       } catch (err) {
@@ -117,6 +120,18 @@ export async function processRawMessage(rawMessage) {
           error: err.message,
         });
       }
+
+      // Fire-and-forget Telegram alert (never blocks signal processing)
+      sendTelegramAlert(
+        storedParsedSignal.pair,
+        storedParsedSignal.action,
+        messageKey
+      ).catch((err) => {
+        logger.error("telegram_alert.unhandled_error", {
+          messageKey,
+          error: err.message,
+        });
+      });
     }
 
     return {
