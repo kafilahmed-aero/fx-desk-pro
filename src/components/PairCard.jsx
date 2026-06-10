@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, ShieldCheck } from "lucide-react";
 
-function PairCard({ name, signal, color, percentage, signalCount, channelsCount }) {
+function PairCard({ name, signal, color, percentage }) {
   const isStrongSignal = percentage >= 70;
 
   return (
@@ -61,13 +61,6 @@ function PairCard({ name, signal, color, percentage, signalCount, channelsCount 
           }`}
           style={{ width: `${percentage}%` }}
         ></div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
-        <span>Signals: {signalCount}</span>
-        {channelsCount !== undefined && channelsCount !== null && (
-          <span>Channels: {channelsCount}</span>
-        )}
       </div>
     </div>
   );
