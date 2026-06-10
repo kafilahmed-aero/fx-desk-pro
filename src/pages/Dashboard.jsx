@@ -122,7 +122,7 @@ function Dashboard() {
           return;
         }
 
-        const { pair, action, messageKey } = newSignal;
+        const { pair, action, signalCount, messageKey } = newSignal;
         if (!pair || !action || !messageKey) return;
 
         let notified;
@@ -148,7 +148,7 @@ function Dashboard() {
         } catch {
           console.log("[NOTIFICATION FIRING]", newSignal);
           new Notification("FX Desk Pro", {
-            body: `${pair} ${action}`,
+            body: `${pair} ${action}\nSignals: ${signalCount || 1}`,
           });
           return;
         }
@@ -160,7 +160,7 @@ function Dashboard() {
             if (winner === tabId) {
               console.log("[NOTIFICATION FIRING]", newSignal);
               new Notification("FX Desk Pro", {
-                body: `${pair} ${action}`,
+                body: `${pair} ${action}\nSignals: ${signalCount || 1}`,
               });
 
               let currentNotified;
@@ -191,7 +191,7 @@ function Dashboard() {
           } catch {
             console.log("[NOTIFICATION FIRING]", newSignal);
             new Notification("FX Desk Pro", {
-              body: `${pair} ${action}`,
+              body: `${pair} ${action}\nSignals: ${signalCount || 1}`,
             });
           }
         }, delay);

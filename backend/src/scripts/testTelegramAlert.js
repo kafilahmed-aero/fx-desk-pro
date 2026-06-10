@@ -7,11 +7,12 @@ async function runTest() {
   
   const testPair = "EURUSD";
   const testAction = "BUY";
+  const testSignalCount = 4;
   const testMessageKey = `test_channel:${Date.now()}`;
 
-  console.log(`Sending alert for ${testPair} ${testAction} with key ${testMessageKey}...`);
+  console.log(`Sending alert for ${testPair} ${testAction} (signals: ${testSignalCount}) with key ${testMessageKey}...`);
   
-  await sendTelegramAlert(testPair, testAction, testMessageKey);
+  await sendTelegramAlert(testPair, testAction, testSignalCount, testMessageKey);
   
   console.log("Test execution completed. Check logs above and verify the message reaches the channel.");
 }

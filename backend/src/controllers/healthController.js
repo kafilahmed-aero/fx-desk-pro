@@ -34,9 +34,9 @@ import { processRawMessage } from "../services/signalProcessingService.js";
 
 export async function triggerTelegramTestAlert(request, response) {
   try {
-    const { pair = "EURUSD", action = "BUY" } = request.body || {};
+    const { pair = "EURUSD", action = "BUY", signalCount = 4 } = request.body || {};
     const testMessageKey = `test_endpoint:${Date.now()}`;
-    await sendTelegramAlert(pair, action, testMessageKey);
+    await sendTelegramAlert(pair, action, signalCount, testMessageKey);
     response.json({ success: true, messageKey: testMessageKey });
   } catch (err) {
     logger.error("api.test_telegram_alert_failed", { error: err.message });

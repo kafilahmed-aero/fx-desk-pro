@@ -10,6 +10,7 @@ import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { logger } from "../utils/logger.js";
 import { broadcastLiveUpdateEvent } from "./liveUpdateService.js";
 import { sendTelegramAlert } from "./telegramAlertService.js";
+import { getPairState } from "./pairStateEngine.js";
 
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
@@ -106,10 +107,25 @@ export async function processRawMessage(rawMessage) {
     ) {
       const messageKey = `${storedParsedSignal.channel}:${storedParsedSignal.messageId}`;
 
+      // Retrieve the updated pair state to get the signal count
+      let signalCount = 1;
+      try {
+        const pairState = getPairState(storedParsedSignal.pair);
+        if (pairState && typeof pairState.signalCount === "number") {
+          signalCount = pairState.signalCount;
+        }
+      } catch (err) {
+        logger.error("telegram_alert.get_pair_state_failed", {
+          pair: storedParsedSignal.pair,
+          error: err.message,
+        });
+      }
+
       try {
         broadcastLiveUpdateEvent("new-signal-alert", {
           pair: storedParsedSignal.pair,
           action: storedParsedSignal.action,
+          signalCount,
           messageKey,
           timestamp: storedParsedSignal.createdAt || new Date().toISOString(),
         });
@@ -125,6 +141,7 @@ export async function processRawMessage(rawMessage) {
       sendTelegramAlert(
         storedParsedSignal.pair,
         storedParsedSignal.action,
+        signalCount,
         messageKey
       ).catch((err) => {
         logger.error("telegram_alert.unhandled_error", {

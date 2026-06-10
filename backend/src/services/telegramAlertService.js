@@ -7,23 +7,26 @@ import { logger } from "../utils/logger.js";
  * 
  * @param {string} pair - Forex pair (e.g. EURUSD)
  * @param {string} action - Action (e.g. BUY, SELL)
+ * @param {number} signalCount - Current active signal count
  * @param {string} messageKey - Signal unique message key (e.g. channel:messageId)
  */
-export async function sendTelegramAlert(pair, action, messageKey) {
+export async function sendTelegramAlert(pair, action, signalCount, messageKey) {
   const { botToken, channelId } = config.telegramAlert;
+  const displayCount = signalCount || 1;
 
   if (!botToken || !channelId) {
     logger.warn("telegram_alert.skipped_missing_config", {
       messageKey,
       pair,
       action,
+      signalCount: displayCount,
       hasBotToken: !!botToken,
       hasChannelId: !!channelId,
     });
     return;
   }
 
-  const message = `🚨 FX DESK PRO ALERT\n\nPAIR: ${pair}\nACTION: ${action}`;
+  const message = `🚨 FX DESK PRO ALERT\n\nPAIR: ${pair}\nACTION: ${action}\nSIGNALS: ${displayCount}`;
 
   try {
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -44,6 +47,7 @@ export async function sendTelegramAlert(pair, action, messageKey) {
         messageKey,
         pair,
         action,
+        signalCount: displayCount,
         status: response.status,
         error: errorText,
       });
@@ -54,12 +58,14 @@ export async function sendTelegramAlert(pair, action, messageKey) {
       messageKey,
       pair,
       action,
+      signalCount: displayCount,
     });
   } catch (error) {
     logger.error("telegram_alert.send_error", {
       messageKey,
       pair,
       action,
+      signalCount: displayCount,
       error: error.message,
     });
   }
