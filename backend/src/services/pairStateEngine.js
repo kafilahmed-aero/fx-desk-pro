@@ -189,7 +189,20 @@ function recalculatePairState(pairState, now) {
   pairState.entryZone = primaryZones.entryZone;
   pairState.tpZone = primaryZones.tpZone;
   pairState.slZone = primaryZones.slZone;
-  pairState.lastUpdated = new Date().toISOString();
+
+  const contributingSignals = pairState.activeSignals.filter((signal) =>
+    canAffectConsensus(signal)
+  );
+  if (contributingSignals.length > 0) {
+    const newestSignal = contributingSignals.reduce((newest, current) => {
+      const currentVal = getSignalTime(current);
+      const newestVal = getSignalTime(newest);
+      return currentVal > newestVal ? current : newest;
+    }, contributingSignals[0]);
+    pairState.lastUpdated = newestSignal.timestamp;
+  } else {
+    pairState.lastUpdated = null;
+  }
 
   logZoneUpdates(pairState, previousZones);
   logConfidenceUpdates(pairState, previousConfidence);
