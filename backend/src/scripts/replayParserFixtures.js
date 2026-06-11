@@ -346,7 +346,7 @@ function compareWithBaseline(baselineReport, currentReport) {
         return null;
       }
 
-      const changedFields = Object.entries(fixture.checkedFields).filter(
+      const changedFields = Object.entries(fixture.checkedFields || {}).filter(
         ([field, value]) => !valuesMatch(value, baselineFixture.checkedFields?.[field])
       );
 

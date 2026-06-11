@@ -10,6 +10,7 @@ export function normalizeMessageText(text = "") {
     .normalize("NFKC")
     .replace(/\r\n/g, "\n")
     .replace(/[|_]+/g, " ")
+    .replace(/(\d),(?=\d{3}(?:\.\d+)?(?:\D|$))/g, "$1")
     .replace(/(?<=\d),(?=\d)/g, ".")
     .replace(/,/g, " ")
     .replace(repeatedSymbolPattern, "$1")
