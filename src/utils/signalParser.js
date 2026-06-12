@@ -7,8 +7,8 @@ export const mockTelegramMessages = [
 
 const SIGNAL_PATTERN = /\b(BUY|SELL)\b/i;
 const PAIR_PATTERN = /\b(GOLD|XAUUSD|EURUSD|GBPUSD|USDJPY|USDCHF|USDCAD|AUDUSD|NZDUSD)\b/i;
-const ENTRY_PATTERN = /(?:entry|entry price|@)\s*:?\s*([0-9]+(?:\.[0-9]+)?)/i;
-const TARGET_PATTERN = /(?:target|target price|tp)\s*:?\s*([0-9]+(?:\.[0-9]+)?)/i;
+const ENTRY_PATTERN = /(?:entry|entry price|entry point|entry level|@)\s*:?\s*([0-9]+(?:[,.][0-9]+)?)/i;
+const TARGET_PATTERN = /(?:target|target price|tp)\s*:?\s*([0-9]+(?:[,.][0-9]+)?)/i;
 const CONFIDENCE_PATTERN = /(?:confidence|confidence score|score)\s*:?\s*([0-9]{1,3})%?/i;
 
 export const parseSignalType = (message) => {

@@ -213,7 +213,7 @@ function extractBias(text) {
 function extractEntry(normalized, action) {
   const pairPrefix = `(?:\\s*#?\\s*(?:${createPairTokenPattern().source}))?`;
   const labeledPatterns = [
-    new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT|LEVEL)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
   ];

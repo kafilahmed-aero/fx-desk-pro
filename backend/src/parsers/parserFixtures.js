@@ -444,4 +444,21 @@ export const parserFixtures = [
       stopLoss: 18700,
     },
   },
+  {
+    name: "entry level and target level parsing with commas",
+    rawMessage: {
+      channel: "fixture-test",
+      messageId: 106,
+      text: "GOLD Trade Direction: short\nEntry Level: 1,670.23\nTarget Level: 1,632.13\nStop Loss: 1,695.58",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "SELL",
+      entry: 1670.23,
+      targets: [1632.13],
+      stopLoss: 1695.58,
+    },
+  },
 ];
