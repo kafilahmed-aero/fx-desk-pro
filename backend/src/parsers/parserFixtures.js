@@ -907,4 +907,58 @@ export const parserFixtures = [
       parsed: false,
     },
   },
+  {
+    name: "double slash entry range buy case",
+    rawMessage: {
+      channel: "fixture-test",
+      messageId: 120,
+      text: "XAUUSD BUY 4335//4330\nTP 4350\nSL 4320",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4335,
+      entryRange: [4330, 4335],
+      targets: [4350],
+      stopLoss: 4320,
+    },
+  },
+  {
+    name: "double slash entry range sell case",
+    rawMessage: {
+      channel: "fixture-test",
+      messageId: 121,
+      text: "XAUUSD SELL 4351//4354\nTP 4330\nSL 4370",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "SELL",
+      entry: 4351,
+      entryRange: [4351, 4354],
+      targets: [4330],
+      stopLoss: 4370,
+    },
+  },
+  {
+    name: "double slash entry range xauusd buy case",
+    rawMessage: {
+      channel: "fixture-test",
+      messageId: 122,
+      text: "XAUUSD BUY 3340//3335\nTP 3360\nSL 3320",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 3340,
+      entryRange: [3335, 3340],
+      targets: [3360],
+      stopLoss: 3320,
+    },
+  },
 ];

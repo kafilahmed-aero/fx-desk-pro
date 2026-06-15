@@ -250,11 +250,11 @@ function extractEntry(normalized, action) {
   const pairPattern = createPairTokenPattern().source;
   const pairPrefix = `(?:\\s*#?\\s*(?:${pairPattern}))?`;
   const labeledPatterns = [
-    new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT|LEVEL)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
-    new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
-    new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
-    new RegExp(`(?:(?:${pairPattern})\\s*\\b(?:BUY|SELL|LONG|SHORT)\\b|\\b(?:BUY|SELL|LONG|SHORT)\\b\\s*(?:${pairPattern}))\\s*@?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
-    new RegExp(`\\b(?:PIVOT\\s+LEVEL|PIVOT\\s+POINT|KEY\\s+LEVEL|PSYCHOLOGICAL\\s+LEVEL|MARKET\\s+IS\\s+TRADING\\s+ON|PRICE\\s+IS\\s+COILING\\s+AROUND|INSTRUMENT\\s+TESTS|ASSET\\s+IS\\s+APPROACHING)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT|LEVEL)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`(?:(?:${pairPattern})\\s*\\b(?:BUY|SELL|LONG|SHORT)\\b|\\b(?:BUY|SELL|LONG|SHORT)\\b\\s*(?:${pairPattern}))\\s*@?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:PIVOT\\s+LEVEL|PIVOT\\s+POINT|KEY\\s+LEVEL|PSYCHOLOGICAL\\s+LEVEL|MARKET\\s+IS\\s+TRADING\\s+ON|PRICE\\s+IS\\s+COILING\\s+AROUND|INSTRUMENT\\s+TESTS|ASSET\\s+IS\\s+APPROACHING)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
   ];
 
   for (const line of normalized.upperLines) {
@@ -601,7 +601,7 @@ function extractAtEntry(normalized) {
       continue;
     }
 
-    const match = line.match(new RegExp(`@\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"));
+    const match = line.match(new RegExp(`@\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"));
     const info = entryFromMatch(match);
 
     if (info.entry !== null) {
@@ -655,7 +655,7 @@ function getEntryRangeFromLine(line, numbers, entry) {
 
   if (
     numbers.length >= 2 &&
-    new RegExp(`${numberPattern}\\s*(?:[-/]|TO|AND|\\s)\\s*${numberPattern}`).test(line)
+    new RegExp(`${numberPattern}\\s*(?://|[-/]|TO|AND|\\s)\\s*${numberPattern}`).test(line)
   ) {
     return normalizeEntryRange(numbers.slice(0, 2));
   }
