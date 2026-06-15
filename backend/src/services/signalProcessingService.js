@@ -11,6 +11,7 @@ import { logger } from "../utils/logger.js";
 import { broadcastLiveUpdateEvent } from "./liveUpdateService.js";
 import { sendTelegramAlert } from "./telegramAlertService.js";
 import { getPairState } from "./pairStateEngine.js";
+import { initializeOutcome, processSignalUpdate } from "./signalOutcomeEngine.js";
 
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
@@ -68,6 +69,28 @@ export async function processRawMessage(rawMessage) {
     };
     const storeResult = await storeParsedSignal(parsedSignal);
     const storedParsedSignal = storeResult.signal;
+
+    // Trigger Signal Outcome tracking if signal is successfully stored
+    if (storeResult.stored) {
+      if (storedParsedSignal.classification === "NEW_SIGNAL") {
+        await initializeOutcome(storedParsedSignal).catch((err) => {
+          logger.error("outcome_initialization.failed", {
+            messageKey,
+            error: err.message,
+          });
+        });
+      } else if (
+        storedParsedSignal.classification === "UPDATE_SIGNAL" ||
+        storedParsedSignal.classification === "RESULT_SIGNAL"
+      ) {
+        await processSignalUpdate(storedParsedSignal).catch((err) => {
+          logger.error("outcome_update.failed", {
+            messageKey,
+            error: err.message,
+          });
+        });
+      }
+    }
 
     logger.info("signal.parsed", {
       messageKey,
