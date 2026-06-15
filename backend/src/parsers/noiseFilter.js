@@ -219,18 +219,21 @@ export function classifyMessage(rawMessage = {}) {
   
   // Parse signal first to apply Setup Setup Dominance check
   const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
-  const hasPair = !!parsed.pair;
+  const hasPair = !!parsed.pair && parsed.pair !== "unknown";
   const hasAction = !!parsed.action;
   const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
   const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
   const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
 
-  const isSignal = hasPair && hasAction && hasEntry && (hasTP || hasSL);
+  const isSignal = hasPair && hasAction && hasEntry && hasTP && hasSL;
   const containsPromoKeywords = isPromoByKeywords(normalized.originalText);
+  const hasResultPhrase = /\b(?:stopped out|stoped out|tp hit|target hit|closed in profit|closed in loss|result|setup failed)\b/i.test(normalized.originalText);
 
   let classification;
 
-  if (isSignal) {
+  if (hasResultPhrase) {
+    classification = "RESULT_SIGNAL";
+  } else if (isSignal) {
     // Dominance Rule: Signals override promo keywords
     classification = "NEW_SIGNAL";
   } else if (containsPromoKeywords) {
@@ -251,26 +254,24 @@ export function classifyMessage(rawMessage = {}) {
   }
 
   // Complete Trade Setup Dominance Rule (Double check override)
-  if (isSignal) {
+  if (isSignal && !hasResultPhrase) {
     classification = "NEW_SIGNAL";
   }
 
   if (classification === "NEW_SIGNAL" && !isSignal) {
-    if (!isValidActiveSignal(parsed, rawMessage)) {
-      const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
-      const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text));
-      
-      if (explicitUpdatePattern.test(text) || hasGenericUpdate || reasons.updateScore >= 1) {
-        classification = "UPDATE_SIGNAL";
-      } else if (isPromoByKeywords(normalized.originalText) || reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
-        classification = "PROMO";
-      } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS/i.test(normalized.originalText)) {
-        classification = "MARKET_ANALYSIS";
-      } else if (reasons.newsScore >= 1) {
-        classification = "NEWS";
-      } else {
-        classification = "NOISE";
-      }
+    const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
+    const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text));
+    
+    if (explicitUpdatePattern.test(text) || hasGenericUpdate || reasons.updateScore >= 1) {
+      classification = "UPDATE_SIGNAL";
+    } else if (isPromoByKeywords(normalized.originalText) || reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
+      classification = "PROMO";
+    } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS/i.test(normalized.originalText)) {
+      classification = "MARKET_ANALYSIS";
+    } else if (reasons.newsScore >= 1) {
+      classification = "NEWS";
+    } else {
+      classification = "NOISE";
     }
   }
 
@@ -483,7 +484,7 @@ function getUpdateScore(text) {
     score += 2;
   }
 
-  if (/\b(PARTIAL\s+(PROFIT|PROFITS|CLOSE)|SECURE\s+PARTIAL|TAKE\s+(SOME\s+)?PROFITS?|TAKE\s+PARTIAL|BOOK\s+\d{1,3}\s*%)\b/.test(text)) {
+  if (/\b(PARTIAL\s+(PROFIT|PROFITS|CLOSE)|SECURE\s+PARTIAL|TAKE\s+SOME\s+PROFITS?|TAKE\s+PROFITS|TAKE\s+PARTIAL|BOOK\s+\d{1,3}\s*%)\b/.test(text)) {
     score += 2;
   }
 

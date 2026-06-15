@@ -57,6 +57,23 @@ export async function processRawMessage(rawMessage) {
       rawMessage,
       classificationResult.classification
     );
+
+    if (!extractedSignal.pair || extractedSignal.pair === "unknown") {
+      logger.info("message.skipped", {
+        messageKey,
+        normalizedText: classificationResult.normalized.normalizedText,
+        classification: classificationResult.classification,
+        reason: "unknown_or_invalid_pair",
+        reasons: classificationResult.reasons,
+      });
+
+      return {
+        classification: classificationResult.classification,
+        parsedSignal: null,
+        stored: false,
+      };
+    }
+
     const parsedSignal = {
       ...extractedSignal,
       ...createTestSignalMetadata(rawMessage),

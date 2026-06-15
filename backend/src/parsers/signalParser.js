@@ -1,5 +1,5 @@
 import { normalizeMessageText } from "./messageNormalizer.js";
-import { createPairTokenPattern, detectTradingPair, detectRawPair, normalizePair } from "./pairDetector.js";
+import { createPairTokenPattern, detectTradingPair, detectRawPair, normalizePair, RECOGNIZED_ASSETS } from "./pairDetector.js";
 import { logger } from "../utils/logger.js";
 
 const numberPattern = "\\d{1,6}(?:\\.\\d{1,5})?";
@@ -14,16 +14,29 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
   try {
     const normalized = runNormalizationStage(rawMessage);
     const entities = runEntityExtractionStage(normalized);
+
+    const hasPair = !!entities.pair && entities.pair !== "unknown";
+    const hasAction = !!entities.action;
+    const hasEntry = (entities.entryInfo.entry !== null && entities.entryInfo.entry !== undefined) || (entities.entryInfo.entryRange && entities.entryInfo.entryRange.length > 0);
+    const hasTP = (entities.targets && entities.targets.length > 0) || (entities.pipTargets && entities.pipTargets.length > 0);
+    const hasSL = (entities.stopLoss !== null && entities.stopLoss !== undefined) || entities.hiddenStopLoss;
+
+    const isEligible = hasPair && hasAction && hasEntry && hasTP && hasSL;
+    let finalClassification = parserClassification;
+    if (parserClassification === "NEW_SIGNAL" && !isEligible) {
+      finalClassification = "NOISE";
+    }
+
     const interpretation = runSignalInterpretationStage(
       entities,
       rawMessage,
-      parserClassification
+      finalClassification
     );
     const confidence = runConfidenceScoringStage(
       entities,
       interpretation,
       normalized,
-      parserClassification
+      finalClassification
     );
 
     const parsedSignal = {
@@ -45,7 +58,7 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
       rawText: normalized.originalText,
       normalizedText: normalized.normalizedText,
       extractionConfidence: confidence.extractionConfidence,
-      parserClassification,
+      parserClassification: finalClassification,
       managementAction: entities.managementAction,
       resultAction: entities.resultAction,
       lifecycleEvent: interpretation.lifecycleEvent,
@@ -184,13 +197,13 @@ function extractPair(text) {
 
   if (rawPair) {
     const pair = normalizePair(rawPair, true);
-    if (pair) {
+    if (pair && RECOGNIZED_ASSETS.has(pair)) {
       logger.debug("parser.pair_detected", { pair });
+      return pair;
     }
-    return pair;
   }
 
-  return null;
+  return "unknown";
 }
 
 function extractAction(text, bias = null) {
@@ -420,7 +433,7 @@ function extractManagementAction(text) {
     /\bBOOK\b[\s\S]{0,24}\b(PARTIAL|PROFIT|PROFITS)\b/.test(text) ||
     /\bCLOSE\s*[\s\S]{0,24}\b(PARTIAL|HALF|PROFIT|PROFITS)\b/.test(text) ||
     /\bCLOSE\s*[\s\S]{0,24}\d{1,3}\s*%/.test(text) ||
-    /\b(PARTIAL\s+(PROFIT|PROFITS|CLOSE)|SECURE\s+PARTIAL|TAKE\s+(SOME\s+)?PROFITS?|TAKE\s+PARTIAL|BOOK\s+\d{1,3}\s*%)\b/.test(text)
+    /\b(PARTIAL\s+(PROFIT|PROFITS|CLOSE)|SECURE\s+PARTIAL|TAKE\s+SOME\s+PROFITS?|TAKE\s+PROFITS|TAKE\s+PARTIAL|BOOK\s+\d{1,3}\s*%)\b/.test(text)
   ) {
     return "CLOSE_PARTIAL";
   }

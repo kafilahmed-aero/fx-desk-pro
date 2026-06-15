@@ -1,5 +1,12 @@
 import { logger } from "../utils/logger.js";
 
+export const RECOGNIZED_ASSETS = new Set([
+  "XAUUSD", "XAGUSD", "EURUSD", "GBPUSD", "USDJPY",
+  "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "BTCUSD",
+  "ETHUSD", "SOLUSD", "US30", "US100", "SPX500",
+  "GER40", "WTI", "BRENT", "NATGAS"
+]);
+
 const aliasMap = new Map([
   // Metals
   ["GOLD", "XAUUSD"],
@@ -185,6 +192,7 @@ export function isValidPairCandidate(candidate) {
   if (ignoredPairWords.has(prefix)) return false;
   if (cleaned.endsWith("ERS") || cleaned.endsWith("ING")) return false;
   if (["BUY", "SELL", "LONG", "SHORT"].includes(cleaned)) return false;
+  if (/^[0-9.‐–——-\s]+$/.test(cleaned)) return false;
   return true;
 }
 
@@ -280,7 +288,8 @@ export function createPairTokenPattern() {
 }
 
 export function normalizeTradingPair(pair) {
-  return normalizePair(pair, false) || String(pair || "").toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
+  const norm = normalizePair(pair, false);
+  return norm && RECOGNIZED_ASSETS.has(norm) ? norm : "unknown";
 }
 
 export function normalizePair(pairStr, shouldLog = false) {
@@ -289,6 +298,10 @@ export function normalizePair(pairStr, shouldLog = false) {
 
   let cleaned = original.toUpperCase().replace(/#/g, "").replace(/\//g, "").trim();
   cleaned = cleaned.replace(/\s+/g, " ");
+
+  if (/^[0-9.‐–——-\s]+$/.test(cleaned)) {
+    return null;
+  }
 
   let normalized = cleaned;
 
@@ -316,15 +329,18 @@ export function normalizePair(pairStr, shouldLog = false) {
       if (shouldLog) {
         logger.info("unknown_pair_alias", { pair: original });
       }
-      return cleaned;
+      return null;
     }
   }
 
-  if (shouldLog && normalized !== original) {
-    logger.info("pair_normalized", { original, normalized });
+  if (normalized && RECOGNIZED_ASSETS.has(normalized)) {
+    if (shouldLog && normalized !== original) {
+      logger.info("pair_normalized", { original, normalized });
+    }
+    return normalized;
   }
 
-  return normalized;
+  return null;
 }
 
 function findHashtagPair(text) {

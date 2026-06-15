@@ -30,11 +30,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "XAUUSD",
-      action: "BUY",
-      entry: null,
-      signalStatus: "ACTIVE",
+      classification: "NOISE",
+      parsed: false,
     },
   },
   {
@@ -299,12 +296,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "AUDNZD",
-      action: "SELL",
-      entry: 1.2117,
-      targets: [1.2084],
-      stopLoss: 1.2139,
+      classification: "NOISE",
+      parsed: false,
     },
   },
   {
@@ -333,12 +326,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "GBPJPY",
-      action: "SELL",
-      entry: 190.42,
-      targets: [189.8],
-      stopLoss: 190.95,
+      classification: "MARKET_ANALYSIS",
+      parsed: false,
     },
   },
   {
@@ -811,12 +800,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "GBPJPY",
-      action: "SELL",
-      entry: 200.50,
-      targets: [199.00],
-      stopLoss: 201.50,
+      classification: "NOISE",
+      parsed: false,
     },
   },
   {
@@ -828,12 +813,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "AUDJPY",
-      action: "BUY",
-      entry: 98.20,
-      targets: [99.50],
-      stopLoss: 97.50,
+      classification: "NOISE",
+      parsed: false,
     },
   },
   {
@@ -879,12 +860,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "QQQ",
-      action: "BUY",
-      entry: 450.00,
-      targets: [460.00],
-      stopLoss: 445.00,
+      classification: "NOISE",
+      parsed: false,
     },
   },
   {
@@ -913,12 +890,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "TSLA",
-      action: "BUY",
-      entry: 180.00,
-      targets: [195.00],
-      stopLoss: 170.00,
+      classification: "NOISE",
+      parsed: false,
     },
   },
   {
@@ -930,12 +903,8 @@ export const parserFixtures = [
       timestamp: now,
     },
     expected: {
-      classification: "NEW_SIGNAL",
-      pair: "AAPL",
-      action: "SELL",
-      entry: 210.00,
-      targets: [200.00],
-      stopLoss: 218.00,
+      classification: "NOISE",
+      parsed: false,
     },
   },
 ];
