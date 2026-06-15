@@ -25,13 +25,11 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import Analytics from "./pages/Analytics";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Reliability from "./pages/Reliability";
 import PairPerformance from "./pages/PairPerformance";
 import ReliabilityScores from "./pages/ReliabilityScores";
-import IntelligenceReadiness from "./pages/IntelligenceReadiness";
 import Settings from "./pages/Settings";
 import Signals from "./pages/Signals";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -44,8 +42,6 @@ const navigationItems = [
   { label: "Reliability", path: "/reliability", icon: Award },
   { label: "Pair Performance", path: "/pair-performance", icon: Activity },
   { label: "Reliability Scores", path: "/reliability-scores", icon: TrendingUp },
-  { label: "Intelligence Readiness", path: "/intelligence-readiness", icon: Shield },
-  { label: "Analytics", path: "/analytics", icon: BarChart3 },
   { label: "Settings", path: "/settings", icon: SettingsIcon },
 ];
 
@@ -307,22 +303,6 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 element={
                   <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <ReliabilityScores />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/intelligence-readiness"
-                element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
-                    <IntelligenceReadiness />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/analytics"
-                element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
-                    <Analytics />
                   </ProtectedRoute>
                 }
               />

@@ -9,7 +9,6 @@ import signalRoutes from "./routes/signalRoutes.js";
 import channelPerformanceRoutes from "./routes/channelPerformanceRoutes.js";
 import pairPerformanceRoutes from "./routes/pairPerformanceRoutes.js";
 import reliabilityScoreRoutes from "./routes/reliabilityScoreRoutes.js";
-import outcomeAnalyticsRoutes from "./routes/outcomeAnalyticsRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 
 // app.js owns the Express application setup.
@@ -40,7 +39,6 @@ export function createApp() {
   app.use("/api/channel-performance", requireAuth, channelPerformanceRoutes);
   app.use("/api/pair-performance", requireAuth, pairPerformanceRoutes);
   app.use("/api/reliability-scores", requireAuth, reliabilityScoreRoutes);
-  app.use("/api/outcome-summary", requireAuth, outcomeAnalyticsRoutes);
 
   return app;
 }
