@@ -130,6 +130,10 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
     return outcome;
   }
 
+  if (!Array.isArray(outcome.hitTargets)) {
+    outcome.hitTargets = [];
+  }
+
   // If already in a terminal state (FULL_TP, SL_HIT, EXPIRED, CANCELLED), skip price updates
   if (["FULL_TP", "SL_HIT", "EXPIRED", "CANCELLED"].includes(outcome.status)) {
     return outcome;
@@ -317,6 +321,9 @@ export async function updateOutcomeStatus(messageKey, status, reason, data = {})
   }
 
   if (Array.isArray(data.hitTargets)) {
+    if (!Array.isArray(outcome.hitTargets)) {
+      outcome.hitTargets = [];
+    }
     outcome.hitTargets = [...new Set([...outcome.hitTargets, ...data.hitTargets])].sort((a, b) => a - b);
     outcome.maxTargetHit = outcome.hitTargets.length > 0 ? Math.max(...outcome.hitTargets) : 0;
   }

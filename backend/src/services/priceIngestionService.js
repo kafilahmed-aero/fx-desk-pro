@@ -26,11 +26,14 @@ const SYMBOL_MAP = {
   "US30": { symbol: "^DJI", provider: "yahoo" },
   "SPX500": { symbol: "^GSPC", provider: "yahoo" },
   "NAS100": { symbol: "^IXIC", provider: "yahoo" },
+  "US100": { symbol: "^IXIC", provider: "yahoo" },
   "GER30": { symbol: "^GDAXI", provider: "yahoo" },
   "UK100": { symbol: "^FTSE", provider: "yahoo" },
   // Commodities
   "USOIL": { symbol: "CL=F", provider: "yahoo" },
+  "WTI": { symbol: "CL=F", provider: "yahoo" },
   "UKOIL": { symbol: "BZ=F", provider: "yahoo" },
+  "BRENT": { symbol: "BZ=F", provider: "yahoo" },
   "NATGAS": { symbol: "NG=F", provider: "yahoo" },
   // Stocks
   "TSLA": { symbol: "TSLA", provider: "yahoo" },
