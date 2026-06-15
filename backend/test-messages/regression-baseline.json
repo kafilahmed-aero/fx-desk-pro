@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-15T10:32:21.127Z",
+  "generatedAt": "2026-06-15T10:37:42.295Z",
   "fixtureRoot": "test-messages",
   "datasetNames": [
     "test-messages/clean-complete-signals.json",
@@ -12,10 +12,10 @@
     "test-messages/update-result-signals.json"
   ],
   "totalExamples": 1860,
-  "passedExamples": 1540,
-  "failedExamples": 320,
-  "successRate": 0.8279569892473119,
-  "extractionAccuracy": 0.9623971797884842,
+  "passedExamples": 1529,
+  "failedExamples": 331,
+  "successRate": 0.8220430107526882,
+  "extractionAccuracy": 0.960828402366864,
   "categorySummaries": [
     {
       "datasetName": "test-messages/clean-complete-signals.json",
@@ -50,22 +50,22 @@
     {
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "total": 100,
-      "passed": 90,
-      "failed": 10,
-      "fieldChecks": 640,
-      "passedFieldChecks": 630,
-      "successRate": 0.9,
-      "extractionAccuracy": 0.984375
+      "passed": 80,
+      "failed": 20,
+      "fieldChecks": 580,
+      "passedFieldChecks": 560,
+      "successRate": 0.8,
+      "extractionAccuracy": 0.9655172413793104
     },
     {
       "datasetName": "test-messages/promo-noise-signals.json",
       "total": 110,
-      "passed": 110,
-      "failed": 0,
+      "passed": 109,
+      "failed": 1,
       "fieldChecks": 110,
-      "passedFieldChecks": 110,
-      "successRate": 1,
-      "extractionAccuracy": 1
+      "passedFieldChecks": 109,
+      "successRate": 0.990909090909091,
+      "extractionAccuracy": 0.990909090909091
     },
     {
       "datasetName": "test-messages/short-fast-signals.json",
@@ -7477,23 +7477,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#309:aa37bf2f",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USDJPY\nentry pending\ntp1 155.15\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          155.15
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 310,
@@ -7718,23 +7710,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#319:128cf22c",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USD/JPY\nentry pending\ntp1 154.45\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          154.45
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 320,
@@ -7959,23 +7943,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#329:5c1f0604",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL #USDJPY\nentry pending\ntp1 153.75\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          153.75
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 330,
@@ -8200,23 +8176,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#339:2baee6d2",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USDJPY\nentry pending\ntp1 153.05\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          153.05
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 340,
@@ -8441,23 +8409,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#349:940419cf",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USD/JPY\nentry pending\ntp1 152.35\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          152.35
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 350,
@@ -8682,23 +8642,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#359:2cffc408",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL #USDJPY\nentry pending\ntp1 155.15\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          155.15
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 360,
@@ -8923,23 +8875,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#369:41c7602d",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USDJPY\nentry pending\ntp1 154.45\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          154.45
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 370,
@@ -9164,23 +9108,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#379:aa1c932a",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USD/JPY\nentry pending\ntp1 153.75\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          153.75
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 380,
@@ -9405,23 +9341,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#389:ae76ebab",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL #USDJPY\nentry pending\ntp1 153.05\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          153.05
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 390,
@@ -9646,23 +9574,15 @@
       "fixtureKey": "test-messages/partial-incomplete-signals.json#399:c33e87d0",
       "datasetName": "test-messages/partial-incomplete-signals.json",
       "rawText": "SELL USDJPY\nentry pending\ntp1 152.35\nsl vip members only",
-      "classification": "NEW_SIGNAL",
-      "confidence": 0.75,
-      "passed": true,
-      "mismatches": [],
-      "checkedFields": {
-        "classification": "NEW_SIGNAL",
-        "pair": "USDJPY",
-        "action": "SELL",
-        "entryRange": [],
-        "targets": [
-          152.35
-        ],
-        "stopLoss": null,
-        "hiddenStopLoss": true
-      },
-      "fieldChecks": 7,
-      "passedFieldChecks": 7
+      "classification": "PROMO",
+      "confidence": 0,
+      "passed": false,
+      "mismatches": [
+        "classification expected NEW_SIGNAL, received PROMO",
+        "expected parsed signal, received null"
+      ],
+      "fieldChecks": 1,
+      "passedFieldChecks": 0
     },
     {
       "index": 400,
@@ -10677,12 +10597,14 @@
       "fixtureKey": "test-messages/promo-noise-signals.json#484:c4d9e741",
       "datasetName": "test-messages/promo-noise-signals.json",
       "rawText": "Trading psychology is key",
-      "classification": "NOISE",
+      "classification": "PROMO",
       "confidence": 0,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "classification expected NOISE, received PROMO"
+      ],
       "fieldChecks": 1,
-      "passedFieldChecks": 1
+      "passedFieldChecks": 0
     },
     {
       "index": 485,

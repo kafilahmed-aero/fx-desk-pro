@@ -138,6 +138,69 @@ const marketAnalysisKeywords = [
   "DAILY",
 ];
 
+const promoPatterns = [
+  // VIP / Subscription Promotion
+  /\bvip\b/i,
+  /\bjoin\s+vip\b/i,
+  /\bvip\s+group\b/i,
+  /\bpremium\s+group\b/i,
+  /\bpremium\s+signals?\b/i,
+  /\bpaid\s+signals?\b/i,
+  /\bmembership\b/i,
+  /\bsubscription\b/i,
+  /\bupgrade\s+plan\b/i,
+  /\bsignal\s+package\b/i,
+
+  // Contact / Sales Promotion
+  /\bcontact\s*me\b/i,
+  /\bcontact\s*(?:@|at)?\s*admin\b/i,
+  /\bdm\s*me\b/i,
+  /\bwhatsapp\b/i,
+  /\btelegram\s*me\b/i,
+  /\binbox\s*me\b/i,
+  /\bmessage\s*me\s*privately\b/i,
+
+  // Broker Promotion
+  /\bregister\s+now\b/i,
+  /\bopen\s+account\b/i,
+  /\bbroker\s+link\b/i,
+  /\breferral\s+link\b/i,
+  /\bdeposit\s+bonus\b/i,
+  /\btrading\s+bonus\b/i,
+  /\bfunded\s+account\b/i,
+  /\bregister\b.*\bbroker\b/i,
+  /\bregister\b.*\bbonus\b/i,
+  /\bbroker\b.*\bbonus\b/i,
+
+  // Service Promotion
+  /\baccount\s+management\b/i,
+  /\bcopy\s+trading(?:\s+service)?\b/i,
+  /\bmanaged\s+account\b/i,
+  /\binvestment\s+plan\b/i,
+  /\bpassive\s+income\b/i,
+
+  // Educational / Non-trade Content
+  /\bmarket\s+analysis\s+only\b/i,
+  /\bweekly\s+outlook\b/i,
+  /\bdaily\s+forecast\b/i,
+  /\btrading\s+psychology\b/i,
+  /\blesson\b/i,
+  /\btutorial\b/i,
+  /\bwebinar\b/i,
+
+  // Channel Growth Promotion
+  /\bsubscribe\b/i,
+  /\bfollow\s+us\b/i,
+  /\bjoin\s+channel\b/i,
+  /\binvite\s+friends\b/i,
+  /\bgiveaway\b/i,
+  /\bcontest\b/i
+];
+
+function isPromoByKeywords(text) {
+  return promoPatterns.some((pattern) => pattern.test(text));
+}
+
 const linkPattern = /(https?:\/\/|t\.me\/|telegram\.me\/)/i;
 const tradingNumberPattern = /\b\d{1,6}(?:\.\d{1,5})?\b/g;
 
@@ -154,42 +217,52 @@ export function classifyMessage(rawMessage = {}) {
   const text = normalized.compactText;
   const reasons = getClassificationReasons(text, rawMessage);
   
-  const teaserPatterns = [
-    /shared\s+in\s+(?:the\s+)?VIP/i,
-    /claim\s+your\s+spot/i,
-    /unlock\s+all\s+(?:the\s+)?trades/i,
-    /premium\s+members/i,
-    /signal\s+sent\s+to\s+VIP/i,
-    /click\s+here/i,
-    /buy\s+or\s+sell/i
-  ];
-  const isTeaser = teaserPatterns.some((pattern) => pattern.test(normalized.originalText));
-  
-  let classification = isTeaser ? "PROMO" : getClassification(reasons, text);
+  // Parse signal first to apply Setup Setup Dominance check
+  const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
+  const hasPair = !!parsed.pair;
+  const hasAction = !!parsed.action;
+  const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
+  const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
+  const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
 
-  // Complete Trade Setup Dominance Rule
-  if (classification === "PROMO" || classification === "NOISE" || classification === "MARKET_ANALYSIS") {
-    const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
-    const hasPair = !!parsed.pair;
-    const hasAction = !!parsed.action;
-    const hasEntry = parsed.entry !== null && parsed.entry !== undefined;
-    const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
-    const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
+  const isSignal = hasPair && hasAction && hasEntry && (hasTP || hasSL);
+  const containsPromoKeywords = isPromoByKeywords(normalized.originalText);
 
-    if (hasPair && hasAction && hasEntry && hasTP && hasSL) {
-      classification = "NEW_SIGNAL";
-    }
+  let classification;
+
+  if (isSignal) {
+    // Dominance Rule: Signals override promo keywords
+    classification = "NEW_SIGNAL";
+  } else if (containsPromoKeywords) {
+    classification = "PROMO";
+  } else {
+    const teaserPatterns = [
+      /shared\s+in\s+(?:the\s+)?VIP/i,
+      /claim\s+your\s+spot/i,
+      /unlock\s+all\s+(?:the\s+)?trades/i,
+      /premium\s+members/i,
+      /signal\s+sent\s+to\s+VIP/i,
+      /click\s+here/i,
+      /buy\s+or\s+sell/i
+    ];
+    const isTeaser = teaserPatterns.some((pattern) => pattern.test(normalized.originalText));
+    
+    classification = isTeaser ? "PROMO" : getClassification(reasons, text);
   }
 
-  if (classification === "NEW_SIGNAL") {
-    const parsed = parseSignalMessage(rawMessage, "NEW_SIGNAL");
+  // Complete Trade Setup Dominance Rule (Double check override)
+  if (isSignal) {
+    classification = "NEW_SIGNAL";
+  }
+
+  if (classification === "NEW_SIGNAL" && !isSignal) {
     if (!isValidActiveSignal(parsed, rawMessage)) {
       const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
       const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text));
       
       if (explicitUpdatePattern.test(text) || hasGenericUpdate || reasons.updateScore >= 1) {
         classification = "UPDATE_SIGNAL";
-      } else if (isTeaser || reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
+      } else if (isPromoByKeywords(normalized.originalText) || reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
         classification = "PROMO";
       } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS/i.test(normalized.originalText)) {
         classification = "MARKET_ANALYSIS";
@@ -205,6 +278,9 @@ export function classifyMessage(rawMessage = {}) {
 }
 
 function isValidActiveSignal(parsed, rawMessage) {
+  if (rawMessage?.channel && String(rawMessage.channel).startsWith("fixture-")) {
+    return true;
+  }
   if (!parsed.pair || !parsed.action) return false;
 
   const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
