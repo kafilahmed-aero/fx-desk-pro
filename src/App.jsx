@@ -27,6 +27,7 @@ import Analytics from "./pages/Analytics";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Reliability from "./pages/Reliability";
+import PairPerformance from "./pages/PairPerformance";
 import Settings from "./pages/Settings";
 import Signals from "./pages/Signals";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -37,6 +38,7 @@ const navigationItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Signals", path: "/signals", icon: Signal },
   { label: "Reliability", path: "/reliability", icon: Award },
+  { label: "Pair Performance", path: "/pair-performance", icon: Activity },
   { label: "Analytics", path: "/analytics", icon: BarChart3 },
   { label: "Settings", path: "/settings", icon: SettingsIcon },
 ];
@@ -283,6 +285,14 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 element={
                   <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <Reliability />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pair-performance"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <PairPerformance />
                   </ProtectedRoute>
                 }
               />

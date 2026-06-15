@@ -11,6 +11,14 @@ import {
   startMarketEngine,
   stopMarketEngine,
 } from "./src/services/marketEngineService.js";
+import {
+  startPerformanceAggregation,
+  stopPerformanceAggregation,
+} from "./src/services/channelPerformanceScheduler.js";
+import {
+  startPairPerformanceAggregation,
+  stopPairPerformanceAggregation,
+} from "./src/services/pairPerformanceScheduler.js";
 import { logger } from "./src/utils/logger.js";
 
 // server.js is the backend entry point.
@@ -47,6 +55,8 @@ async function startServer() {
 
   const shutdown = async () => {
     stopMarketEngine();
+    stopPerformanceAggregation();
+    stopPairPerformanceAggregation();
     await stopTelegramListener();
     server.close(() => {
       logger.info("server.stopped");
@@ -61,6 +71,8 @@ async function startServer() {
 async function initializeBackgroundServices() {
   await connectDatabase();
   startMarketEngine();
+  startPerformanceAggregation();
+  startPairPerformanceAggregation();
   await startTelegramListener();
 }
 
