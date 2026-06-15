@@ -1,5 +1,5 @@
 import { normalizeMessageText } from "./messageNormalizer.js";
-import { createPairTokenPattern, detectTradingPair } from "./pairDetector.js";
+import { createPairTokenPattern, detectTradingPair, detectRawPair, normalizePair } from "./pairDetector.js";
 import { logger } from "../utils/logger.js";
 
 const numberPattern = "\\d{1,6}(?:\\.\\d{1,5})?";
@@ -180,21 +180,25 @@ function runConfidenceScoringStage(
 }
 
 function extractPair(text) {
-  const pair = detectTradingPair(text);
+  const rawPair = detectRawPair(text);
 
-  if (pair) {
-    logger.debug("parser.pair_detected", { pair });
+  if (rawPair) {
+    const pair = normalizePair(rawPair, true);
+    if (pair) {
+      logger.debug("parser.pair_detected", { pair });
+    }
+    return pair;
   }
 
-  return pair;
+  return null;
 }
 
 function extractAction(text, bias = null) {
-  if (/\b(BUY|LONG)\b/.test(text) || createCompactActionPattern("BUY").test(text) || /\bBIAS\s+BULLISH\b/i.test(text)) {
+  if (/\b(BUY|LONG)\b/.test(text) || createCompactActionPattern("BUY").test(text) || /\bBIAS\s*[-–—]?\s*BULLISH\b/i.test(text)) {
     return "BUY";
   }
 
-  if (/\b(SELL|SHORT)\b/.test(text) || createCompactActionPattern("SELL").test(text) || /\bBIAS\s+BEARISH\b/i.test(text)) {
+  if (/\b(SELL|SHORT)\b/.test(text) || createCompactActionPattern("SELL").test(text) || /\bBIAS\s*[-–—]?\s*BEARISH\b/i.test(text)) {
     return "SELL";
   }
 

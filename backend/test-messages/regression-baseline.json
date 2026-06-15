@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-15T10:37:42.295Z",
+  "generatedAt": "2026-06-15T11:14:47.513Z",
   "fixtureRoot": "test-messages",
   "datasetNames": [
     "test-messages/clean-complete-signals.json",
@@ -12,10 +12,10 @@
     "test-messages/update-result-signals.json"
   ],
   "totalExamples": 1860,
-  "passedExamples": 1529,
-  "failedExamples": 331,
-  "successRate": 0.8220430107526882,
-  "extractionAccuracy": 0.960828402366864,
+  "passedExamples": 1557,
+  "failedExamples": 303,
+  "successRate": 0.8370967741935483,
+  "extractionAccuracy": 0.9641420118343196,
   "categorySummaries": [
     {
       "datasetName": "test-messages/clean-complete-signals.json",
@@ -80,12 +80,12 @@
     {
       "datasetName": "test-messages/torture-test-suite.json",
       "total": 1150,
-      "passed": 870,
-      "failed": 280,
+      "passed": 898,
+      "failed": 252,
       "fieldChecks": 4600,
-      "passedFieldChecks": 4320,
-      "successRate": 0.7565217391304347,
-      "extractionAccuracy": 0.9391304347826087
+      "passedFieldChecks": 4348,
+      "successRate": 0.7808695652173913,
+      "extractionAccuracy": 0.9452173913043478
     },
     {
       "datasetName": "test-messages/update-result-signals.json",
@@ -21378,13 +21378,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT BUY 🚀\nEntry: 65154\nTP1: 67154\nTP2: 69154\nSL: 63154\nLeverage: Cross 20x\n@tradewithpat | http://alt-signals.com\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "BUY",
         "entry": 65154,
         "targets": [
@@ -21394,7 +21392,7 @@
         "stopLoss": 63154
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 966,
@@ -21426,13 +21424,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3629\nTP1: 3779\nTP2: 3929\nSL: 3479\nLeverage: Cross 50x\n👁️ 890\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3629,
         "targets": [
@@ -21442,7 +21438,7 @@
         "stopLoss": 3479
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 968,
@@ -21520,13 +21516,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT BUY 🚀\nEntry: 156.5\nTP1: 164.5\nTP2: 172.5\nSL: 148.5\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "BUY",
         "entry": 156.5,
         "targets": [
@@ -21536,7 +21530,7 @@
         "stopLoss": 148.5
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 972,
@@ -21568,13 +21562,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 153.7\nTP1: 145.7\nTP2: 137.7\nSL: 161.7\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 153.7,
         "targets": [
@@ -21584,7 +21576,7 @@
         "stopLoss": 161.7
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 974,
@@ -21593,13 +21585,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3656\nTP1: 3806\nTP2: 3956\nSL: 3506\nLeverage: Cross 20x\n👁️ 4.5k\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3656,
         "targets": [
@@ -21609,7 +21599,7 @@
         "stopLoss": 3506
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 975,
@@ -21664,13 +21654,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT BUY 🚀\nEntry: 65852\nTP1: 67852\nTP2: 69852\nSL: 63852\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "BUY",
         "entry": 65852,
         "targets": [
@@ -21680,7 +21668,7 @@
         "stopLoss": 63852
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 978,
@@ -21712,13 +21700,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 149.8\nTP1: 141.8\nTP2: 133.8\nSL: 157.8\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 149.8,
         "targets": [
@@ -21728,7 +21714,7 @@
         "stopLoss": 157.8
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 980,
@@ -21737,13 +21723,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 68791\nTP1: 66791\nTP2: 64791\nSL: 70791\nLeverage: Cross 20x\n@tradewithpat | http://alt-signals.com\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 68791,
         "targets": [
@@ -21753,7 +21737,7 @@
         "stopLoss": 70791
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 981,
@@ -21785,13 +21769,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 65967\nTP1: 63967\nTP2: 61967\nSL: 67967\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 65967,
         "targets": [
@@ -21801,7 +21783,7 @@
         "stopLoss": 67967
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 983,
@@ -21810,13 +21792,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 150.2\nTP1: 142.2\nTP2: 134.2\nSL: 158.2\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 150.2,
         "targets": [
@@ -21826,7 +21806,7 @@
         "stopLoss": 158.2
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 984,
@@ -21835,13 +21815,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3609\nTP1: 3459\nTP2: 3309\nSL: 3759\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3609,
         "targets": [
@@ -21851,7 +21829,7 @@
         "stopLoss": 3759
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 985,
@@ -21860,13 +21838,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3482\nTP1: 3332\nTP2: 3182\nSL: 3632\nLeverage: Cross 20x\n@crypto_beast | http://alt-signals.com\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3482,
         "targets": [
@@ -21876,7 +21852,7 @@
         "stopLoss": 3632
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 986,
@@ -21908,13 +21884,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT BUY 🚀\nEntry: 146.4\nTP1: 154.4\nTP2: 162.4\nSL: 138.4\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "BUY",
         "entry": 146.4,
         "targets": [
@@ -21924,7 +21898,7 @@
         "stopLoss": 138.4
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 988,
@@ -21956,13 +21930,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3586\nTP1: 3436\nTP2: 3286\nSL: 3736\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3586,
         "targets": [
@@ -21972,7 +21944,7 @@
         "stopLoss": 3736
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 990,
@@ -21981,13 +21953,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 141.6\nTP1: 133.6\nTP2: 125.6\nSL: 149.6\nLeverage: Cross 20x\n@fxdesk_pro | http://alt-signals.com\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 141.6,
         "targets": [
@@ -21997,7 +21967,7 @@
         "stopLoss": 149.6
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 991,
@@ -22029,13 +21999,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 151.2\nTP1: 143.2\nTP2: 135.2\nSL: 159.2\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 151.2,
         "targets": [
@@ -22045,7 +22013,7 @@
         "stopLoss": 159.2
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 993,
@@ -22169,13 +22137,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 151.9\nTP1: 143.9\nTP2: 135.9\nSL: 159.9\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 151.9,
         "targets": [
@@ -22185,7 +22151,7 @@
         "stopLoss": 159.9
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 999,
@@ -22194,13 +22160,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3535\nTP1: 3385\nTP2: 3235\nSL: 3685\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3535,
         "targets": [
@@ -22210,7 +22174,7 @@
         "stopLoss": 3685
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1000,
@@ -22219,13 +22183,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 147\nTP1: 139\nTP2: 131\nSL: 155\nLeverage: Cross 50x\n@fxdesk_pro | t.me/fxdesk_pro\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 147,
         "targets": [
@@ -22235,7 +22197,7 @@
         "stopLoss": 155
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1001,
@@ -22244,13 +22206,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT BUY 🚀\nEntry: 144.8\nTP1: 152.8\nTP2: 160.8\nSL: 136.8\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "BUY",
         "entry": 144.8,
         "targets": [
@@ -22260,7 +22220,7 @@
         "stopLoss": 136.8
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1002,
@@ -22269,13 +22229,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 65307\nTP1: 63307\nTP2: 61307\nSL: 67307\nLeverage: Cross 10x\n👁️ 1.2k views\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 65307,
         "targets": [
@@ -22285,7 +22243,7 @@
         "stopLoss": 67307
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1003,
@@ -22294,13 +22252,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3464\nTP1: 3614\nTP2: 3764\nSL: 3314\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3464,
         "targets": [
@@ -22310,7 +22266,7 @@
         "stopLoss": 3314
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1004,
@@ -22411,13 +22367,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3534\nTP1: 3384\nTP2: 3234\nSL: 3684\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3534,
         "targets": [
@@ -22427,7 +22381,7 @@
         "stopLoss": 3684
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1009,
@@ -22436,13 +22390,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3606\nTP1: 3756\nTP2: 3906\nSL: 3456\nLeverage: Cross 20x\n👁️ 890\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3606,
         "targets": [
@@ -22452,7 +22404,7 @@
         "stopLoss": 3456
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1010,
@@ -22461,13 +22413,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 65410\nTP1: 63410\nTP2: 61410\nSL: 67410\nLeverage: Cross 20x\n@tradewithpat | t.me/fxdesk_pro\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 65410,
         "targets": [
@@ -22477,7 +22427,7 @@
         "stopLoss": 67410
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1011,
@@ -22486,13 +22436,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3530\nTP1: 3680\nTP2: 3830\nSL: 3380\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3530,
         "targets": [
@@ -22502,7 +22450,7 @@
         "stopLoss": 3380
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1012,
@@ -22511,13 +22459,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3456\nTP1: 3606\nTP2: 3756\nSL: 3306\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3456,
         "targets": [
@@ -22527,7 +22473,7 @@
         "stopLoss": 3306
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1013,
@@ -22536,13 +22482,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 141\nTP1: 133\nTP2: 125\nSL: 149\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 141,
         "targets": [
@@ -22552,7 +22496,7 @@
         "stopLoss": 149
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1014,
@@ -22561,13 +22505,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT BUY 🚀\nEntry: 65830\nTP1: 67830\nTP2: 69830\nSL: 63830\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "BUY",
         "entry": 65830,
         "targets": [
@@ -22577,7 +22519,7 @@
         "stopLoss": 63830
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1015,
@@ -22632,13 +22574,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 66213\nTP1: 64213\nTP2: 62213\nSL: 68213\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 66213,
         "targets": [
@@ -22648,7 +22588,7 @@
         "stopLoss": 68213
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1018,
@@ -22657,13 +22597,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT BUY 🚀\nEntry: 68358\nTP1: 70358\nTP2: 72358\nSL: 66358\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "BUY",
         "entry": 68358,
         "targets": [
@@ -22673,7 +22611,7 @@
         "stopLoss": 66358
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1019,
@@ -22705,13 +22643,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT BUY 🚀\nEntry: 144.6\nTP1: 152.6\nTP2: 160.6\nSL: 136.6\nLeverage: Cross 10x\n@fxdesk_pro | telegram.me/forex_vip\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "BUY",
         "entry": 144.6,
         "targets": [
@@ -22721,7 +22657,7 @@
         "stopLoss": 136.6
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1021,
@@ -22799,13 +22735,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 156.1\nTP1: 148.1\nTP2: 140.1\nSL: 164.1\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 156.1,
         "targets": [
@@ -22815,7 +22749,7 @@
         "stopLoss": 164.1
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1025,
@@ -22847,13 +22781,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT BUY 🚀\nEntry: 66714\nTP1: 68714\nTP2: 70714\nSL: 64714\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "BUY",
         "entry": 66714,
         "targets": [
@@ -22863,7 +22795,7 @@
         "stopLoss": 64714
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1027,
@@ -22872,13 +22804,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 66670\nTP1: 64670\nTP2: 62670\nSL: 68670\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 66670,
         "targets": [
@@ -22888,7 +22818,7 @@
         "stopLoss": 68670
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1028,
@@ -22943,13 +22873,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3527\nTP1: 3377\nTP2: 3227\nSL: 3677\nLeverage: Cross 20x\n@gold_vip | https://t.me/+Mau70cXi4N\n👁️ 890\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3527,
         "targets": [
@@ -22959,7 +22887,7 @@
         "stopLoss": 3677
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1031,
@@ -22991,13 +22919,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 67824\nTP1: 65824\nTP2: 63824\nSL: 69824\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 67824,
         "targets": [
@@ -23007,7 +22933,7 @@
         "stopLoss": 69824
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1033,
@@ -23016,13 +22942,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3577\nTP1: 3727\nTP2: 3877\nSL: 3427\nLeverage: Cross 20x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3577,
         "targets": [
@@ -23032,7 +22956,7 @@
         "stopLoss": 3427
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1034,
@@ -23041,13 +22965,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 68355\nTP1: 66355\nTP2: 64355\nSL: 70355\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 68355,
         "targets": [
@@ -23057,7 +22979,7 @@
         "stopLoss": 70355
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1035,
@@ -23135,13 +23057,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT SELL 🚀\nEntry: 145.6\nTP1: 137.6\nTP2: 129.6\nSL: 153.6\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "SELL",
         "entry": 145.6,
         "targets": [
@@ -23151,7 +23071,7 @@
         "stopLoss": 153.6
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1039,
@@ -23160,13 +23080,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT BUY 🚀\nEntry: 67019\nTP1: 69019\nTP2: 71019\nSL: 65019\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "BUY",
         "entry": 67019,
         "targets": [
@@ -23176,7 +23094,7 @@
         "stopLoss": 65019
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1040,
@@ -23231,13 +23149,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT BUY 🚀\nEntry: 140.8\nTP1: 148.8\nTP2: 156.8\nSL: 132.8\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "BUY",
         "entry": 140.8,
         "targets": [
@@ -23247,7 +23163,7 @@
         "stopLoss": 132.8
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1043,
@@ -23417,13 +23333,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3635\nTP1: 3785\nTP2: 3935\nSL: 3485\nLeverage: Cross 20x\n@fxdesk_pro | http://alt-signals.com\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3635,
         "targets": [
@@ -23433,7 +23347,7 @@
         "stopLoss": 3485
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1051,
@@ -23442,13 +23356,11 @@
       "rawText": "🚀 CRYPTO CALL: SOLUSDT BUY 🚀\nEntry: 144.5\nTP1: 152.5\nTP2: 160.5\nSL: 136.5\nLeverage: Cross 50x\n👁️ 890\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"SOLUSD\", received \"SOLUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "SOLUSDT",
+        "pair": "SOLUSD",
         "action": "BUY",
         "entry": 144.5,
         "targets": [
@@ -23458,7 +23370,7 @@
         "stopLoss": 136.5
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1052,
@@ -23467,13 +23379,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3437\nTP1: 3287\nTP2: 3137\nSL: 3587\nLeverage: Cross 10x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3437,
         "targets": [
@@ -23483,7 +23393,7 @@
         "stopLoss": 3587
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1053,
@@ -23538,13 +23448,11 @@
       "rawText": "🚀 CRYPTO CALL: BTCUSDT SELL 🚀\nEntry: 67468\nTP1: 65468\nTP2: 63468\nSL: 69468\nLeverage: Cross 20x\n@crypto_beast | http://alt-signals.com\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"BTCUSD\", received \"BTCUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "BTCUSDT",
+        "pair": "BTCUSD",
         "action": "SELL",
         "entry": 67468,
         "targets": [
@@ -23554,7 +23462,7 @@
         "stopLoss": 69468
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1056,
@@ -23563,13 +23471,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT BUY 🚀\nEntry: 3547\nTP1: 3697\nTP2: 3847\nSL: 3397\nLeverage: Cross 50x\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "BUY",
         "entry": 3547,
         "targets": [
@@ -23579,7 +23485,7 @@
         "stopLoss": 3397
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1057,
@@ -23611,13 +23517,11 @@
       "rawText": "🚀 CRYPTO CALL: ETHUSDT SELL 🚀\nEntry: 3580\nTP1: 3430\nTP2: 3280\nSL: 3730\nLeverage: Cross 50x\n👁️ 4.5k\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": false,
-      "mismatches": [
-        "pair expected \"ETHUSD\", received \"ETHUSDT\""
-      ],
+      "passed": true,
+      "mismatches": [],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "ETHUSDT",
+        "pair": "ETHUSD",
         "action": "SELL",
         "entry": 3580,
         "targets": [
@@ -23627,7 +23531,7 @@
         "stopLoss": 3730
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 5
+      "passedFieldChecks": 6
     },
     {
       "index": 1059,
@@ -23659,11 +23563,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18784\nTP Target: 19084\nStop Loss: 18484\n@fxdesk_pro | telegram.me/forex_vip\n👁️ 890\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18784,
         "targets": [
@@ -23672,7 +23578,7 @@
         "stopLoss": 18484
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1061,
@@ -23879,11 +23785,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18513\nTP Target: 18213\nStop Loss: 18813\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18513,
         "targets": [
@@ -23892,7 +23800,7 @@
         "stopLoss": 18813
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1071,
@@ -24011,11 +23919,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18451\nTP Target: 18751\nStop Loss: 18151\n532 views\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18451,
         "targets": [
@@ -24024,7 +23934,7 @@
         "stopLoss": 18151
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1077,
@@ -24099,11 +24009,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18467\nTP Target: 18767\nStop Loss: 18167\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18467,
         "targets": [
@@ -24112,7 +24024,7 @@
         "stopLoss": 18167
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1081,
@@ -24143,11 +24055,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18499\nTP Target: 18799\nStop Loss: 18199\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18499,
         "targets": [
@@ -24156,7 +24070,7 @@
         "stopLoss": 18199
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1083,
@@ -24429,11 +24343,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18709\nTP Target: 18409\nStop Loss: 19009\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18709,
         "targets": [
@@ -24442,7 +24358,7 @@
         "stopLoss": 19009
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1096,
@@ -24495,11 +24411,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18758\nTP Target: 18458\nStop Loss: 19058\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18758,
         "targets": [
@@ -24508,7 +24426,7 @@
         "stopLoss": 19058
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1099,
@@ -24517,11 +24435,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18292\nTP Target: 17992\nStop Loss: 18592\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18292,
         "targets": [
@@ -24530,7 +24450,7 @@
         "stopLoss": 18592
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1100,
@@ -24671,11 +24591,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18287\nTP Target: 17987\nStop Loss: 18587\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18287,
         "targets": [
@@ -24684,7 +24606,7 @@
         "stopLoss": 18587
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1107,
@@ -24737,11 +24659,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18349\nTP Target: 18649\nStop Loss: 18049\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18349,
         "targets": [
@@ -24750,7 +24674,7 @@
         "stopLoss": 18049
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1110,
@@ -24935,11 +24859,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18357\nTP Target: 18657\nStop Loss: 18057\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18357,
         "targets": [
@@ -24948,7 +24874,7 @@
         "stopLoss": 18057
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1119,
@@ -25067,11 +24993,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18420\nTP Target: 18120\nStop Loss: 18720\n12.4k views\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18420,
         "targets": [
@@ -25080,7 +25008,7 @@
         "stopLoss": 18720
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1125,
@@ -25221,11 +25149,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18256\nTP Target: 18556\nStop Loss: 17956\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18256,
         "targets": [
@@ -25234,7 +25164,7 @@
         "stopLoss": 17956
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1132,
@@ -25287,11 +25217,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18740\nTP Target: 18440\nStop Loss: 19040\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18740,
         "targets": [
@@ -25300,7 +25232,7 @@
         "stopLoss": 19040
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1135,
@@ -25353,11 +25285,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18640\nTP Target: 18940\nStop Loss: 18340\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18640,
         "targets": [
@@ -25366,7 +25300,7 @@
         "stopLoss": 18340
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1138,
@@ -25485,11 +25419,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 SELL MARKET 📉\nEntry Price: 18377\nTP Target: 18077\nStop Loss: 18677\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "SELL",
         "entry": 18377,
         "targets": [
@@ -25498,7 +25434,7 @@
         "stopLoss": 18677
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1144,
@@ -25595,11 +25531,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18518\nTP Target: 18818\nStop Loss: 18218\n👁️ 4.5k\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18518,
         "targets": [
@@ -25608,7 +25546,7 @@
         "stopLoss": 18218
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1149,
@@ -25639,11 +25577,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18304\nTP Target: 18604\nStop Loss: 18004\n@tradewithpat | telegram.me/forex_vip\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18304,
         "targets": [
@@ -25652,7 +25592,7 @@
         "stopLoss": 18004
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1151,
@@ -25705,11 +25645,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18404\nTP Target: 18704\nStop Loss: 18104\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18404,
         "targets": [
@@ -25718,7 +25660,7 @@
         "stopLoss": 18104
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1154,
@@ -25837,11 +25779,13 @@
       "rawText": "📈 INDEX UPDATE: NAS100 BUY MARKET 📉\nEntry Price: 18796\nTP Target: 19096\nStop Loss: 18496\n",
       "classification": "NEW_SIGNAL",
       "confidence": 1,
-      "passed": true,
-      "mismatches": [],
+      "passed": false,
+      "mismatches": [
+        "pair expected \"NAS100\", received \"US100\""
+      ],
       "checkedFields": {
         "classification": "NEW_SIGNAL",
-        "pair": "NAS100",
+        "pair": "US100",
         "action": "BUY",
         "entry": 18796,
         "targets": [
@@ -25850,7 +25794,7 @@
         "stopLoss": 18496
       },
       "fieldChecks": 6,
-      "passedFieldChecks": 6
+      "passedFieldChecks": 5
     },
     {
       "index": 1160,
