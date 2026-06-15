@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Activity,
+  Award,
   BarChart3,
   ChevronDown,
   LayoutDashboard,
@@ -25,6 +26,7 @@ import {
 import Analytics from "./pages/Analytics";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Reliability from "./pages/Reliability";
 import Settings from "./pages/Settings";
 import Signals from "./pages/Signals";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -34,6 +36,7 @@ import { getCurrentUser, logout } from "./services/authService";
 const navigationItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Signals", path: "/signals", icon: Signal },
+  { label: "Reliability", path: "/reliability", icon: Award },
   { label: "Analytics", path: "/analytics", icon: BarChart3 },
   { label: "Settings", path: "/settings", icon: SettingsIcon },
 ];
@@ -272,6 +275,14 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 element={
                   <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <Signals />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reliability"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <Reliability />
                   </ProtectedRoute>
                 }
               />
