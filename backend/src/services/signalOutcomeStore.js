@@ -42,7 +42,7 @@ export async function saveOutcome(outcomeData) {
       ...existing,
       ...plainData,
       updatedAt: new Date(),
-      createdAt: existing.createdAt || new Date(),
+      createdAt: existing.createdAt || plainData.createdAt || new Date(),
     };
     localOutcomes.set(messageKey, updated);
     return updated;
