@@ -12,10 +12,14 @@ export async function runMonitoringCycle() {
     return;
   }
   cycleInProgress = true;
+  const startTime = Date.now();
+  let activeOutcomeCount = 0;
+  let monitoredPairsCount = 0;
 
   try {
     // 1. Fetch only outcomes requiring evaluation
     const activeOutcomes = await getActiveAndPendingOutcomes();
+    activeOutcomeCount = activeOutcomes.length;
     if (activeOutcomes.length === 0) {
       logger.debug("price_monitor.idle", { reason: "no_active_outcomes" });
       cycleInProgress = false;
@@ -24,6 +28,7 @@ export async function runMonitoringCycle() {
 
     // 2. Extract unique pairs
     const uniquePairs = [...new Set(activeOutcomes.map((o) => o.pair))];
+    monitoredPairsCount = uniquePairs.length;
     logger.info("price_monitor.cycle_started", {
       activeOutcomesCount: activeOutcomes.length,
       pairsCount: uniquePairs.length,
@@ -64,6 +69,12 @@ export async function runMonitoringCycle() {
     logger.error("price_monitor.cycle_failed", { error: error.message });
   } finally {
     cycleInProgress = false;
+    const cycleDuration = Date.now() - startTime;
+    logger.info("price_monitoring.cycle", {
+      activeOutcomeCount,
+      monitoredPairsCount,
+      cycleDuration,
+    });
   }
 }
 
@@ -75,7 +86,10 @@ export function startPriceMonitoring(intervalMs = 60000) {
   monitorIntervalMs = intervalMs;
   monitorInterval = setInterval(runMonitoringCycle, monitorIntervalMs);
 
-  logger.info("price_monitor.started", { intervalMs });
+  logger.info("price_monitoring.started", {
+    pollingInterval: monitorIntervalMs,
+    timestamp: new Date().toISOString()
+  });
   
   // Run first cycle asynchronously
   runMonitoringCycle().catch((err) => {

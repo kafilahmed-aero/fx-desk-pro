@@ -19,6 +19,10 @@ import {
   startPairPerformanceAggregation,
   stopPairPerformanceAggregation,
 } from "./src/services/pairPerformanceScheduler.js";
+import {
+  startPriceMonitoring,
+  stopPriceMonitoring,
+} from "./src/services/priceMonitoringScheduler.js";
 import { logger } from "./src/utils/logger.js";
 
 // server.js is the backend entry point.
@@ -55,6 +59,7 @@ async function startServer() {
 
   const shutdown = async () => {
     stopMarketEngine();
+    stopPriceMonitoring();
     stopPerformanceAggregation();
     stopPairPerformanceAggregation();
     await stopTelegramListener();
@@ -71,6 +76,7 @@ async function startServer() {
 async function initializeBackgroundServices() {
   await connectDatabase();
   startMarketEngine();
+  startPriceMonitoring();
   startPerformanceAggregation();
   startPairPerformanceAggregation();
   await startTelegramListener();
