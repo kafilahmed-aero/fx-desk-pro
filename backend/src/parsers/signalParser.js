@@ -190,11 +190,11 @@ function extractPair(text) {
 }
 
 function extractAction(text, bias = null) {
-  if (/\b(BUY|LONG)\b/.test(text) || createCompactActionPattern("BUY").test(text)) {
+  if (/\b(BUY|LONG)\b/.test(text) || createCompactActionPattern("BUY").test(text) || /\bBIAS\s+BULLISH\b/i.test(text)) {
     return "BUY";
   }
 
-  if (/\b(SELL|SHORT)\b/.test(text) || createCompactActionPattern("SELL").test(text)) {
+  if (/\b(SELL|SHORT)\b/.test(text) || createCompactActionPattern("SELL").test(text) || /\bBIAS\s+BEARISH\b/i.test(text)) {
     return "SELL";
   }
 
@@ -237,6 +237,7 @@ function extractEntry(normalized, action) {
     new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
     new RegExp(`(?:(?:${pairPattern})\\s*\\b(?:BUY|SELL|LONG|SHORT)\\b|\\b(?:BUY|SELL|LONG|SHORT)\\b\\s*(?:${pairPattern}))\\s*@?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:PIVOT\\s+LEVEL|PIVOT\\s+POINT|KEY\\s+LEVEL|PSYCHOLOGICAL\\s+LEVEL|MARKET\\s+IS\\s+TRADING\\s+ON|PRICE\\s+IS\\s+COILING\\s+AROUND|INSTRUMENT\\s+TESTS|ASSET\\s+IS\\s+APPROACHING)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
   ];
 
   for (const line of normalized.upperLines) {
@@ -310,7 +311,7 @@ function extractTargets(text) {
     new RegExp(`\\bTAKE\\s+PROFIT\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bTAKE\\s+PROFITS\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bTARGET\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bGOAL\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bGOAL\\s*(?:\\d{1,2})?\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
   ];
 
   for (const pattern of directPatterns) {
@@ -343,6 +344,7 @@ function extractStopLoss(normalized) {
     new RegExp(`\\bSL(?=${numberPattern})\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSTOP\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSTOPLOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\b(?:MY|SAFE|RECOMMENDED)\\s+STOP\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bINVALID(?:ATION)?\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
   ];
 

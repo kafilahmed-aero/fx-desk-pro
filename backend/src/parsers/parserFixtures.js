@@ -683,4 +683,72 @@ export const parserFixtures = [
       stopLoss: 4284,
     },
   },
+  {
+    name: "AnabelSignals gold bullish pivot level",
+    rawMessage: {
+      channel: "anabelsignals",
+      messageId: 101,
+      text: "GOLD\nBias Bullish\npivot level: 2320.50\nGoal 1: 2335.00\nMy Stop Loss: 2310.00",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2320.50,
+      targets: [2335.00],
+      stopLoss: 2310.00,
+    },
+  },
+  {
+    name: "AnabelSignals silver bearish price coiling",
+    rawMessage: {
+      channel: "anabelsignals",
+      messageId: 102,
+      text: "SILVER\nBias Bearish\nprice is coiling around 29.50\nGoal: 28.10\nSafe Stop Loss: 30.20",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAGUSD",
+      action: "SELL",
+      entry: 29.50,
+      targets: [28.10],
+      stopLoss: 30.20,
+    },
+  },
+  {
+    name: "AnabelSignals gold bullish approaching",
+    rawMessage: {
+      channel: "anabelsignals",
+      messageId: 103,
+      text: "GOLD\nBias Bullish\nasset is approaching 2350.00\nGoal 1 2365\nRecommended Stop Loss 2340",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2350.00,
+      targets: [2365],
+      stopLoss: 2340,
+    },
+  },
+  {
+    name: "AnabelSignals gold bullish key and psychological level",
+    rawMessage: {
+      channel: "anabelsignals",
+      messageId: 104,
+      text: "GOLD\nBias Bullish\nkey level: 2320.50\npsychological level 2318.00\nGoal 1: 2335.00\nMy Stop Loss: 2310.00",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2320.50,
+      targets: [2335.00],
+      stopLoss: 2310.00,
+    },
+  },
 ];
