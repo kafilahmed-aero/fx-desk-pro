@@ -665,4 +665,22 @@ export const parserFixtures = [
       stopLoss: 100000,
     },
   },
+  {
+    name: "precision buy from range format",
+    rawMessage: {
+      channel: "fixture-test",
+      messageId: 119,
+      text: "XAUUSD BUY FROM 4290 4287\n\nTP 4296\nTP 4303\nTP 4310\nTP 4320\n\nSL 4284",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4290,
+      entryRange: [4287, 4290],
+      targets: [4296, 4303, 4310, 4320],
+      stopLoss: 4284,
+    },
+  },
 ];

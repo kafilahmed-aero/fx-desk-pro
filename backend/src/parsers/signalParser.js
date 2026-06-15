@@ -617,7 +617,7 @@ function getEntryRangeFromLine(line, numbers, entry) {
 
   if (
     numbers.length >= 2 &&
-    new RegExp(`${numberPattern}\\s*[-/]\\s*${numberPattern}`).test(line)
+    new RegExp(`${numberPattern}\\s*(?:[-/]|TO|AND|\\s)\\s*${numberPattern}`).test(line)
   ) {
     return normalizeEntryRange(numbers.slice(0, 2));
   }

@@ -91,6 +91,11 @@ export const monitoredTelegramChannels = [
     username: "Forex_Trades_MyBillion",
     title: "Forex Trades MyBillion",
   },
+  {
+    ref: "GoldTradePrecision1",
+    username: "GoldTradePrecision1",
+    title: "GoldTradePrecision1",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);
