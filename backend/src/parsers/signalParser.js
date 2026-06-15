@@ -211,11 +211,13 @@ function extractBias(text) {
 }
 
 function extractEntry(normalized, action) {
-  const pairPrefix = `(?:\\s*#?\\s*(?:${createPairTokenPattern().source}))?`;
+  const pairPattern = createPairTokenPattern().source;
+  const pairPrefix = `(?:\\s*#?\\s*(?:${pairPattern}))?`;
   const labeledPatterns = [
     new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT|LEVEL)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`(?:(?:${pairPattern})\\s*\\b(?:BUY|SELL|LONG|SHORT)\\b|\\b(?:BUY|SELL|LONG|SHORT)\\b\\s*(?:${pairPattern}))\\s*@?\\s*(${numberPattern})(?:\\s*[-/]\\s*(${numberPattern}))?`, "i"),
   ];
 
   for (const line of normalized.upperLines) {
@@ -285,10 +287,10 @@ function extractTargets(text) {
   }
 
   const directPatterns = [
-    new RegExp(`\\bTP\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTAKE\\s+PROFIT\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTAKE\\s+PROFITS\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTARGET\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTP\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTAKE\\s+PROFIT\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTAKE\\s+PROFITS\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTARGET\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bGOAL\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
   ];
 
