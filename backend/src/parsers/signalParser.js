@@ -26,7 +26,7 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
       parserClassification
     );
 
-    return {
+    const parsedSignal = {
       pair: entities.pair,
       action: entities.action,
       bias: entities.bias,
@@ -63,6 +63,25 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
         lineCount: normalized.lineCount,
       },
     };
+
+    if (parserClassification === "NEW_SIGNAL") {
+      const missingFields = [];
+      if (!parsedSignal.channel || parsedSignal.channel === "unknown") missingFields.push("channel");
+      if (!parsedSignal.pair) missingFields.push("pair");
+      if (!parsedSignal.action) missingFields.push("action");
+      if (parsedSignal.entry === null || parsedSignal.entry === undefined) missingFields.push("entry");
+      if (!parsedSignal.targets || parsedSignal.targets.length === 0) missingFields.push("targets");
+      if (parsedSignal.stopLoss === null || parsedSignal.stopLoss === undefined) missingFields.push("stopLoss");
+
+      if (missingFields.length > 0) {
+        logger.warn("parser_partial_signal", {
+          channel: parsedSignal.channel,
+          missingFields,
+        });
+      }
+    }
+
+    return parsedSignal;
   } catch (error) {
     return createParserFailure(rawMessage, parserClassification, error);
   }
