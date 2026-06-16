@@ -100,6 +100,11 @@ async function runTests() {
       await seedOutcome(channelName, "GOLD", "FULL_TP", 15);
     }
 
+    // Seed outcomes for private-test-channel:3955968449 (should be excluded)
+    for (let i = 0; i < 5; i++) {
+      await seedOutcome("private-test-channel:3955968449", "XAUUSD", "FULL_TP", 30);
+    }
+
     // Recalculate Pair Performance
     const results = await aggregatePairPerformance();
     
@@ -107,6 +112,9 @@ async function runTests() {
     // 1. TestPremiumGold_XAUUSD (merged XAUUSD & GOLD outcomes)
     // 2. TestPremiumGold_EURUSD
     assert(results.length === 2, `Aggregated successfully for exactly 2 groups (got ${results.length})`);
+    
+    const hasTestChannel = results.some(r => r.channel === "private-test-channel:3955968449");
+    assert(!hasTestChannel, "private-test-channel:3955968449 is excluded from aggregated results");
 
     const xauusdPerf = results.find(r => r.pair === "XAUUSD");
     const eurusdPerf = results.find(r => r.pair === "EURUSD");

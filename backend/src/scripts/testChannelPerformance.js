@@ -84,10 +84,19 @@ async function runTests() {
     // 1 ACTIVE
     await seedOutcome(channelName, "ACTIVE");
 
+    // Seed outcomes for private-test-channel:3955968449 (should be excluded)
+    for (let i = 0; i < 5; i++) {
+      await seedOutcome("private-test-channel:3955968449", "FULL_TP", 30);
+    }
+
     // Recalculate Performance
     const results = await aggregateChannelPerformance();
     
     assert(results.length === 1, "Aggregated successfully for exactly 1 channel");
+    
+    const hasTestChannel = results.some(r => r.channel === "private-test-channel:3955968449");
+    assert(!hasTestChannel, "private-test-channel:3955968449 is excluded from aggregated results");
+
     const p = results[0];
 
     assert(p.channel === channelName, "Channel name is correct");

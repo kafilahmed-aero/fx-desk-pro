@@ -104,6 +104,11 @@ async function runTests() {
       await seedOutcome("ChannelC", "EXPIRED");
     }
 
+    // Seed outcomes for private-test-channel:3955968449 (should be excluded)
+    for (let i = 0; i < 20; i++) {
+      await seedOutcome("private-test-channel:3955968449", "FULL_TP");
+    }
+
     // Run channel performances aggregation
     await aggregateChannelPerformance();
 
@@ -111,6 +116,9 @@ async function runTests() {
     const results = await getReliabilityScores();
     
     assert(results.length === 3, `Expected 3 results, got ${results.length}`);
+    
+    const hasTestChannel = results.some(r => r.channel === "private-test-channel:3955968449");
+    assert(!hasTestChannel, "private-test-channel:3955968449 is excluded from reliability scores");
 
     // Verify Sorting: ChannelC first (score 89.09), ChannelA second (score 77.00), ChannelB third (score 76.00)
     assert(results[0].channel === "ChannelC", `First element should be ChannelC, got ${results[0].channel}`);

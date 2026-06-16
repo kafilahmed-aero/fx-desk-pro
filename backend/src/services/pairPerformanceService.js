@@ -26,6 +26,9 @@ export async function aggregatePairPerformance() {
     // Group signals by channel and normalized pair
     outcomes.forEach((o) => {
       const ch = o.channel;
+      if (ch === "private-test-channel:3955968449") {
+        return;
+      }
       const normalizedPair = normalizeTradingPair(o.pair);
       
       const key = `${ch}_${normalizedPair}`;
@@ -178,14 +181,16 @@ export async function aggregatePairPerformance() {
  */
 export async function getPairPerformances() {
   if (isMongoConnected()) {
-    return PairPerformance.find({}).sort({ channel: 1, pair: 1 }).lean();
+    return PairPerformance.find({ channel: { $ne: "private-test-channel:3955968449" } }).sort({ channel: 1, pair: 1 }).lean();
   }
 
-  return [...localPairPerformance.values()].sort((left, right) => {
-    const channelCompare = left.channel.localeCompare(right.channel);
-    if (channelCompare !== 0) return channelCompare;
-    return left.pair.localeCompare(right.pair);
-  });
+  return [...localPairPerformance.values()]
+    .filter((p) => p.channel !== "private-test-channel:3955968449")
+    .sort((left, right) => {
+      const channelCompare = left.channel.localeCompare(right.channel);
+      if (channelCompare !== 0) return channelCompare;
+      return left.pair.localeCompare(right.pair);
+    });
 }
 
 /**

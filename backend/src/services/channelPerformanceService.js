@@ -25,6 +25,9 @@ export async function aggregateChannelPerformance() {
     // Group signals by channel
     outcomes.forEach((o) => {
       const ch = o.channel;
+      if (ch === "private-test-channel:3955968449") {
+        return;
+      }
       if (!groups[ch]) {
         groups[ch] = [];
       }
@@ -171,12 +174,14 @@ export async function aggregateChannelPerformance() {
  */
 export async function getChannelPerformances() {
   if (isMongoConnected()) {
-    return ChannelPerformance.find({}).sort({ channel: 1 }).lean();
+    return ChannelPerformance.find({ channel: { $ne: "private-test-channel:3955968449" } }).sort({ channel: 1 }).lean();
   }
 
-  return [...localPerformance.values()].sort((left, right) =>
-    left.channel.localeCompare(right.channel)
-  );
+  return [...localPerformance.values()]
+    .filter((p) => p.channel !== "private-test-channel:3955968449")
+    .sort((left, right) =>
+      left.channel.localeCompare(right.channel)
+    );
 }
 
 /**
