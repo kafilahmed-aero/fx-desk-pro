@@ -206,6 +206,11 @@ export const monitoredTelegramChannels = [
     username: "livetradeann",
     title: "livetradeann",
   },
+  {
+    ref: "thelimitlessfx",
+    username: "thelimitlessfx",
+    title: "thelimitlessfx",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);
