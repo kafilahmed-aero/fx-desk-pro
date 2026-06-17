@@ -152,6 +152,47 @@ export function updateInMemorySignalState(pair, signalId, newState, now = new Da
   return pairState;
 }
 
+export function updateInMemorySignalLifecycle(pair, signalId, effectiveStopLoss, remainingTargets, lifecycleStage, now = new Date()) {
+  const pairState = getStoredPairState(pair);
+  if (!pairState) {
+    return null;
+  }
+
+  // Find the target signal in activeSignals
+  const targetSignal = pairState.activeSignals.find(
+    (signal) => String(signal._id || "") === String(signalId)
+  );
+
+  if (!targetSignal) {
+    return null;
+  }
+
+  if (
+    targetSignal.effectiveStopLoss === effectiveStopLoss &&
+    JSON.stringify(targetSignal.remainingTargets) === JSON.stringify(remainingTargets) &&
+    targetSignal.lifecycleStage === lifecycleStage
+  ) {
+    return pairState;
+  }
+
+  const prevSL = targetSignal.effectiveStopLoss;
+  const prevStage = targetSignal.lifecycleStage;
+
+  targetSignal.effectiveStopLoss = effectiveStopLoss;
+  targetSignal.remainingTargets = remainingTargets;
+  targetSignal.lifecycleStage = lifecycleStage;
+
+  debugLog("[OUTCOME SYNC LIFECYCLE UPDATE]");
+  debugLog(`${pair} signal ${signalId} SL ${prevSL} -> ${effectiveStopLoss}, stage ${prevStage} -> ${lifecycleStage}`);
+
+  recalculatePairState(pairState, now);
+  savePairState(pairState);
+  broadcastPairStateUpdate(pairState);
+
+  return pairState;
+}
+
+
 
 function isPrivateTestSignal(signal) {
   return String(signal?.channel || "").startsWith("private-test-channel:");
@@ -180,6 +221,9 @@ function createStoredSignal(signal) {
     entryRange: signal.entryRange || [],
     targets: signal.targets || [],
     stopLoss: signal.stopLoss,
+    effectiveStopLoss: signal.effectiveStopLoss !== undefined ? signal.effectiveStopLoss : signal.stopLoss,
+    remainingTargets: signal.remainingTargets !== undefined ? signal.remainingTargets : (signal.targets || []),
+    lifecycleStage: signal.lifecycleStage !== undefined ? signal.lifecycleStage : 0,
     timestamp: signal.createdAt || signal.timestamp || null,
     sourceChannel: signal.channel || "unknown",
     sourceChannelTitle: signal.channelTitle || null,
@@ -257,8 +301,22 @@ function calculatePairZones(signals) {
 function buildDirectionalZones(signals) {
   return {
     entryZone: buildZone(signals.flatMap(getEntryValues)),
-    tpZone: buildZone(signals.flatMap((signal) => signal.targets || [])),
-    slZone: buildZone(signals.map((signal) => signal.stopLoss)),
+    tpZone: buildZone(
+      signals.flatMap(
+        (signal) =>
+          signal.remainingTargets !== undefined
+            ? signal.remainingTargets
+            : (signal.targets || [])
+      )
+    ),
+    slZone: buildZone(
+      signals.map(
+        (signal) =>
+          signal.effectiveStopLoss !== undefined && signal.effectiveStopLoss !== null
+            ? signal.effectiveStopLoss
+            : signal.stopLoss
+      )
+    ),
   };
 }
 

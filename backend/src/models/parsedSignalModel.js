@@ -178,6 +178,18 @@ const parsedSignalSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    effectiveStopLoss: {
+      type: Number,
+      default: null,
+    },
+    remainingTargets: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    lifecycleStage: {
+      type: Number,
+      default: 0,
+    },
     isTestSignal: {
       type: Boolean,
       default: false,

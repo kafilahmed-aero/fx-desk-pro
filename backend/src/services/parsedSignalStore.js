@@ -11,6 +11,16 @@ const signalKeys = new Set();
 // Parsed signal storage is separate from raw message storage by design.
 // Parser quality can improve without losing the original Telegram message.
 export async function storeParsedSignal(signal) {
+  if (signal.effectiveStopLoss === undefined) {
+    signal.effectiveStopLoss = signal.stopLoss;
+  }
+  if (signal.remainingTargets === undefined) {
+    signal.remainingTargets = signal.targets || [];
+  }
+  if (signal.lifecycleStage === undefined) {
+    signal.lifecycleStage = 0;
+  }
+
   const key = createSignalKey(signal.channel, signal.messageId);
 
   if (signalKeys.has(key)) {
@@ -90,6 +100,42 @@ export async function updateParsedSignalState(signalId, newState) {
   }
   return false;
 }
+
+export async function updateParsedSignalLifecycle(signalId, effectiveStopLoss, remainingTargets, lifecycleStage) {
+  if (isMongoConnected()) {
+    try {
+      await ParsedSignal.updateOne(
+        { _id: signalId },
+        { $set: { effectiveStopLoss, remainingTargets, lifecycleStage } }
+      );
+      
+      const localIdx = parsedSignals.findIndex((s) => String(s._id) === String(signalId));
+      if (localIdx !== -1) {
+        parsedSignals[localIdx].effectiveStopLoss = effectiveStopLoss;
+        parsedSignals[localIdx].remainingTargets = remainingTargets;
+        parsedSignals[localIdx].lifecycleStage = lifecycleStage;
+      }
+      logger.info("parsed_signal.lifecycle_updated", { signalId, effectiveStopLoss, remainingTargets, lifecycleStage });
+      return true;
+    } catch (error) {
+      logger.error("parsed_signal.lifecycle_update_failed", {
+        signalId,
+        error: error.message
+      });
+    }
+  } else {
+    const localIdx = parsedSignals.findIndex((s) => String(s._id) === String(signalId));
+    if (localIdx !== -1) {
+      parsedSignals[localIdx].effectiveStopLoss = effectiveStopLoss;
+      parsedSignals[localIdx].remainingTargets = remainingTargets;
+      parsedSignals[localIdx].lifecycleStage = lifecycleStage;
+      logger.info("parsed_signal.local_lifecycle_updated", { signalId, effectiveStopLoss, remainingTargets, lifecycleStage });
+      return true;
+    }
+  }
+  return false;
+}
+
 
 
 export async function getParsedSignals(limit = 100, filters = {}) {

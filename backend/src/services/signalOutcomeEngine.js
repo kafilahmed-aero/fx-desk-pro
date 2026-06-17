@@ -1,7 +1,8 @@
 import { saveOutcome, getOutcomeByMessageKey, getActiveAndPendingOutcomes } from "./signalOutcomeStore.js";
 import { logger } from "../utils/logger.js";
-import { updateParsedSignalState } from "./parsedSignalStore.js";
-import { updateInMemorySignalState } from "./pairStateEngine.js";
+import { updateParsedSignalState, updateParsedSignalLifecycle } from "./parsedSignalStore.js";
+import { updateInMemorySignalState, updateInMemorySignalLifecycle } from "./pairStateEngine.js";
+
 
 const DEFAULT_EXPIRATION_HOURS = 72;
 
@@ -390,6 +391,14 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
         await updateParsedSignalState(signalId, newSignalState);
         updateInMemorySignalState(pair, signalId, newSignalState);
       }
+
+      if (saved.status === "PARTIAL_TP" && signalId) {
+        const adj = getLifecycleAdjustments(saved);
+        if (adj) {
+          await updateParsedSignalLifecycle(signalId, adj.effectiveStopLoss, adj.remainingTargets, adj.lifecycleStage);
+          updateInMemorySignalLifecycle(pair, signalId, adj.effectiveStopLoss, adj.remainingTargets, adj.lifecycleStage);
+        }
+      }
     } catch (syncErr) {
       logger.error("outcome.sync_failed", {
         messageKey: saved.messageKey,
@@ -444,7 +453,7 @@ export async function updateOutcomeStatus(messageKey, status, reason, data = {})
       reason,
     });
 
-    if (originalStatus !== status) {
+    if (originalStatus !== status || Array.isArray(data.hitTargets)) {
       try {
         const signalId = saved.signalId;
         const pair = saved.pair;
@@ -452,6 +461,14 @@ export async function updateOutcomeStatus(messageKey, status, reason, data = {})
         if (newSignalState && signalId) {
           await updateParsedSignalState(signalId, newSignalState);
           updateInMemorySignalState(pair, signalId, newSignalState);
+        }
+
+        if (saved.status === "PARTIAL_TP" && signalId) {
+          const adj = getLifecycleAdjustments(saved);
+          if (adj) {
+            await updateParsedSignalLifecycle(signalId, adj.effectiveStopLoss, adj.remainingTargets, adj.lifecycleStage);
+            updateInMemorySignalLifecycle(pair, signalId, adj.effectiveStopLoss, adj.remainingTargets, adj.lifecycleStage);
+          }
         }
       } catch (syncErr) {
         logger.error("outcome.sync_failed", {
@@ -549,4 +566,40 @@ export async function processSignalUpdate(signal) {
 
   return null;
 }
+
+export function getLifecycleAdjustments(outcome) {
+  const hitTargets = outcome.hitTargets || [];
+  if (hitTargets.length === 0) {
+    return null;
+  }
+
+  const sortedHits = [...hitTargets].sort((a, b) => a - b);
+  const maxHit = sortedHits[sortedHits.length - 1];
+  const totalTargets = (outcome.targets || []).length;
+
+  if (maxHit >= totalTargets) {
+    return null;
+  }
+
+  let newStopLoss = outcome.stopLoss;
+  if (maxHit === 1) {
+    newStopLoss = outcome.entry.entryPrice;
+  } else if (maxHit > 1) {
+    const prevTarget = outcome.targets.find(t => t.targetNumber === maxHit - 1);
+    if (prevTarget) {
+      newStopLoss = prevTarget.price;
+    }
+  }
+
+  const remainingTargets = outcome.targets
+    .filter(t => t.targetNumber > maxHit)
+    .map(t => t.price);
+
+  return {
+    effectiveStopLoss: newStopLoss,
+    remainingTargets,
+    lifecycleStage: maxHit
+  };
+}
+
 

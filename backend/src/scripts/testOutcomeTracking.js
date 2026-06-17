@@ -358,6 +358,84 @@ async function runTests() {
     failedTests++;
   }
 
+  // TEST 11: Dynamic Trade Lifecycle Management (Preserving Originals)
+  try {
+    resetOutcomeStore();
+    resetPairStateStore();
+
+    const signalId = new mongoose.Types.ObjectId();
+    const sig = buildMockSignal({
+      _id: signalId,
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2000,
+      targets: [2010, 2020, 2030],
+      stopLoss: 1990,
+      messageId: 1001,
+      channel: "LifecycleChannel1",
+    });
+
+    // 1. Ingest parsed signal
+    await storeParsedSignal(sig);
+    let outcome = await initializeOutcome(sig);
+
+    // Initial checks
+    let pairState = getPairState("XAUUSD");
+    assert(pairState.signalCount === 1, "Signal is active initially");
+    assert(pairState.slZone.min === 1990 && pairState.slZone.max === 1990, "Initial slZone is the original stopLoss (1990)");
+    assert(pairState.tpZone.min === 2010 && pairState.tpZone.max === 2030, "Initial tpZone covers all original targets (2010-2030)");
+
+    // 2. Trigger Entry -> ACTIVE
+    outcome = await updateOutcomePrice(outcome, 2000, new Date());
+    assert(outcome.status === "ACTIVE", "Outcome status is ACTIVE");
+
+    // 3. Hit Target 1 (TP1 = 2010) -> PARTIAL_TP
+    outcome = await updateOutcomePrice(outcome, 2012, new Date());
+    assert(outcome.status === "PARTIAL_TP", "Outcome status transitions to PARTIAL_TP on TP1 hit");
+
+    // Verify consensus zones have updated to break-even (SL -> Entry) and targets exclude TP1
+    pairState = getPairState("XAUUSD");
+    assert(pairState.slZone.min === 2000 && pairState.slZone.max === 2000, "slZone updated to Entry Price (2000) [break-even]");
+    assert(pairState.tpZone.min === 2020 && pairState.tpZone.max === 2030, "tpZone updated to exclude hit target TP1 (2020-2030)");
+
+    // Verify that original fields are preserved on the in-memory signal
+    const activeSig = pairState.activeSignals[0];
+    assert(activeSig.stopLoss === 1990, "Original stopLoss remains preserved (1990)");
+    assert(activeSig.targets.length === 3 && activeSig.targets[0] === 2010, "Original targets list remains preserved");
+    // Verify that dynamic fields are set on the in-memory signal
+    assert(activeSig.effectiveStopLoss === 2000, "effectiveStopLoss is Entry Price (2000)");
+    assert(activeSig.remainingTargets.length === 2 && activeSig.remainingTargets[0] === 2020, "remainingTargets contains TP2 and TP3");
+    assert(activeSig.lifecycleStage === 1, "lifecycleStage is 1");
+
+    // 4. Hit Target 2 (TP2 = 2020) -> PARTIAL_TP (Stage 2)
+    outcome = await updateOutcomePrice(outcome, 2022, new Date());
+    assert(outcome.status === "PARTIAL_TP", "Outcome status remains PARTIAL_TP on TP2 hit");
+
+    pairState = getPairState("XAUUSD");
+    assert(pairState.slZone.min === 2010 && pairState.slZone.max === 2010, "slZone updated to TP1 price (2010) [profit locked]");
+    assert(pairState.tpZone.min === 2030 && pairState.tpZone.max === 2030, "tpZone updated to exclude hit targets TP1 and TP2 (2030-2030)");
+
+    // Verify dynamic fields
+    const activeSigStage2 = pairState.activeSignals[0];
+    assert(activeSigStage2.effectiveStopLoss === 2010, "effectiveStopLoss is TP1 price (2010)");
+    assert(activeSigStage2.remainingTargets.length === 1 && activeSigStage2.remainingTargets[0] === 2030, "remainingTargets contains only TP3");
+    assert(activeSigStage2.lifecycleStage === 2, "lifecycleStage is 2");
+
+    // 5. Hit Target 3 (TP3 = 2030) -> FULL_TP
+    outcome = await updateOutcomePrice(outcome, 2035, new Date());
+    assert(outcome.status === "FULL_TP", "Outcome status transitions to FULL_TP on TP3 hit");
+
+    // Verify closed signal is excluded from consensus
+    pairState = getPairState("XAUUSD");
+    assert(pairState.signalCount === 0, "Signal is now closed and excluded from consensus");
+    assert(pairState.activeSignals[0].signalState === "CLOSED", "In-memory signal state is CLOSED");
+
+  } catch (err) {
+    console.error("Test 11 Failed with error:", err);
+    failedTests++;
+  }
+
+
 
   console.log("\n=== TEST RUN SUMMARY ===");
   console.log(`PASSED: ${passedTests}`);
