@@ -49,10 +49,6 @@ export async function getDbAudit(request, response) {
     const inMemoryActiveOpportunitiesCount = getActiveOpportunities().length;
     const inMemoryOpportunities = getActiveOpportunities();
 
-    const activeParsedSignals = await ParsedSignal.find({
-      signalState: { $in: ["ACTIVE", "PARTIAL"] }
-    }).select("_id pair signalState entryRange stopLoss targets effectiveStopLoss remainingTargets lifecycleStage channel messageId");
-
     const cutoffTime = new Date(Date.now() - 180 * 60 * 1000);
     const recentActiveSignals = await ParsedSignal.find({
       signalState: { $in: ["ACTIVE", "PARTIAL"] },
@@ -66,7 +62,6 @@ export async function getDbAudit(request, response) {
       inMemoryPairStatesCount,
       inMemoryActiveOpportunitiesCount,
       inMemoryOpportunities,
-      activeParsedSignals,
       recentActiveSignals
     });
   } catch (err) {
