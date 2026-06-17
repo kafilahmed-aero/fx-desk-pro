@@ -120,6 +120,39 @@ export function updatePairStateFromSignal(signal, now = new Date()) {
   return pairState;
 }
 
+export function updateInMemorySignalState(pair, signalId, newState, now = new Date()) {
+  const pairState = getStoredPairState(pair);
+  if (!pairState) {
+    return null;
+  }
+
+  // Find the target signal in activeSignals
+  const targetSignal = pairState.activeSignals.find(
+    (signal) => String(signal._id || "") === String(signalId)
+  );
+
+  if (!targetSignal) {
+    return null;
+  }
+
+  if (targetSignal.signalState === newState) {
+    return pairState;
+  }
+
+  const previousState = targetSignal.signalState;
+  targetSignal.signalState = newState;
+
+  debugLog("[OUTCOME SYNC STATE UPDATE]");
+  debugLog(`${pair} signal ${signalId} state ${previousState} -> ${newState}`);
+
+  recalculatePairState(pairState, now);
+  savePairState(pairState);
+  broadcastPairStateUpdate(pairState);
+
+  return pairState;
+}
+
+
 function isPrivateTestSignal(signal) {
   return String(signal?.channel || "").startsWith("private-test-channel:");
 }
@@ -140,6 +173,7 @@ function isNewTradeSignal(signal) {
 
 function createStoredSignal(signal) {
   return {
+    _id: signal._id || null,
     pair: signal.pair,
     action: signal.action,
     entry: signal.entry,

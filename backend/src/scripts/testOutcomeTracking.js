@@ -4,6 +4,9 @@ import { resetPriceCache, fetchPrices, getCurrentPrice } from "../services/price
 import { initializeOutcome, updateOutcomePrice, processSignalUpdate } from "../services/signalOutcomeEngine.js";
 import { runMonitoringCycle } from "../services/priceMonitoringScheduler.js";
 import { logger } from "../utils/logger.js";
+import { storeParsedSignal } from "../services/parsedSignalStore.js";
+import { getPairState, resetPairStateStore } from "../services/pairStateEngine.js";
+
 
 // Force quiet logging for clean test output
 logger.level = "warn";
@@ -273,6 +276,88 @@ async function runTests() {
     console.error("Test 9 Failed with error:", err);
     failedTests++;
   }
+
+  // TEST 10: Outcome-to-Consensus Synchronization
+  try {
+    resetOutcomeStore();
+    resetPairStateStore();
+    
+    const signalId = new mongoose.Types.ObjectId();
+    const sig = buildMockSignal({
+      _id: signalId,
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2000,
+      targets: [2010, 2020],
+      stopLoss: 1990,
+      messageId: 1001,
+      channel: "SyncChannel1",
+    });
+
+    // 1. Ingest parsed signal
+    const storeResult = await storeParsedSignal(sig);
+    assert(storeResult.stored === true, "Signal stored in parsedSignalStore");
+
+    // 2. Initialize outcome tracking
+    let outcome = await initializeOutcome(sig);
+    assert(outcome.status === "PENDING", "Outcome initialized as PENDING");
+
+    // Check that pair state has 1 active signal
+    let pairState = getPairState("XAUUSD");
+    assert(pairState !== null && pairState.signalCount === 1, "Pair state has 1 active signal contributing to consensus");
+    assert(pairState.activeSignals[0].signalState === "ACTIVE", "Active signal in-memory state is ACTIVE");
+
+    // 3. Trigger Entry -> ACTIVE
+    outcome = await updateOutcomePrice(outcome, 2000, new Date());
+    assert(outcome.status === "ACTIVE", "Outcome status updated to ACTIVE");
+    
+    pairState = getPairState("XAUUSD");
+    assert(pairState.signalCount === 1, "Consensus signal count remains 1");
+    assert(pairState.activeSignals[0].signalState === "ACTIVE", "In-memory signal state remains ACTIVE");
+
+    // 4. Trigger Stop Loss hit -> SL_HIT -> Mapped to CLOSED
+    outcome = await updateOutcomePrice(outcome, 1985, new Date());
+    assert(outcome.status === "SL_HIT", "Outcome status is SL_HIT");
+
+    // Verify consensus exclusion
+    pairState = getPairState("XAUUSD");
+    assert(pairState.signalCount === 0, "Consensus signal count is now 0 (signal excluded)");
+    assert(pairState.activeSignals[0].signalState === "CLOSED", "In-memory signal state is updated to CLOSED");
+
+    // 5. Test another signal hitting targets -> FULL_TP -> Mapped to CLOSED
+    const signalId2 = new mongoose.Types.ObjectId();
+    const sig2 = buildMockSignal({
+      _id: signalId2,
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 2000,
+      targets: [2010],
+      stopLoss: 1990,
+      messageId: 1002,
+      channel: "SyncChannel1",
+    });
+
+    await storeParsedSignal(sig2);
+    let outcome2 = await initializeOutcome(sig2);
+    
+    pairState = getPairState("XAUUSD");
+    assert(pairState.signalCount === 1, "Consensus signal count rose to 1 for the second signal");
+
+    // Price hits entry
+    outcome2 = await updateOutcomePrice(outcome2, 2000, new Date());
+    // Price hits target
+    outcome2 = await updateOutcomePrice(outcome2, 2015, new Date());
+    assert(outcome2.status === "FULL_TP", "Outcome status is FULL_TP");
+
+    pairState = getPairState("XAUUSD");
+    assert(pairState.signalCount === 0, "Consensus signal count dropped back to 0 (signal excluded)");
+    assert(pairState.activeSignals.find(s => String(s._id) === String(signalId2)).signalState === "CLOSED", "In-memory signal state for target signal updated to CLOSED");
+
+  } catch (err) {
+    console.error("Test 10 Failed with error:", err);
+    failedTests++;
+  }
+
 
   console.log("\n=== TEST RUN SUMMARY ===");
   console.log(`PASSED: ${passedTests}`);

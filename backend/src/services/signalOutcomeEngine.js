@@ -1,6 +1,20 @@
 import { saveOutcome, getOutcomeByMessageKey, getActiveAndPendingOutcomes } from "./signalOutcomeStore.js";
 import { logger } from "../utils/logger.js";
+import { updateParsedSignalState } from "./parsedSignalStore.js";
+import { updateInMemorySignalState } from "./pairStateEngine.js";
+
 const DEFAULT_EXPIRATION_HOURS = 72;
+
+const OUTCOME_TO_SIGNAL_STATE_MAP = {
+  PENDING: "ACTIVE",
+  ACTIVE: "ACTIVE",
+  PARTIAL_TP: "PARTIAL",
+  FULL_TP: "CLOSED",
+  SL_HIT: "CLOSED",
+  EXPIRED: "CLOSED",
+  CANCELLED: "CLOSED",
+};
+
 
 /**
  * Resolves a pair name to its pip decimal scale factor
@@ -365,8 +379,28 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
   outcome.lastCheckedAt = new Date();
   
   // Save changes if anything was updated
-  return saveOutcome(outcome);
+  const saved = await saveOutcome(outcome);
+
+  if (statusChanged) {
+    try {
+      const signalId = saved.signalId;
+      const pair = saved.pair;
+      const newSignalState = OUTCOME_TO_SIGNAL_STATE_MAP[saved.status];
+      if (newSignalState && signalId) {
+        await updateParsedSignalState(signalId, newSignalState);
+        updateInMemorySignalState(pair, signalId, newSignalState);
+      }
+    } catch (syncErr) {
+      logger.error("outcome.sync_failed", {
+        messageKey: saved.messageKey,
+        error: syncErr.message,
+      });
+    }
+  }
+
+  return saved;
 }
+
 
 /**
  * Processes manual updates or result messages to force states / record reasons
@@ -409,6 +443,24 @@ export async function updateOutcomeStatus(messageKey, status, reason, data = {})
       to: status,
       reason,
     });
+
+    if (originalStatus !== status) {
+      try {
+        const signalId = saved.signalId;
+        const pair = saved.pair;
+        const newSignalState = OUTCOME_TO_SIGNAL_STATE_MAP[saved.status];
+        if (newSignalState && signalId) {
+          await updateParsedSignalState(signalId, newSignalState);
+          updateInMemorySignalState(pair, signalId, newSignalState);
+        }
+      } catch (syncErr) {
+        logger.error("outcome.sync_failed", {
+          messageKey: saved.messageKey,
+          error: syncErr.message,
+        });
+      }
+    }
+
     return saved;
   } catch (error) {
     logger.error("outcome.manual_override_failed", {

@@ -3,6 +3,7 @@ import { ParsedSignal } from "../models/parsedSignalModel.js";
 import { enrichPossibleDuplicate } from "./duplicateSignalDetection.js";
 import { updatePairStateFromSignal } from "./pairStateEngine.js";
 import { isExpiredTestSignal } from "./testSignalExpiry.js";
+import { logger } from "../utils/logger.js";
 
 const parsedSignals = [];
 const signalKeys = new Set();
@@ -50,6 +51,46 @@ export async function storeParsedSignal(signal) {
     signal: signalWithDuplicateMetadata,
   };
 }
+
+export async function updateParsedSignalState(signalId, newState) {
+  if (isMongoConnected()) {
+    try {
+      const result = await ParsedSignal.updateOne(
+        { _id: signalId, signalState: { $ne: newState } },
+        { $set: { signalState: newState } }
+      );
+      
+      // Update in-memory copy of this signal in parsedSignals array if present
+      const localIdx = parsedSignals.findIndex((s) => String(s._id) === String(signalId));
+      if (localIdx !== -1) {
+        parsedSignals[localIdx].signalState = newState;
+      }
+
+      if (result.modifiedCount > 0) {
+        logger.info("parsed_signal.state_updated", { signalId, newState });
+        return true;
+      }
+    } catch (error) {
+      logger.error("parsed_signal.state_update_failed", {
+        signalId,
+        newState,
+        error: error.message,
+      });
+    }
+  } else {
+    // Memory fallback logic
+    const localIdx = parsedSignals.findIndex((s) => String(s._id) === String(signalId));
+    if (localIdx !== -1) {
+      if (parsedSignals[localIdx].signalState !== newState) {
+        parsedSignals[localIdx].signalState = newState;
+        logger.info("parsed_signal.local_state_updated", { signalId, newState });
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 
 export async function getParsedSignals(limit = 100, filters = {}) {
   const query = createSignalQuery(filters);
