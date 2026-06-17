@@ -49,6 +49,8 @@ export const config = {
     channels: getMonitoredTelegramChannelRefs(),
     pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS) || 30000,
     pollLimit: Number(process.env.TELEGRAM_POLL_LIMIT) || 10,
+    backfillHours: Number(process.env.TELEGRAM_BACKFILL_HOURS) || 3,
+    backfillLimit: Number(process.env.TELEGRAM_BACKFILL_LIMIT) || 200,
   },
   telegramAlert: {
     botToken: process.env.TELEGRAM_ALERT_BOT_TOKEN || "",

@@ -7,6 +7,10 @@ const numberRegex = new RegExp(numberPattern, "g");
 const pipWordPattern = /(?:\b|(?<=\d))PIPS?\b/i;
 const expectedNewSignalFields = ["pair", "action", "entry", "targets", "stopLoss"];
 
+const CHANNEL_DEFAULT_PAIRS = {
+  "arixanderxx7": "XAUUSD"
+};
+
 // Rules-based extraction for noisy Telegram messages. Every field is optional:
 // partial signals are useful input for later consensus, so malformed messages
 // should become low-confidence records instead of parser crashes.
@@ -14,6 +18,11 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
   try {
     const normalized = runNormalizationStage(rawMessage);
     const entities = runEntityExtractionStage(normalized);
+
+    // Apply channel-specific default pair if no pair is detected
+    if ((!entities.pair || entities.pair === "unknown") && rawMessage.channel && CHANNEL_DEFAULT_PAIRS[rawMessage.channel]) {
+      entities.pair = CHANNEL_DEFAULT_PAIRS[rawMessage.channel];
+    }
 
     const hasPair = !!entities.pair && entities.pair !== "unknown";
     const hasAction = !!entities.action;
@@ -587,7 +596,11 @@ function entryFromMatch(match) {
   }
 
   const entry = toNumber(match[1]);
-  const secondEntry = match[2] ? toNumber(match[2]) : null;
+  let secondEntry = match[2] ? toNumber(match[2]) : null;
+
+  if (entry !== null && secondEntry !== null && match[2]) {
+    secondEntry = reconstructAbbreviatedValue(entry, secondEntry, match[2].trim());
+  }
 
   return {
     entry,
@@ -653,14 +666,54 @@ function getEntryRangeFromLine(line, numbers, entry) {
     return [];
   }
 
-  if (
-    numbers.length >= 2 &&
-    new RegExp(`${numberPattern}\\s*(?://|[-/]|TO|AND|\\s)\\s*${numberPattern}`).test(line)
-  ) {
-    return normalizeEntryRange(numbers.slice(0, 2));
+  if (numbers.length >= 2) {
+    const match = line.match(new RegExp(`(${numberPattern})\\s*(?://|[-/]|TO|AND|\\s)\\s*(${numberPattern})`, "i"));
+    if (match) {
+      const firstVal = toNumber(match[1]);
+      let secondVal = toNumber(match[2]);
+      if (firstVal !== null && secondVal !== null) {
+        secondVal = reconstructAbbreviatedValue(firstVal, secondVal, match[2].trim());
+        return normalizeEntryRange([firstVal, secondVal]);
+      }
+    }
   }
 
   return [entry];
+}
+
+function reconstructAbbreviatedValue(firstVal, secondVal, secondStr) {
+  if (typeof firstVal !== "number" || typeof secondVal !== "number" || !secondStr) {
+    return secondVal;
+  }
+
+  if (firstVal <= 100) {
+    return secondVal;
+  }
+
+  const firstIntStr = Math.floor(firstVal).toString();
+  const secondIntStr = secondStr.split(".")[0];
+
+  if (secondIntStr.length < firstIntStr.length) {
+    const k = secondIntStr.length;
+    const factor = Math.pow(10, k);
+    const prefixVal = Math.floor(firstVal / factor) * factor;
+    const vBase = prefixVal + secondVal;
+    
+    const c1 = vBase - factor;
+    const c2 = vBase;
+    const c3 = vBase + factor;
+    
+    const diff1 = Math.abs(c1 - firstVal);
+    const diff2 = Math.abs(c2 - firstVal);
+    const diff3 = Math.abs(c3 - firstVal);
+    
+    const minDiff = Math.min(diff1, diff2, diff3);
+    if (minDiff === diff1) return c1;
+    if (minDiff === diff2) return c2;
+    return c3;
+  }
+
+  return secondVal;
 }
 
 function normalizeEntryRange(values) {

@@ -1,7 +1,46 @@
 import { saveOutcome, getOutcomeByMessageKey, getActiveAndPendingOutcomes } from "./signalOutcomeStore.js";
 import { logger } from "../utils/logger.js";
-
 const DEFAULT_EXPIRATION_HOURS = 72;
+
+/**
+ * Resolves a pair name to its pip decimal scale factor
+ * @param {string} pair - Normalized pair name
+ * @returns {number} The scale value for 1 pip
+ */
+export function getPipValue(pair) {
+  const normalized = String(pair).toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  // 1. Metals
+  if (["XAUUSD", "GOLD", "XAU"].includes(normalized)) {
+    return 0.1;
+  }
+  if (["XAGUSD", "SILVER", "XAG"].includes(normalized)) {
+    return 0.01;
+  }
+
+  // 2. JPY Pairs
+  if (normalized.endsWith("JPY")) {
+    return 0.01;
+  }
+
+  // 3. Crypto / Indices
+  if (
+    normalized.startsWith("BTC") || 
+    normalized.startsWith("ETH") || 
+    normalized.startsWith("SOL") ||
+    ["US30", "DOW", "DOWJONES", "NAS100", "NASDAQ", "USTEC", "SPX500", "US100", "GER30", "GER40", "UK100"].includes(normalized)
+  ) {
+    return 1.0;
+  }
+
+  // 4. Commodities
+  if (["USOIL", "WTI", "UKOIL", "BRENT", "NATGAS"].includes(normalized)) {
+    return 0.01;
+  }
+
+  // 5. Default Forex (EURUSD, GBPUSD, AUDUSD, NZDUSD, USDCAD, USDCHF, etc.)
+  return 0.0001;
+}
 
 /**
  * Initializes a new SignalOutcome record from a ParsedSignal
@@ -41,7 +80,9 @@ export async function initializeOutcome(signal) {
 
   // Format Targets Information
   const targets = [];
-  if (Array.isArray(signal.targets)) {
+  let targetsPopulated = false;
+  
+  if (Array.isArray(signal.targets) && signal.targets.length > 0) {
     signal.targets.forEach((tgt, index) => {
       const price = typeof tgt === "object" ? Number(tgt.price) : Number(tgt);
       if (!isNaN(price)) {
@@ -52,9 +93,12 @@ export async function initializeOutcome(signal) {
           hitAt: null,
           hitPrice: null,
         });
+        targetsPopulated = true;
       }
     });
-  } else if (signal.target) {
+  }
+  
+  if (!targetsPopulated && signal.target) {
     const price = Number(signal.target);
     if (!isNaN(price)) {
       targets.push({
@@ -64,7 +108,34 @@ export async function initializeOutcome(signal) {
         hitAt: null,
         hitPrice: null,
       });
+      targetsPopulated = true;
     }
+  }
+
+  if (!targetsPopulated && Array.isArray(signal.pipTargets) && signal.pipTargets.length > 0 && typeof entryPrice === "number" && !isNaN(entryPrice)) {
+    const pipValue = getPipValue(signal.pair);
+    signal.pipTargets.forEach((pipTgt, index) => {
+      const pips = Number(pipTgt);
+      if (!isNaN(pips)) {
+        let price;
+        if (signal.action === "BUY") {
+          price = entryPrice + pips * pipValue;
+        } else if (signal.action === "SELL") {
+          price = entryPrice - pips * pipValue;
+        }
+        if (price !== undefined) {
+          const decimals = Math.max(2, (entryPrice.toString().split(".")[1] || "").length, (pipValue.toString().split(".")[1] || "").length);
+          price = Number(price.toFixed(decimals));
+          targets.push({
+            targetNumber: index + 1,
+            price,
+            isHit: false,
+            hitAt: null,
+            hitPrice: null,
+          });
+        }
+      }
+    });
   }
 
   // Expiration calculation (Default 72 Hours)

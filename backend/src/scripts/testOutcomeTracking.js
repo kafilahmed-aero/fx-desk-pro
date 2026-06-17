@@ -34,7 +34,8 @@ async function runTests() {
       action: overrides.action || "BUY",
       entry: overrides.entry !== undefined ? overrides.entry : 2000,
       entryRange: overrides.entryRange || [],
-      targets: overrides.targets || [2010, 2020, 2030],
+      targets: overrides.targets !== undefined ? overrides.targets : [2010, 2020, 2030],
+      pipTargets: overrides.pipTargets || [],
       stopLoss: overrides.stopLoss !== undefined ? overrides.stopLoss : 1990,
       classification: overrides.classification || "NEW_SIGNAL",
       parserClassification: overrides.parserClassification || "NEW_SIGNAL",
@@ -218,6 +219,58 @@ async function runTests() {
     assert(priceInfo !== null && priceInfo.price > 0, "Price ingested and stored in cache for GBPUSD");
   } catch (err) {
     console.error("Test 7 Failed with error:", err);
+    failedTests++;
+  }
+
+  // TEST 8: Pip-based Target Mapping during Initialization
+  try {
+    resetOutcomeStore();
+    const sig = buildMockSignal({
+      pair: "EURUSD",
+      action: "BUY",
+      entry: 1.1200,
+      targets: [],
+      pipTargets: [10, 20, 30]
+    });
+    const outcome = await initializeOutcome(sig);
+    assert(outcome !== null, "Pip-based signal outcome initialized successfully");
+    assert(outcome.targets.length === 3, "Mapped 3 pip targets to absolute targets");
+    assert(outcome.targets[0].targetNumber === 1 && outcome.targets[0].price === 1.1210, "Target 1 price is correct (1.1210)");
+    assert(outcome.targets[1].targetNumber === 2 && outcome.targets[1].price === 1.1220, "Target 2 price is correct (1.1220)");
+    assert(outcome.targets[2].targetNumber === 3 && outcome.targets[2].price === 1.1230, "Target 3 price is correct (1.1230)");
+  } catch (err) {
+    console.error("Test 8 Failed with error:", err);
+    failedTests++;
+  }
+
+  // TEST 9: Pip-based Target Mapping for SELL and JPY/Gold Pairs
+  try {
+    resetOutcomeStore();
+    const sigGold = buildMockSignal({
+      pair: "XAUUSD",
+      action: "SELL",
+      entry: 2350.0,
+      targets: [],
+      pipTargets: [50, 100]
+    });
+    const outcomeGold = await initializeOutcome(sigGold);
+    assert(outcomeGold.targets.length === 2, "Mapped Gold pip targets successfully");
+    assert(outcomeGold.targets[0].price === 2345.0, "Gold TP1 is correct (2345.0)");
+    assert(outcomeGold.targets[1].price === 2340.0, "Gold TP2 is correct (2340.0)");
+
+    const sigJpy = buildMockSignal({
+      pair: "USDJPY",
+      action: "BUY",
+      entry: 155.00,
+      targets: [],
+      pipTargets: [20, 50]
+    });
+    const outcomeJpy = await initializeOutcome(sigJpy);
+    assert(outcomeJpy.targets.length === 2, "Mapped USDJPY pip targets successfully");
+    assert(outcomeJpy.targets[0].price === 155.20, "USDJPY TP1 is correct (155.20)");
+    assert(outcomeJpy.targets[1].price === 155.50, "USDJPY TP2 is correct (155.50)");
+  } catch (err) {
+    console.error("Test 9 Failed with error:", err);
     failedTests++;
   }
 

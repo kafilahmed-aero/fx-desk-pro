@@ -60,10 +60,10 @@ export async function startTelegramListener() {
   listenerRunning = true;
 
   try {
-    await connectTelegramWithSavedSession();
+    const client = await connectTelegramWithSavedSession();
     logger.info("telegram.connected");
     lastStartupChannelReport = await validateStartupChannels();
-    await pollTelegramChannels();
+    await runStartupBackfill(client);
 
     listenerTimer = setInterval(() => {
       pollTelegramChannels().catch((error) => {
@@ -471,6 +471,167 @@ function logChannelPollingActive(channelRef, resolvedChannel) {
     channelUsername: resolvedChannel.channelUsername,
     channelTitle: resolvedChannel.channelTitle,
   });
+}
+
+export async function runStartupBackfill(client) {
+  const startedAt = Date.now();
+  logger.info("telegram.startup_backfill_started", {
+    backfillHours: config.telegram.backfillHours,
+    backfillLimit: config.telegram.backfillLimit,
+  });
+
+  const backfillMetrics = {
+    messagesFetched: 0,
+    messagesStored: 0,
+    messagesQueued: 0,
+    duplicateMessages: 0,
+    safetyLimitReached: false,
+  };
+
+  try {
+    for (const channel of config.telegram.channels) {
+      const channelMetrics = await backfillChannelMessages(client, channel);
+      backfillMetrics.messagesFetched += channelMetrics.messagesFetched;
+      backfillMetrics.messagesStored += channelMetrics.messagesStored;
+      backfillMetrics.messagesQueued += channelMetrics.messagesQueued;
+      backfillMetrics.duplicateMessages += channelMetrics.duplicateMessages;
+      if (channelMetrics.safetyLimitReached) {
+        backfillMetrics.safetyLimitReached = true;
+      }
+    }
+  } catch (error) {
+    logger.error("telegram.startup_backfill_failed", {
+      error: error.message,
+    });
+  }
+
+  logger.info("telegram.startup_backfill_complete", {
+    durationMs: Date.now() - startedAt,
+    messagesFetched: backfillMetrics.messagesFetched,
+    messagesStored: backfillMetrics.messagesStored,
+    messagesQueued: backfillMetrics.messagesQueued,
+    duplicateMessages: backfillMetrics.duplicateMessages,
+    safetyLimitReached: backfillMetrics.safetyLimitReached,
+  });
+
+  return backfillMetrics;
+}
+
+export async function backfillChannelMessages(client, channel) {
+  const channelMetrics = {
+    messagesFetched: 0,
+    messagesStored: 0,
+    messagesQueued: 0,
+    duplicateMessages: 0,
+    safetyLimitReached: false,
+  };
+
+  try {
+    const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
+    logChannelDiscovered(channel, resolvedChannel);
+
+    const backfillHours = config.telegram.backfillHours;
+    const backfillLimit = config.telegram.backfillLimit;
+    const minTime = new Date(Date.now() - backfillHours * 60 * 60 * 1000);
+
+    let offsetId = 0;
+    let fetchedCount = 0;
+    let keepFetching = true;
+
+    while (keepFetching && fetchedCount < backfillLimit) {
+      const limit = Math.min(100, backfillLimit - fetchedCount);
+      const messages = await client.getMessages(resolvedChannel.entity, {
+        limit,
+        offsetId,
+      });
+
+      if (messages.length === 0) {
+        break;
+      }
+
+      channelMetrics.messagesFetched += messages.length;
+      fetchedCount += messages.length;
+
+      for (const message of messages) {
+        const messageDate = new Date(message.date * 1000);
+
+        if (messageDate >= minTime) {
+          const text = message.message || "";
+          const hasMedia = Boolean(message.media);
+          const channelTitle =
+            resolvedChannel.channelTitle || message.chat?.title || message.sender?.username || null;
+
+          const rawMessage = {
+            channel: resolvedChannel.channelLabel,
+            channelTitle,
+            messageId: message.id,
+            text,
+            hasText: text.trim().length > 0,
+            hasMedia,
+            mediaType: hasMedia ? getMediaType(message.media) : null,
+            textLength: text.length,
+            timestamp: formatMessageDate(message.date),
+            fetchedAt: new Date().toISOString(),
+          };
+
+          const testSignalMetadata = createTestSignalMetadata(rawMessage);
+          rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
+
+          const result = await storeRawMessage(rawMessage);
+
+          if (result.stored) {
+            channelMetrics.messagesStored += 1;
+            ingestionMetrics.messagesStored += 1;
+            
+            const queueResult = enqueueRawMessageProcessing(rawMessage);
+            if (queueResult.queued) {
+              channelMetrics.messagesQueued += 1;
+              ingestionMetrics.messagesQueued += 1;
+            }
+            if (queueResult.duplicate) {
+              channelMetrics.duplicateMessages += 1;
+              ingestionMetrics.duplicateMessages += 1;
+            }
+          } else {
+            channelMetrics.duplicateMessages += 1;
+            ingestionMetrics.duplicateMessages += 1;
+          }
+        } else {
+          keepFetching = false;
+          break;
+        }
+      }
+
+      if (messages.length < limit) {
+        break;
+      }
+
+      offsetId = messages[messages.length - 1].id;
+    }
+
+    ingestionMetrics.messagesFetched += channelMetrics.messagesFetched;
+    logChannelSubscribed(channel, resolvedChannel);
+    logChannelPollingActive(channel, resolvedChannel);
+
+    if (fetchedCount >= backfillLimit && keepFetching) {
+      channelMetrics.safetyLimitReached = true;
+      logger.warn("telegram.backfill_safety_limit_reached", {
+        channelRef: channel,
+        sourceChannel: resolvedChannel.channelLabel,
+        limitReached: backfillLimit,
+      });
+    }
+
+  } catch (error) {
+    ingestionMetrics.channelFetchFailures += 1;
+    ingestionMetrics.lastError = error.message;
+    logger.error("telegram.backfill_channel_failed", {
+      channel,
+      error: error.message,
+    });
+  }
+
+  return channelMetrics;
 }
 
 function scheduleReconnect() {
