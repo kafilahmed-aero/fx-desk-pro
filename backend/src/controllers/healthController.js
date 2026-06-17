@@ -49,13 +49,18 @@ export async function getDbAudit(request, response) {
     const inMemoryActiveOpportunitiesCount = getActiveOpportunities().length;
     const inMemoryOpportunities = getActiveOpportunities();
 
+    const activeParsedSignals = await ParsedSignal.find({
+      signalState: { $in: ["ACTIVE", "PARTIAL"] }
+    }).select("_id pair signalState entryRange stopLoss targets effectiveStopLoss remainingTargets lifecycleStage channel messageId");
+
     response.json({
       statusCounts,
       totalParsedSignals,
       totalSignalOutcomes,
       inMemoryPairStatesCount,
       inMemoryActiveOpportunitiesCount,
-      inMemoryOpportunities
+      inMemoryOpportunities,
+      activeParsedSignals
     });
   } catch (err) {
     response.status(500).json({ error: err.message });
