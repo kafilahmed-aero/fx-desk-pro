@@ -53,6 +53,12 @@ export async function getDbAudit(request, response) {
       signalState: { $in: ["ACTIVE", "PARTIAL"] }
     }).select("_id pair signalState entryRange stopLoss targets effectiveStopLoss remainingTargets lifecycleStage channel messageId");
 
+    const cutoffTime = new Date(Date.now() - 180 * 60 * 1000);
+    const recentActiveSignals = await ParsedSignal.find({
+      signalState: { $in: ["ACTIVE", "PARTIAL"] },
+      createdAt: { $gte: cutoffTime }
+    }).select("_id pair signalState entryRange stopLoss targets effectiveStopLoss remainingTargets lifecycleStage channel messageId createdAt");
+
     response.json({
       statusCounts,
       totalParsedSignals,
@@ -60,7 +66,8 @@ export async function getDbAudit(request, response) {
       inMemoryPairStatesCount,
       inMemoryActiveOpportunitiesCount,
       inMemoryOpportunities,
-      activeParsedSignals
+      activeParsedSignals,
+      recentActiveSignals
     });
   } catch (err) {
     response.status(500).json({ error: err.message });
