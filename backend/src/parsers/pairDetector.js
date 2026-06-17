@@ -4,10 +4,13 @@ export const RECOGNIZED_ASSETS = new Set([
   "XAUUSD", "XAGUSD", "EURUSD", "GBPUSD", "USDJPY",
   "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "BTCUSD",
   "ETHUSD", "SOLUSD", "US30", "US100", "SPX500",
-  "GER40", "WTI", "BRENT", "NATGAS"
+  "GER40", "WTI", "BRENT", "NATGAS", "DXY"
 ]);
 
 const aliasMap = new Map([
+  // DXY Index
+  ["DXY", "DXY"],
+
   // Metals
   ["GOLD", "XAUUSD"],
   ["XAUUSD", "XAUUSD"],
@@ -196,8 +199,56 @@ export function isValidPairCandidate(candidate) {
   return true;
 }
 
+export function cleanTextForPairDetection(text = "") {
+  if (!text) return "";
+
+  // 1. If it has newlines, split and filter out promotional/footer lines
+  let processedText = text;
+  if (text.includes("\n")) {
+    const lines = text.split(/\r?\n/);
+    const urlPattern = /(?:https?:\/\/|www\.|t\.me)/i;
+    const telegramHandlePattern = /@\s*[a-zA-Z_][a-zA-Z0-9_]*/;
+    const promoKeywordsPattern = /\b(?:deposit|register|referral|signup|sign-up|join|contact|free vip|promo|advertisement|broker)\b/i;
+
+    const cleanLines = lines.filter((line) => {
+      const isPromo = urlPattern.test(line) || 
+                      telegramHandlePattern.test(line) || 
+                      promoKeywordsPattern.test(line);
+      return !isPromo;
+    });
+    processedText = cleanLines.join("\n");
+  }
+
+  // 2. Also strip individual URLs, Telegram handles, and common promo phrases inline
+  // to handle cases where newlines are already flattened or within remaining lines
+  processedText = processedText
+    .replace(/(?:https?:\/\/|www\.|t\.me)\S*/gi, "") // strip URLs completely
+    .replace(/@\s*[a-zA-Z_][a-zA-Z0-9_]*/g, "");     // strip Telegram handles completely
+
+  // Remove common promo phrases inline
+  const inlinePromoPhrases = [
+    /\bdeposit\s+\$?\d+/gi,
+    /\bfree\s+vip\b/gi,
+    /\bjoin\s+vip\b/gi,
+    /\bjoin\s+now\b/gi,
+    /\bjoin\s+channel\b/gi,
+    /\bcontact\s+to\s+join\b/gi,
+    /\bcontact\s+@\s*\w+/gi,
+    /\bsign\s*up\s*(?:on|at|with)?\b/gi,
+    /\bregister\s*(?:on|at|with)?\b/gi,
+    /\breferral\s+link\b/gi
+  ];
+
+  for (const pattern of inlinePromoPhrases) {
+    processedText = processedText.replace(pattern, "");
+  }
+
+  return processedText;
+}
+
 export function detectRawPair(text = "") {
-  const normalizedText = String(text || "").toUpperCase();
+  const cleanedText = cleanTextForPairDetection(text);
+  const normalizedText = String(cleanedText || "").toUpperCase();
 
   // 1. Explicit declaration has absolute priority (e.g. PAIR = SHOPIFY)
   const explicitMatch = normalizedText.match(/\b(?:PAIR|SYMBOL|INSTRUMENT|ASSET)\s*[:=]\s*([A-Z0-9#/-]{3,12})\b/);

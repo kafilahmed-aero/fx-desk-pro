@@ -114,7 +114,7 @@ function runNormalizationStage(rawMessage) {
 }
 
 function runEntityExtractionStage(normalized) {
-  const pair = extractPair(normalized.compactText);
+  const pair = extractPair(normalized.cleanedText);
   const bias = extractBias(normalized.compactText);
   const action = extractAction(normalized.compactText, bias);
 

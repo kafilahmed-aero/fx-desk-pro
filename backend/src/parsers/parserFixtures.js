@@ -1221,4 +1221,85 @@ export const parserFixtures = [
       stopLoss: 4280,
     },
   },
+  {
+    name: "Case 1: DXY signal with goldvip in footer",
+    rawMessage: {
+      channel: "gold_signals",
+      messageId: 3663,
+      text: "📊DXY: Market Is Looking Up! Buy!\n\n🆓SIGNAL DETAILS \n——————\nENTER: #DXY  long trade  \nCURRENT PRICE: 99.622\nSTOP LOSS: 99.574\nTAKE PROFIT: 99.693\n——————\n✈️ CONTACT TO JOIN GOLD SIGNALS VIP👉🏻 @goldvip_contact",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "DXY",
+      action: "BUY",
+      entry: 99.622,
+      targets: [99.693],
+      stopLoss: 99.574,
+    },
+  },
+  {
+    name: "Case 2: BTCUSD signal with gold trader vip in footer",
+    rawMessage: {
+      channel: "fixture-promo",
+      messageId: 2002,
+      text: "BTCUSD BUY 98000\nTP 100000\nSL 96000\n\nJoin our gold trader vip group today!",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "BTCUSD",
+      action: "BUY",
+      entry: 98000,
+      targets: [100000],
+      stopLoss: 96000,
+    },
+  },
+  {
+    name: "Case 3: NAS100 signal with gold in footer",
+    rawMessage: {
+      channel: "fixture-promo",
+      messageId: 2003,
+      text: "NAS100 BUY 20000\nTP 20200\nSL 19900\n\nGet gold vip access now.",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "US100",
+      action: "BUY",
+      entry: 20000,
+      targets: [20200],
+      stopLoss: 19900,
+    },
+  },
+  {
+    name: "Case 4: XAUUSD signal with btcvip in footer",
+    rawMessage: {
+      channel: "fixture-promo",
+      messageId: 2004,
+      text: "XAUUSD SELL 2700\nTP 2650\nSL 2720\n\nJoin our btcvip community at t.me/btcvip",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "SELL",
+      entry: 2700,
+      targets: [2650],
+      stopLoss: 2720,
+    },
+  },
+  {
+    name: "Case 5: No pair present and goldvip in footer",
+    rawMessage: {
+      channel: "fixture-promo",
+      messageId: 2005,
+      text: "BUY 1.0900\nTP 1.0950\nSL 1.0850\n\n@gold_signals",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NOISE",
+      parsed: false,
+    },
+  },
 ];
