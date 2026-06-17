@@ -55,6 +55,8 @@ export async function getDbAudit(request, response) {
       createdAt: { $gte: cutoffTime }
     }).select("_id pair signalState entryRange stopLoss targets effectiveStopLoss remainingTargets lifecycleStage channel messageId createdAt");
 
+    const inMemoryPairStates = getStoredPairStates();
+
     response.json({
       statusCounts,
       totalParsedSignals,
@@ -62,6 +64,7 @@ export async function getDbAudit(request, response) {
       inMemoryPairStatesCount,
       inMemoryActiveOpportunitiesCount,
       inMemoryOpportunities,
+      inMemoryPairStates,
       recentActiveSignals
     });
   } catch (err) {
