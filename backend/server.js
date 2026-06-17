@@ -24,6 +24,7 @@ import {
   stopPriceMonitoring,
 } from "./src/services/priceMonitoringScheduler.js";
 import { logger } from "./src/utils/logger.js";
+import { hydratePairStatesFromDb } from "./src/services/pairStateHydrationService.js";
 
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
@@ -75,6 +76,7 @@ async function startServer() {
 
 async function initializeBackgroundServices() {
   await connectDatabase();
+  await hydratePairStatesFromDb();
   startMarketEngine();
   startPriceMonitoring();
   startPerformanceAggregation();
