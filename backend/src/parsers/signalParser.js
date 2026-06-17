@@ -124,7 +124,7 @@ function runEntityExtractionStage(normalized) {
     action,
     entryInfo: extractEntry(normalized, action),
     pipTargets: extractPipTargets(normalized.compactText),
-    targets: extractTargets(normalized.compactText),
+    targets: extractTargets(normalized.cleanedText),
     stopLoss: extractStopLoss(normalized),
     hiddenStopLoss: extractHiddenStopLoss(normalized.compactText),
     timeframe: extractTimeframe(normalized.compactText),
@@ -326,7 +326,10 @@ function extractTargets(text) {
       continue;
     }
 
-    const safeGroup = group.split(/\b(SL|STOP LOSS|ENTRY|ENTRIES|TIME\s*FRAME|TIMEFRAME|TF)\b/i)[0];
+    const safeGroup = group
+      .split(/\n\s*\n/)[0]
+      .split(/(?:https?:\/\/|www\.|t\.me)/i)[0]
+      .split(/\b(SL|STOP LOSS|ENTRY|ENTRIES|TIME\s*FRAME|TIMEFRAME|TF)\b/i)[0];
     for (const value of extractTargetNumbers(safeGroup)) {
       addUniqueNumber(targets, value);
     }
