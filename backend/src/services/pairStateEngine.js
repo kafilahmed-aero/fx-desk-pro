@@ -17,7 +17,7 @@ import { normalizeTradingPair } from "../parsers/pairDetector.js";
 import { broadcastPairStateUpdate } from "./liveUpdateService.js";
 import { logger } from "../utils/logger.js";
 
-const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 180;
+const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 120;
 
 function debugLog(message) {
   logger.debug("pair_state.engine", {
@@ -53,7 +53,7 @@ export function refreshAllPairStates(now = new Date()) {
 
 export function cleanupExpiredSignals(options = {}) {
   const now = options.now || new Date();
-  const expiredRetentionMinutes = Number(options.expiredRetentionMinutes) || 180;
+  const expiredRetentionMinutes = Number(options.expiredRetentionMinutes) || 120;
   const maxSignalsPerPair = Number(options.maxSignalsPerPair) || 250;
   const cutoffTime = now.getTime() - expiredRetentionMinutes * 60000;
   const cleanupResults = [];

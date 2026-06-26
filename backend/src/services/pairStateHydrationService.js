@@ -24,7 +24,7 @@ export async function hydratePairStatesFromDb() {
       };
     }
 
-    const expirationMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 180;
+    const expirationMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 120;
     const cutoffTime = new Date(Date.now() - expirationMinutes * 60 * 1000);
 
     // Load active/partial signals within the active consensus age window

@@ -54,7 +54,7 @@ function getSignalFreshnessConfidence(signal) {
     return freshnessWeight * 100;
   }
 
-  const recencyCurve = Math.exp((-Math.log(2) * ageMinutes) / 66);
+  const recencyCurve = Math.exp((-Math.log(2) * ageMinutes) / 44);
   return Math.max(freshnessWeight, recencyCurve) * 100;
 }
 

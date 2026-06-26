@@ -40,6 +40,7 @@ export const config = {
   mongoUri:
     process.env.MONGODB_URI ||
     "mongodb://127.0.0.1:27017/telegram_signal_consensus",
+  signalExpirationMinutes: Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 120,
   telegram: {
     apiId: Number(process.env.TELEGRAM_API_ID) || null,
     apiHash: process.env.TELEGRAM_API_HASH || "",
@@ -49,7 +50,7 @@ export const config = {
     channels: getMonitoredTelegramChannelRefs(),
     pollIntervalMs: Number(process.env.TELEGRAM_POLL_INTERVAL_MS) || 30000,
     pollLimit: Number(process.env.TELEGRAM_POLL_LIMIT) || 10,
-    backfillHours: Number(process.env.TELEGRAM_BACKFILL_HOURS) || 3,
+    backfillHours: Number(process.env.TELEGRAM_BACKFILL_HOURS) || 2,
     backfillLimit: Number(process.env.TELEGRAM_BACKFILL_LIMIT) || 200,
   },
   telegramAlert: {
@@ -77,7 +78,7 @@ export const config = {
     ),
     expiredRetentionMinutes: Math.max(
       1,
-      Number(process.env.MARKET_ENGINE_EXPIRED_RETENTION_MINUTES) || 180
+      Number(process.env.MARKET_ENGINE_EXPIRED_RETENTION_MINUTES) || 120
     ),
     maxSignalsPerPair: Math.max(
       25,
