@@ -2,6 +2,163 @@ const now = new Date().toISOString();
 
 export const parserFixtures = [
   {
+    name: "Zone format 1",
+    rawMessage: {
+      channel: "fixture-zone-1",
+      messageId: 101,
+      text: "BUY GOLD\nZone: 4053-4059\nTP1 4080\nSL 4020",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4053,
+      entryRange: [4053, 4059],
+      targets: [4080],
+      stopLoss: 4020,
+    },
+  },
+  {
+    name: "Zone format 2",
+    rawMessage: {
+      channel: "fixture-zone-2",
+      messageId: 102,
+      text: "Gold Buy Zone 4048-4044\nTP1 4060\nSL 4030",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4048,
+      entryRange: [4044, 4048],
+      targets: [4060],
+      stopLoss: 4030,
+    },
+  },
+  {
+    name: "Risk Price 1",
+    rawMessage: {
+      channel: "fixture-risk-1",
+      messageId: 103,
+      text: "BUY GOLD @ 4050\nTP1 4080\nRisk Price: 4063",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4050,
+      targets: [4080],
+      stopLoss: 4063,
+    },
+  },
+  {
+    name: "Risk Price 2",
+    rawMessage: {
+      channel: "fixture-risk-2",
+      messageId: 104,
+      text: "BUY GOLD @ 4050\nTP1 4080\nRisk: 3967",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4050,
+      targets: [4080],
+      stopLoss: 3967,
+    },
+  },
+  {
+    name: "Flexible TP Delimiters 1",
+    rawMessage: {
+      channel: "fixture-tp-1",
+      messageId: 105,
+      text: "BUY GOLD @ 4050\nTP1..4016\nTP2..4012\nSL 4000",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4050,
+      targets: [4016, 4012],
+      stopLoss: 4000,
+    },
+  },
+  {
+    name: "Flexible TP Delimiters 2",
+    rawMessage: {
+      channel: "fixture-tp-2",
+      messageId: 106,
+      text: "BUY GOLD @ 4050\n1_TP 4052\n2_TP 4055\n3_TP 4060\nSL 4000",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4050,
+      targets: [4052, 4055, 4060],
+      stopLoss: 4000,
+    },
+  },
+  {
+    name: "Flexible TP Delimiters 3",
+    rawMessage: {
+      channel: "fixture-tp-3",
+      messageId: 107,
+      text: "BUY GOLD @ 4050\nTP 1: 4048\nTP 2: 4043\nSL 4000",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4050,
+      targets: [4048, 4043],
+      stopLoss: 4000,
+    },
+  },
+  {
+    name: "XAU/USD Normalization",
+    rawMessage: {
+      channel: "fixture-norm-1",
+      messageId: 108,
+      text: "(XAU/USD) BUY 3995/3990\nTP1 4000\nSL 3965",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 3995,
+      entryRange: [3990, 3995],
+      targets: [4000],
+      stopLoss: 3965,
+    },
+  },
+  {
+    name: "BUY NOW / SELL NOW",
+    rawMessage: {
+      channel: "fixture-buynow-1",
+      messageId: 109,
+      text: "GOLD BUY NOW\nZone: 3977-3972\nTP1: 3983\nTP2: 3987\nRisk Price: 3967",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 3977,
+      entryRange: [3972, 3977],
+      targets: [3983, 3987],
+      stopLoss: 3967,
+    },
+  },
+  {
     name: "clean multiline gold signal",
     rawMessage: {
       channel: "fixture-clean",
@@ -262,7 +419,7 @@ export const parserFixtures = [
       action: "BUY",
       entry: 4513,
       entryRange: [4510, 4513],
-      targets: ["OPEN"],
+      targets: [],
       stopLoss: null,
       hiddenStopLoss: true,
     },
@@ -1300,6 +1457,99 @@ export const parserFixtures = [
     expected: {
       classification: "NOISE",
       parsed: false,
+    },
+  },
+  {
+    name: "VIP Room Promotion",
+    rawMessage: {
+      channel: "fixture-promo-2",
+      messageId: 2006,
+      text: "💥 UNLOCK VIP ROOM ACCESS TODAY 💥\nOnly 5 seats left with 98% accuracy!\nClick here to subscribe: https://example.com/vip",
+      timestamp: now,
+    },
+    expected: {
+      classification: "PROMO",
+      parsed: false,
+    },
+  },
+  {
+    name: "Payment Screenshot Proof",
+    rawMessage: {
+      channel: "fixture-promo-3",
+      messageId: 2007,
+      text: "Deposit done! Welcome to the VIP channel! Proof screenshot attached.",
+      timestamp: now,
+      hasMedia: true,
+      mediaType: "photo",
+    },
+    expected: {
+      classification: "PROMO",
+      parsed: false,
+    },
+  },
+  {
+    name: "TP Superscript Hit Result",
+    rawMessage: {
+      channel: "fixture-result-2",
+      messageId: 3001,
+      text: "XAUUSD Sell💥\nTARGET ³ COMPLETE 110+ PIPS DONE  💯✌️✌️💪💪 🔥🔥",
+      timestamp: now,
+    },
+    expected: {
+      classification: "RESULT_SIGNAL",
+      parsed: {
+        resultAction: null,
+      },
+    },
+  },
+  {
+    name: "Running Pips Profit Result",
+    rawMessage: {
+      channel: "fixture-result-3",
+      messageId: 3002,
+      text: "GOLD BUY Running 40+ pips Profit 💵💵💵",
+      timestamp: now,
+    },
+    expected: {
+      classification: "RESULT_SIGNAL",
+      parsed: {
+        resultAction: null,
+      },
+    },
+  },
+  {
+    name: "Unlabeled Multi-line Targets",
+    rawMessage: {
+      channel: "fixture-flexible-1",
+      messageId: 4001,
+      text: "GOLD BUY 4075/4070\n4077\n4080\nSL 4060",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4075,
+      entryRange: [4070, 4075],
+      targets: [4077, 4080],
+      stopLoss: 4060,
+    },
+  },
+  {
+    name: "Open Target TP Handling",
+    rawMessage: {
+      channel: "fixture-flexible-2",
+      messageId: 4002,
+      text: "XAUUSD BUY @ 4050\nTP Open\nSL 4000",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4050,
+      targets: [],
+      stopLoss: 4000,
     },
   },
 ];

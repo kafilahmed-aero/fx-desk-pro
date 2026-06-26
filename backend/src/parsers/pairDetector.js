@@ -14,6 +14,7 @@ const aliasMap = new Map([
   // Metals
   ["GOLD", "XAUUSD"],
   ["XAUUSD", "XAUUSD"],
+  ["XAUSSD", "XAUUSD"],
   ["XAU/USD", "XAUUSD"],
   ["GOLD SPOT", "XAUUSD"],
   ["XAU", "XAUUSD"],
@@ -202,8 +203,8 @@ export function isValidPairCandidate(candidate) {
 export function cleanTextForPairDetection(text = "") {
   if (!text) return "";
 
-  // 1. If it has newlines, split and filter out promotional/footer lines
-  let processedText = text;
+  // Normalize (XAU/USD) to XAUUSD before other processing
+  let processedText = text.replace(/\(([A-Z]{3})\s*[/]\s*([A-Z]{3})\)/gi, "$1$2");
   if (text.includes("\n")) {
     const lines = text.split(/\r?\n/);
     const urlPattern = /(?:https?:\/\/|www\.|t\.me)/i;

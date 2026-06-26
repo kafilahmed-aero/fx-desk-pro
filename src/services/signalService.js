@@ -41,6 +41,15 @@ async function fetchJson(path, errorLabel, options = {}) {
   return response.json();
 }
 
+export async function getParsedSignals(options = {}) {
+  const signals = await fetchJson(
+    "/signals",
+    "Failed to load parsed signals",
+    options
+  );
+  return signals || [];
+}
+
 export async function getActiveOpportunities(options = {}) {
   const payload = await fetchJson(
     "/consensus/opportunities",

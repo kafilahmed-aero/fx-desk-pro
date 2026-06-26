@@ -1,0 +1,3562 @@
+[
+  {
+    "channel": "thelimitlessfx",
+    "status": "RESOLVED",
+    "channelTitle": "LIMITLESS FX ♾️",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 4,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 16
+    },
+    "parserStats": {
+      "intendedSignals": 7,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 35768,
+          "text": "♾GOLD SELL NOW |  | Zone : 4053- 4059 |  | TP 1: 4048 | TP 2: 4043 |  | Risk Price : 4063",
+          "missing": [
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 35767,
+          "text": "Gold sell at 4053",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 35764,
+          "text": "Hit All Target Gold ! Flying Gold🎯✈️♾ |  | Round 1 | TP 2 Gold running +180pips🟢 |  | Round 2 | TP 2 Gold Runn",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 35761,
+          "text": "Double profit! Dengan Randy Warm Up biru biru✈️♾ |  | Round 1 | TP 1 Gold running +110pips🟢 |  | Round 2 | TP 1",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 35759,
+          "text": "HIT TP🏹",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 35749,
+          "text": "Sharp Zone ! Hit Target 🎯♾ |  | TP 1 Gold running +40pips🟢 |  | Trade instructions: Jika hold , manage you",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 35748,
+          "text": "Sharp Zone and flying High! Hit All Target 🎯🚀 |  | TP 2 Gold running +120pips🟢 |  | Trade instructions: J",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "♾GOLD SELL NOW |  | Zone : 4053- 4059 |  | TP 1: 4048 | TP 2: 4043 |  | Risk Price : 4063",
+        "Gold sell at 4053",
+        "Hit All Target Gold ! Flying Gold🎯✈️♾ |  | Round 1 | TP 2 Gold running +180pips🟢 |  | Round 2 | TP 2 Gold Running +180pips🟢 |  | Trade instructions: Jika hold , manage your risk okay 🤝🏻"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Xauusd_Gold_Vip100",
+    "status": "RESOLVED",
+    "channelTitle": "𝗚𝗼𝗹𝗱 𝗦𝗶𝗴𝗻𝗮𝗹𝘀",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 11,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 9
+    },
+    "parserStats": {
+      "intendedSignals": 20,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 919,
+          "text": "All TP DONE 👍👍✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 918,
+          "text": "(#GOLD SELL |  | TP5 HIT 200 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 917,
+          "text": "(#GOLD SELL |  | TP4 HIT 160 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 916,
+          "text": "(#GOLD SELL |  | TP3 HIT 120 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 915,
+          "text": "(#GOLD SELL |  | TP2 HIT 80 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 914,
+          "text": "(#GOLD SELL |  | TP1 HIT 40 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 913,
+          "text": "GOLD SELL 4020  /4025 |  |   TP1..4016 |   TP2..4012 |   TP3..4008 |   TP4..4004 |   TP5..4000 |  | SL....4035",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 912,
+          "text": "All TP DONE 👍👍✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 911,
+          "text": "(#GOLD SELL |  | TP5 HIT 200 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 909,
+          "text": "(#GOLD SELL |  | TP4 HIT 160 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 908,
+          "text": "(#GOLD SELL |  | TP3 HIT 120 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 907,
+          "text": "(#GOLD SELL |  | TP2 HIT 80 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 906,
+          "text": "(#GOLD SELL |  | TP1 HIT 40 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 905,
+          "text": "GOLD SELL 4044  /4050 |  |   TP1..4040 |   TP2..4036 |   TP3..4032 |   TP4..4028 |   TP5..4024 |  | SL....4060",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 903,
+          "text": "(#GOLD SELL |  | TP5 HIT 180 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 902,
+          "text": "(#GOLD SELL |  | TP4 HIT 160 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 901,
+          "text": "(#GOLD SELL |  | TP3 HIT 120 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 900,
+          "text": "(#GOLD SELL |  | TP2 HIT 80 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 899,
+          "text": "(#GOLD SELL |  | TP1 HIT 40 PIP'S Profit Done 🎉🎉👍👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 897,
+          "text": "GOLD SELL 3980  /3990 |  |   TP1..3976 |   TP2..3972 |   TP3..3968 |   TP4..3964 |   TP5..3960 |  | SL....4000",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "All TP DONE 👍👍✅✅",
+        "(#GOLD SELL |  | TP5 HIT 200 PIP'S Profit Done 🎉🎉👍👍",
+        "(#GOLD SELL |  | TP4 HIT 160 PIP'S Profit Done 🎉🎉👍👍"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "forexero",
+    "status": "RESOLVED",
+    "channelTitle": "Forexero - Forex Signals",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 0,
+      "promo": 7,
+      "analysis": 0,
+      "news": 0,
+      "noise": 11
+    },
+    "parserStats": {
+      "intendedSignals": 2,
+      "actionableSignals": 2,
+      "successRate": 100,
+      "failures": [],
+      "unparsedSamples": []
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "goldtradersunny",
+    "status": "RESOLVED",
+    "channelTitle": "Gold Trader Sunny 🏆",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 5,
+      "promo": 1,
+      "analysis": 0,
+      "news": 2,
+      "noise": 12
+    },
+    "parserStats": {
+      "intendedSignals": 1,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 13856,
+          "text": "So far this month: |  | 95 Profit Targets Hit ✅ | 5010+ Pips 🤑 | 2 SL 🎯 |  | Everyone that’s asking for VIP, y",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "So far this month: |  | 95 Profit Targets Hit ✅ | 5010+ Pips 🤑 | 2 SL 🎯 |  | Everyone that’s asking for VIP, you can join for free 🚀 |  | Message for access👇 |  | @GoldTraderGTS 💎"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "tradehubetrade_1778",
+    "status": "RESOLVED",
+    "channelTitle": "𝐍𝐞𝐦𝐚𝐭𝐨𝐯 𝐓𝐫𝐚𝐝𝐞",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 6,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 11
+    },
+    "parserStats": {
+      "intendedSignals": 7,
+      "actionableSignals": 2,
+      "successRate": 29,
+      "failures": [
+        {
+          "id": 14316,
+          "text": "#GOLD | TP⁵ HIT 200+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14315,
+          "text": "#GOLD | TP⁴ HIT 160+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14314,
+          "text": "#GOLD | TP³ HIT 120+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14312,
+          "text": "#GOLD | TP² HIT 80+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14311,
+          "text": "#GOLD | TP¹ HIT 40+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#GOLD | TP⁵ HIT 200+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+        "#GOLD | TP⁴ HIT 160+ PIPS PROFIT DONE 🔥🔥🔥🔥",
+        "#GOLD | TP³ HIT 120+ PIPS PROFIT DONE 🔥🔥🔥🔥"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "XAUUSD_SIGNALS222",
+    "status": "RESOLVED",
+    "channelTitle": "XAUUSD SIGNALS",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 1,
+      "updates": 3,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 15
+    },
+    "parserStats": {
+      "intendedSignals": 2,
+      "actionableSignals": 1,
+      "successRate": 50,
+      "failures": [
+        {
+          "id": 4444,
+          "text": "XAUSSD BUY  3995✅",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "XAUSSD BUY  3995✅"
+      ]
+    },
+    "valueCategory": "MEDIUM VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "fxprofitpoint",
+    "status": "RESOLVED",
+    "channelTitle": "نقطة الربح FX 📈💸",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 4,
+      "updates": 0,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 16
+    },
+    "parserStats": {
+      "intendedSignals": 4,
+      "actionableSignals": 4,
+      "successRate": 100,
+      "failures": [],
+      "unparsedSamples": []
+    },
+    "valueCategory": "HIGH VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Tradewithkhadim876",
+    "status": "RESOLVED",
+    "channelTitle": "𝙂𝙊𝙇𝘿 𝙑𝙄𝙋 𝙎𝙞𝙜𝙣𝙖𝙡𝙨",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 13,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 6
+    },
+    "parserStats": {
+      "intendedSignals": 16,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 16465,
+          "text": "TP 2 HIT 60+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16464,
+          "text": "TP 1 HIT 30+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16463,
+          "text": "Trade Update – XAUUSD | Price has entered the Sell Zone. The 1st position activated.",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16462,
+          "text": "😄😄😍🙋 | PAIR: (GOLD VS USD) |  | #XAUUSD 🔤🔤 | Entry Zone 1 : 4050⚡️ | Entry Zone 2 :4055⚡️  |  | ✅TP1: 4047 | ✅",
+          "missing": [
+            "action"
+          ]
+        },
+        {
+          "id": 16461,
+          "text": "Gold Sell Now 4050/4055",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16458,
+          "text": "TP 4 HIT 120+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16457,
+          "text": "TP 3 HIT 90+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16456,
+          "text": "TP 2 HIT 60+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16455,
+          "text": "TP 1 HIT 30+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16454,
+          "text": "Trade Update – XAUUSD | Price has entered the Sell Zone. The 1st position activated.",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16453,
+          "text": "😄😄😍🙋 | PAIR: (GOLD VS USD) |  | #XAUUSD 🔤🔤 | Entry Zone 1 : 4017⚡️ | Entry Zone 2 :4022⚡️  |  | ✅TP1: 4014 | ✅",
+          "missing": [
+            "action"
+          ]
+        },
+        {
+          "id": 16452,
+          "text": "Gold Sell Now 4017/4022",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16450,
+          "text": "TP 2 HIT 60+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16449,
+          "text": "TP 1 HIT 30+ PIPS PROFIT DONE ✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16448,
+          "text": "😄😄😍🙋 | PAIR: (GOLD VS USD) |  | #XAUUSD 🔤🔤 | Entry Zone 1 : 4007⚡️ | Entry Zone 2 :4012⚡️  |  | ✅TP1: 4004 | ✅",
+          "missing": [
+            "action"
+          ]
+        },
+        {
+          "id": 16447,
+          "text": "Gold Sell Now 4007/4012",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "TP 2 HIT 60+ PIPS PROFIT DONE ✅✅",
+        "TP 1 HIT 30+ PIPS PROFIT DONE ✅✅",
+        "Trade Update – XAUUSD | Price has entered the Sell Zone. The 1st position activated."
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GoldPipsTradeHub",
+    "status": "RESOLVED",
+    "channelTitle": "GOLD PIPS TRADE HUB",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 5,
+      "updates": 1,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 14
+    },
+    "parserStats": {
+      "intendedSignals": 19,
+      "actionableSignals": 5,
+      "successRate": 26,
+      "failures": [
+        {
+          "id": 22596,
+          "text": "✅GOLD SELL active Signal | 130+ pips running profit 💸 💥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22595,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP3 Hit Successfully (4008) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22594,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP2 Hit Successfully (4012) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22593,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP1 Hit Successfully (4015) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22591,
+          "text": "📢 GOLD BUY UPDATE     | ✅TP 4 open  | ✅ All TPs Hit & Closed 4130 | 💰500+ pips Profit | ⛔ SL: 3972 | Strong ",
+          "missing": [
+            "entry"
+          ]
+        },
+        {
+          "id": 22590,
+          "text": "✅GOLD BUY Signal Update | 🎯 TP3 Hit Successfully (3990) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22589,
+          "text": "✅GOLD BUY Signal Update | 🎯 TP2 Hit Successfully (3987) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22588,
+          "text": "✅GOLD BUY Signal Update | 🎯 TP1 Hit Successfully (3984) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22586,
+          "text": "✅GOLD SELL limit active Signal | 90+ pips running profit 💸 💥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22585,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP1 Hit Successfully (3974) | Next targets active ✅️",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22580,
+          "text": "✅GOLD SELL active Signal | 120+ pips running profit 💸 💥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22579,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP3 Hit Successfully (4002) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22578,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP2 Hit Successfully (4005) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 22577,
+          "text": "✅GOLD SELL Signal Update | 🎯 TP1 Hit Successfully (4008) | Next targets active ✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "✅GOLD SELL active Signal | 130+ pips running profit 💸 💥",
+        "✅GOLD SELL Signal Update | 🎯 TP3 Hit Successfully (4008) | Next targets active ✅",
+        "✅GOLD SELL Signal Update | 🎯 TP2 Hit Successfully (4012) | Next targets active ✅"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "MrHenrys122",
+    "status": "RESOLVED",
+    "channelTitle": "Gold Signals 98% Sure 😎",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 1,
+      "promo": 0,
+      "analysis": 4,
+      "news": 0,
+      "noise": 15
+    },
+    "parserStats": {
+      "intendedSignals": 17,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 27966,
+          "text": "(#XAUUSD Sell💥 |  | All TARGET COMPLETE 300+ PIPS DONE  💯✌️✌️💪💪🔥🔥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27965,
+          "text": "XAUUSD Sell💥 |  | TARGET ⁴ COMPLETE 300+ PIPS DONE  💯✌️✌️💪💪 🔥🔥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27964,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 250+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27962,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 200+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27961,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 160+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27960,
+          "text": "XAUUSD Sell💥 |  | TARGET ³ COMPLETE 140+ PIPS DONE  💯✌️✌️💪💪 🔥🔥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27959,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 130+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27958,
+          "text": "XAUUSD Sell💥 |  | TARGET ² COMPLETE 100+ PIPS DONE  💯✌️✌️💪💪 🔥🔥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27957,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 70+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27956,
+          "text": "XAUUSD Sell💥 |  | TARGET ¹ COMPLETE 40+ PIPS DONE  💯✌️✌️💪💪 🔥🔥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27954,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 30+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27951,
+          "text": "XAUUSD Sell 4018/4021 | بيع الذهب | TP1. 4014 | TP2. 4011 | TP3. 4007 | TP4. 3991 |  | SL.   4031 | استخدام إدارة ال",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27950,
+          "text": "Entry 4018",
+          "missing": [
+            "action",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27949,
+          "text": "Gold Sell Now 4016",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27937,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 250+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27935,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 230+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27934,
+          "text": "XAUUSD Sell💥 |  | RUNNING PROFIT 200+ PIPS 😮😮 💯✌️✌️💪💪",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "(#XAUUSD Sell💥 |  | All TARGET COMPLETE 300+ PIPS DONE  💯✌️✌️💪💪🔥🔥",
+        "XAUUSD Sell💥 |  | TARGET ⁴ COMPLETE 300+ PIPS DONE  💯✌️✌️💪💪 🔥🔥",
+        "XAUUSD Sell💥 |  | RUNNING PROFIT 250+ PIPS 😮😮 💯✌️✌️💪💪"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GOLDSNNPER786",
+    "status": "RESOLVED",
+    "channelTitle": "𝗚𝗢𝗟𝗗 𝗦𝗡𝗜𝗣𝗘𝗥",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 6,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 12
+    },
+    "parserStats": {
+      "intendedSignals": 4,
+      "actionableSignals": 2,
+      "successRate": 50,
+      "failures": [
+        {
+          "id": 59692,
+          "text": "GOLD BUY NOW",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59682,
+          "text": "GOLD BUY NOW",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD BUY NOW",
+        "GOLD BUY NOW"
+      ]
+    },
+    "valueCategory": "MEDIUM VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Technicalpipshuk_786",
+    "status": "RESOLVED",
+    "channelTitle": "𝐓𝐞𝐜𝐡𝐧𝐢𝐜𝐚𝐥 𝐏𝐢𝐩𝐬 ™",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 1,
+      "updates": 9,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 10
+    },
+    "parserStats": {
+      "intendedSignals": 1,
+      "actionableSignals": 1,
+      "successRate": 100,
+      "failures": [],
+      "unparsedSamples": []
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Staradcmey50",
+    "status": "RESOLVED",
+    "channelTitle": "𝐒𝐭𝐚𝐫 𝐓𝐫𝐚𝐝𝐢𝐧𝐠 ™",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 7,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 13
+    },
+    "parserStats": {
+      "intendedSignals": 1,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 77052,
+          "text": "#XAUUSD  | CHECK MY ENTRY POINT GUYS",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#XAUUSD  | CHECK MY ENTRY POINT GUYS"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "ViewXuk50",
+    "status": "RESOLVED",
+    "channelTitle": "𝐓𝐫𝐚𝐝𝐢𝐧𝐠 𝐕𝐢𝐞𝐰",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 16,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 2
+    },
+    "parserStats": {
+      "intendedSignals": 19,
+      "actionableSignals": 2,
+      "successRate": 11,
+      "failures": [
+        {
+          "id": 51745,
+          "text": "#XAUUSD  | TP⁸ HIT DONE 200+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51744,
+          "text": "LAST TP 4000",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51743,
+          "text": "#XAUUSD  | TP⁶ HIT DONE 170+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51742,
+          "text": "#XAUUSD  | TP⁵ HIT DONE 150+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51741,
+          "text": "#XAUUSD  | TP⁴ HIT DONE 120+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51740,
+          "text": "#XAUUSD  | TP³ HIT DONE 90+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51739,
+          "text": "#GOLD | TP² HIT 60+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51738,
+          "text": "#GOLD | TP¹ HIT 30+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51735,
+          "text": "GOLD SELL 4020",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51716,
+          "text": "#XAUUSD  | TP⁶ HIT DONE 180+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51715,
+          "text": "#XAUUSD  | TP⁵ HIT DONE 150+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51712,
+          "text": "#XAUUSD  | TP⁴ HIT DONE 120+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51711,
+          "text": "#XAUUSD  | TP³ HIT DONE 90+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51710,
+          "text": "#GOLD | TP² HIT 60+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51709,
+          "text": "#GOLD | TP¹ HIT 30+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51702,
+          "text": "#XAUUSD  | TP³ HIT DONE 90+ PIPS DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 51700,
+          "text": "#GOLD | TP² HIT 60+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#XAUUSD  | TP⁸ HIT DONE 200+ PIPS DONE",
+        "LAST TP 4000",
+        "#XAUUSD  | TP⁶ HIT DONE 170+ PIPS DONE"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GoldInsighthub525",
+    "status": "RESOLVED",
+    "channelTitle": "𝑮𝑹𝑬𝑬𝑵 𝑷𝑰𝑷𝑺 🌐",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 3,
+      "updates": 0,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 16
+    },
+    "parserStats": {
+      "intendedSignals": 14,
+      "actionableSignals": 3,
+      "successRate": 21,
+      "failures": [
+        {
+          "id": 29549,
+          "text": "TP3 SMASHED ✅ | XAUUSD BUY → +100 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29546,
+          "text": "TP SMASHED ✅ | XAUUSD BUY → +90 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29545,
+          "text": "TP2 SMASHED ✅ | XAUUSD BUY → +60 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29543,
+          "text": "TP1 SMASHED ✅ | XAUUSD BUY → +30 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29523,
+          "text": "TP5 SMASHED ✅ | XAUUSD SELL → +200 PIP🔥 |  | COMPLETE TARGET 🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29522,
+          "text": "TP5 SMASHED ✅ | XAUUSD SELL → +200 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29521,
+          "text": "TP4 SMASHED ✅ | XAUUSD SELL → +150 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29520,
+          "text": "TP3 SMASHED ✅ | XAUUSD SELL → +100 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29519,
+          "text": "TP2 SMASHED ✅ | XAUUSD SELL → +60 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29517,
+          "text": "TP1 SMASHED ✅ | XAUUSD SELL → +30 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 29501,
+          "text": "TP4 SMASHED ✅ | XAUUSD SELL → +150 PIPS🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "TP3 SMASHED ✅ | XAUUSD BUY → +100 PIPS🔥",
+        "TP SMASHED ✅ | XAUUSD BUY → +90 PIPS🔥",
+        "TP2 SMASHED ✅ | XAUUSD BUY → +60 PIPS🔥"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Majid_GoldTechnical",
+    "status": "RESOLVED",
+    "channelTitle": "𝐆𝐨𝐥𝐝 𝐓𝐞𝐜𝐡𝐧𝐢𝐜𝐚𝐥",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 9,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 9
+    },
+    "parserStats": {
+      "intendedSignals": 6,
+      "actionableSignals": 2,
+      "successRate": 33,
+      "failures": [
+        {
+          "id": 23381,
+          "text": "XAUUSD SELL NOW 💥💥💥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 23380,
+          "text": "All TP Done 💥💥✅✅✅ | Better days are ahead—stay focused and keep trusting the process.",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 23369,
+          "text": "ONLY SCALPING IN SELL TODAY 💥",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 23367,
+          "text": "Gold sell Now👍",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "XAUUSD SELL NOW 💥💥💥",
+        "All TP Done 💥💥✅✅✅ | Better days are ahead—stay focused and keep trusting the process.",
+        "ONLY SCALPING IN SELL TODAY 💥"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Xauuzsdking",
+    "status": "RESOLVED",
+    "channelTitle": "𝙓𝘼𝙐𝙐𝙎𝘿 𝙆𝙄𝙉𝙂™️👑",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 14,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 4
+    },
+    "parserStats": {
+      "intendedSignals": 2,
+      "actionableSignals": 2,
+      "successRate": 100,
+      "failures": [],
+      "unparsedSamples": []
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "tradewithkhalidfx1",
+    "status": "RESOLVED",
+    "channelTitle": "Trade with Khalid",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 12,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 6
+    },
+    "parserStats": {
+      "intendedSignals": 16,
+      "actionableSignals": 2,
+      "successRate": 13,
+      "failures": [
+        {
+          "id": 6332,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP All HIT 150+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6331,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP⁶ HIT 120+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6330,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP⁵ HIT 100+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6329,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP⁴ HIT 80+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6328,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP³ HIT 60+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6327,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP² HIT 40+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6326,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP¹ HIT 20+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6295,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP All HIT 150+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6294,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP⁶ HIT 120+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6293,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP⁵ HIT 100+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6292,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP⁴ HIT 80+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6291,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP³ HIT 60+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6290,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP² HIT 40+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6289,
+          "text": "#𝐆𝐎𝐋𝐃 |  | TP¹ HIT 20+ PIPS PROFIT DONE",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#𝐆𝐎𝐋𝐃 |  | TP All HIT 150+ PIPS PROFIT DONE",
+        "#𝐆𝐎𝐋𝐃 |  | TP⁶ HIT 120+ PIPS PROFIT DONE",
+        "#𝐆𝐎𝐋𝐃 |  | TP⁵ HIT 100+ PIPS PROFIT DONE"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Forex_Kingfxhuk786",
+    "status": "RESOLVED",
+    "channelTitle": "Forex King",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 0,
+      "promo": 0,
+      "analysis": 2,
+      "news": 0,
+      "noise": 16
+    },
+    "parserStats": {
+      "intendedSignals": 8,
+      "actionableSignals": 2,
+      "successRate": 25,
+      "failures": [
+        {
+          "id": 77518,
+          "text": "#GOLD BUY Trade  | Final target (4030) has been reached.",
+          "missing": [
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 77513,
+          "text": "GOLD BUY Trade  | Price has reached TP2 (4025).",
+          "missing": [
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 77509,
+          "text": "#GOLD BUY Trade | 4020 HITS40+PIPS Hits.",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 77505,
+          "text": "GOLD BUY 5016",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 77504,
+          "text": "#GOLD SELL Trade | 4005 HITS40+PIPS Hits.",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 77497,
+          "text": "#GOLD SELL Trade  | Final target (3988) has been reached.",
+          "missing": [
+            "entry",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#GOLD BUY Trade  | Final target (4030) has been reached.",
+        "GOLD BUY Trade  | Price has reached TP2 (4025).",
+        "#GOLD BUY Trade | 4020 HITS40+PIPS Hits."
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "XAUUSD_KING_SCALPERS",
+    "status": "RESOLVED",
+    "channelTitle": "XAUUSD/GOLD SCALPERS",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 1,
+      "updates": 0,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 19
+    },
+    "parserStats": {
+      "intendedSignals": 16,
+      "actionableSignals": 1,
+      "successRate": 6,
+      "failures": [
+        {
+          "id": 39048,
+          "text": "#GOLD  | TP 8 HlT 280+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39047,
+          "text": "#GOLD  | TP 7 HlT 250+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39046,
+          "text": "#GOLD  | TP 6 HlT 210+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39045,
+          "text": "#GOLD  | TP 5 HlT 170+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39043,
+          "text": "#GOLD  | TP 4 HlT 130+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39042,
+          "text": "#GOLD  | TP 3 HlT 100+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39041,
+          "text": "#GOLD  | TP 2 HlT 70+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39040,
+          "text": "#GOLD  | TP 1 HlT 40+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 39038,
+          "text": "GOLD SELL NOW 4028 4032",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 38963,
+          "text": "#GOLD  | TP 10 HlT 390+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 38962,
+          "text": "#GOLD  | TP 9 HlT 340+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 38961,
+          "text": "#GOLD  | TP 8 HlT 290+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 38960,
+          "text": "#GOLD  | TP 7 HlT 140+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 38956,
+          "text": "#GOLD  | TP 5 HlT 190+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 38955,
+          "text": "#GOLD  | TP 4 HlT 170+ PlPS PROFIT DONE✅✅",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#GOLD  | TP 8 HlT 280+ PlPS PROFIT DONE✅✅",
+        "#GOLD  | TP 7 HlT 250+ PlPS PROFIT DONE✅✅",
+        "#GOLD  | TP 6 HlT 210+ PlPS PROFIT DONE✅✅"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "nassniperhuk50",
+    "status": "RESOLVED",
+    "channelTitle": "𝗡𝗔𝗦 𝗨𝗦𝟯𝟬 𝗦𝗡𝗜𝗣𝗘𝗥",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 1,
+      "updates": 15,
+      "promo": 2,
+      "analysis": 0,
+      "news": 0,
+      "noise": 2
+    },
+    "parserStats": {
+      "intendedSignals": 1,
+      "actionableSignals": 1,
+      "successRate": 100,
+      "failures": [],
+      "unparsedSamples": []
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GOLDANALYSISEXPERTi1",
+    "status": "RESOLVED",
+    "channelTitle": "GOLD ANALYSIS EXPERT",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 3,
+      "updates": 2,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 15
+    },
+    "parserStats": {
+      "intendedSignals": 12,
+      "actionableSignals": 3,
+      "successRate": 25,
+      "failures": [
+        {
+          "id": 59769,
+          "text": "GOLD 🔵🔴 |  | TP 5 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59768,
+          "text": "GOLD 🔵🔴 |  | TP 4 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59764,
+          "text": "GOLD 🔵🔴 |  | TP 3 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59763,
+          "text": "GOLD 🔵🔴 |  | TP 2 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59762,
+          "text": "GOLD 🔵🔴 |  | TP 1 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59743,
+          "text": "GOLD 🔵🔴 |  | TP 4 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59738,
+          "text": "GOLD 🔵🔴 |  | TP 3 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59737,
+          "text": "GOLD 🔵🔴 |  | TP 2 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 59736,
+          "text": "GOLD 🔵🔴 |  | TP 1 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD 🔵🔴 |  | TP 5 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+        "GOLD 🔵🔴 |  | TP 4 HIT BOOM BOOM PROFIT✔️✔️🔥🔥",
+        "GOLD 🔵🔴 |  | TP 3 HIT BOOM BOOM PROFIT✔️✔️🔥🔥"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Goldvlp7",
+    "status": "RESOLVED",
+    "channelTitle": "𝐆𝐎𝐋𝐃 𝐒𝐍𝐈𝐏𝐄𝐑 𝐙𝐎𝐍𝐄",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 3,
+      "updates": 0,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 17
+    },
+    "parserStats": {
+      "intendedSignals": 14,
+      "actionableSignals": 3,
+      "successRate": 21,
+      "failures": [
+        {
+          "id": 74120,
+          "text": "GOLD SELL NOW",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74112,
+          "text": "Thanks for buy signal 🙏🏼",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74102,
+          "text": "#XAUUSD💎💥 | TP 6 HIT 300+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74086,
+          "text": "#XAUUSD💎💥 | TP 5 HIT 250+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74085,
+          "text": "#XAUUSD💎💥 | TP 4 HIT 200+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74084,
+          "text": "#XAUUSD💎💥 | TP 3 HIT 150+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74083,
+          "text": "#XAUUSD💎💥 | TP 2 HIT 100+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74082,
+          "text": "#XAUUSD💎💥 | TP 1 HIT 50+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74073,
+          "text": "GOLD BUY NOW",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74058,
+          "text": "#XAUUSD💎💥 | TP 2 HIT 100+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 74057,
+          "text": "#XAUUSD💎💥 | TP 1 HIT 50+ PIPS PROFIT DONE 💎💥",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD SELL NOW",
+        "Thanks for buy signal 🙏🏼",
+        "#XAUUSD💎💥 | TP 6 HIT 300+ PIPS PROFIT DONE 💎💥"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "TRADEWITHUK500",
+    "status": "RESOLVED",
+    "channelTitle": "THE ART OF TRADING",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 17,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 3
+    },
+    "parserStats": {
+      "intendedSignals": 2,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 6139,
+          "text": "GOLD BUY 3983/3980 |  | 3985 | 3987 | 3990 | 3992 | 3995 | 3997 | 4000 | 4005 | 4010 |  | SL 3965",
+          "missing": [
+            "targets"
+          ]
+        },
+        {
+          "id": 6138,
+          "text": "GOLD BUY 3998/3995 |  | 4000 | 4002 | 4005 | 4008 | 4010 | 4015 | 4020 | 4030 |  | SL 3980",
+          "missing": [
+            "targets"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD BUY 3983/3980 |  | 3985 | 3987 | 3990 | 3992 | 3995 | 3997 | 4000 | 4005 | 4010 |  | SL 3965",
+        "GOLD BUY 3998/3995 |  | 4000 | 4002 | 4005 | 4008 | 4010 | 4015 | 4020 | 4030 |  | SL 3980"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "SmartMoneySmart837",
+    "status": "RESOLVED",
+    "channelTitle": "🔻Smart Money Trader🔻",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 2,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 17
+    },
+    "parserStats": {
+      "intendedSignals": 2,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 58682,
+          "text": "GOLD Sell  NOW 4054 |  | PLEASE don't SHARE  | this link  | once you join 👇🏻👇🏻💝 |  | https://t.me/MrHenrys1",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 58672,
+          "text": "#𝗫𝗔𝗨𝗨𝗦𝗗 All Tp done  |  | Finally The Waiting Game is Over",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD Sell  NOW 4054 |  | PLEASE don't SHARE  | this link  | once you join 👇🏻👇🏻💝 |  | https://t.me/MrHenrys122 | https://t.me/MrHenrys122 | https://t.me/MrHenrys122 |  |  | ITS A SECRET 🙏",
+        "#𝗫𝗔𝗨𝗨𝗦𝗗 All Tp done  |  | Finally The Waiting Game is Over"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GFR_ANALYSIS",
+    "status": "RESOLVED",
+    "channelTitle": "GFR ANALYSIS FREE",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 4,
+      "updates": 6,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 10
+    },
+    "parserStats": {
+      "intendedSignals": 6,
+      "actionableSignals": 4,
+      "successRate": 67,
+      "failures": [
+        {
+          "id": 32674,
+          "text": "Tp-1 Smashed You Can Book It Now",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 32665,
+          "text": "~ UJ tp-1 Smashed 2R Running ..!! 🙂‍↔️🩷 |  | ~ Took Partials & Set Break Even ..!",
+          "missing": [
+            "action",
+            "entry",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "Tp-1 Smashed You Can Book It Now",
+        "~ UJ tp-1 Smashed 2R Running ..!! 🙂‍↔️🩷 |  | ~ Took Partials & Set Break Even ..!"
+      ]
+    },
+    "valueCategory": "MEDIUM VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Goldpipsthe2",
+    "status": "RESOLVED",
+    "channelTitle": "𝐆𝐎𝐋𝐃 𝐏𝐈𝐏𝐒™️",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 6,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 14
+    },
+    "parserStats": {
+      "intendedSignals": 2,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 6091,
+          "text": "GOLD SELL LIMIT 4011/4020 |  | TP 4006 | TP 4001 | TP 3996 | TP 3991 | TP 3986 | TP 3981 | TP 3976 | TP 3971 | TP 3966 |  | ",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 6080,
+          "text": "GOLD SELL LIMIT 3996/4000 |  | TP 3991 | TP 3986 | TP 3981 | TP 3976 | TP 3971 | TP 3966 | TP 3961 | TP 3956 | TP 3951 |  | ",
+          "missing": [
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD SELL LIMIT 4011/4020 |  | TP 4006 | TP 4001 | TP 3996 | TP 3991 | TP 3986 | TP 3981 | TP 3976 | TP 3971 | TP 3966 |  | SL / 4030",
+        "GOLD SELL LIMIT 3996/4000 |  | TP 3991 | TP 3986 | TP 3981 | TP 3976 | TP 3971 | TP 3966 | TP 3961 | TP 3956 | TP 3951 |  | SL / 4020"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Pro_faxc_2acdemy",
+    "status": "RESOLVED",
+    "channelTitle": "𝗣𝗥𝗢 𝗧𝗥𝗔𝗗𝗘 𝗘𝗠𝗣𝗜𝗥𝗘",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 4,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 14
+    },
+    "parserStats": {
+      "intendedSignals": 3,
+      "actionableSignals": 2,
+      "successRate": 67,
+      "failures": [
+        {
+          "id": 12179,
+          "text": "TP miss by just 2 pips. We try our best and signal was perfect.  |  | But Gold miss TP guys. We prefer t",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "TP miss by just 2 pips. We try our best and signal was perfect.  |  | But Gold miss TP guys. We prefer transparency over hitting fluff TP"
+      ]
+    },
+    "valueCategory": "MEDIUM VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "danifx08",
+    "status": "RESOLVED",
+    "channelTitle": "🟡 𝗦𝗡𝗜𝗣𝗘𝗥 𝗚𝗢𝗟𝗗 𝗙𝗫 🟡",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 4,
+      "updates": 3,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 13
+    },
+    "parserStats": {
+      "intendedSignals": 11,
+      "actionableSignals": 4,
+      "successRate": 36,
+      "failures": [
+        {
+          "id": 16291,
+          "text": "🔥 GOLD SELL +40 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16287,
+          "text": "🔥 GOLD SELL +110 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16285,
+          "text": "🔥 GOLD SELL +50 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16280,
+          "text": "🔥 GOLD SELL +230 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16278,
+          "text": "🔥 GOLD SELL +110 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16276,
+          "text": "🔥 GOLD SELL +50 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 16272,
+          "text": "SL hunt. Selling pressure didn't respected the zone.  |  | Lets wait for recovery ✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "🔥 GOLD SELL +40 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+        "🔥 GOLD SELL +110 PIPS RUNNING |  | IN PROFITS 📉⚡️",
+        "🔥 GOLD SELL +50 PIPS RUNNING |  | IN PROFITS 📉⚡️"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "goldprotradertame",
+    "status": "RESOLVED",
+    "channelTitle": "𝗚𝗢𝗟𝗗 𝗣𝗥𝗢 𝗧𝗥𝗔𝗗𝗘𝗥",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 3,
+      "updates": 3,
+      "promo": 4,
+      "analysis": 0,
+      "news": 0,
+      "noise": 10
+    },
+    "parserStats": {
+      "intendedSignals": 12,
+      "actionableSignals": 3,
+      "successRate": 25,
+      "failures": [
+        {
+          "id": 17848,
+          "text": "𝗚𝗢𝗟𝗗 Sell  𝗛𝗜𝗧 𝗧𝗣 1 𝗮𝗻𝗱 𝗿𝘂𝗻𝗻𝗶𝗻𝗴  | 70+ 𝗽𝗶𝗽𝘀 🍾 |  | 𝗠𝗼𝘃𝗲 𝗦𝗟 𝘁𝗼 𝗲𝗻𝘁𝗿𝘆 \ud835",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17843,
+          "text": "GOLD SELL LIMIT  4013 - 4014 |  | SL 4020",
+          "missing": [
+            "targets"
+          ]
+        },
+        {
+          "id": 17841,
+          "text": "If you want accurate and pinpoint short 🎯 signals, Round 3 will be posted in our VIP shortly. Join ",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17840,
+          "text": "𝗚𝗢𝗟𝗗 Sell 𝗥𝗨𝗡𝗡𝗜𝗡𝗚 140 𝗣𝗶𝗽𝘀 𝗣𝗿𝗼𝗳𝗶𝘁 🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17838,
+          "text": "𝗚𝗢𝗟𝗗 Sell 𝗥𝗨𝗡𝗡𝗜𝗡𝗚 110 𝗣𝗶𝗽𝘀 𝗣𝗿𝗼𝗳𝗶𝘁 🔥",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17837,
+          "text": "𝗚𝗢𝗟𝗗 Sell  𝗛𝗜𝗧 𝗧𝗣 1 𝗮𝗻𝗱 𝗿𝘂𝗻𝗻𝗶𝗻𝗴  | 70+ 𝗽𝗶𝗽𝘀 🍾 |  | 𝗠𝗼𝘃𝗲 𝗦𝗟 𝘁𝗼 𝗲𝗻𝘁𝗿𝘆 \ud835",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17834,
+          "text": "NASDAQ Sell 𝗛𝗜𝗧 𝗧𝗣 1 𝗮𝗻𝗱 𝗿𝘂𝗻𝗻𝗶𝗻𝗴  | 80+ 𝗽𝗶𝗽𝘀 🍾 |  | 𝗠𝗼𝘃𝗲 𝗦𝗟 𝘁𝗼 𝗲𝗻𝘁𝗿𝘆 𝗽𝗼",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17833,
+          "text": "If you are interested in joining our VIP channel, join now. We have a strong BUY setup  Don't miss t",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17830,
+          "text": "GOLD Sell FINAL.TP3 HIT 370+PIPS 🎯 |  | Target Completed. ✍️ |  | (1:6 risk to reward collect )🎯",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "𝗚𝗢𝗟𝗗 Sell  𝗛𝗜𝗧 𝗧𝗣 1 𝗮𝗻𝗱 𝗿𝘂𝗻𝗻𝗶𝗻𝗴  | 70+ 𝗽𝗶𝗽𝘀 🍾 |  | 𝗠𝗼𝘃𝗲 𝗦𝗟 𝘁𝗼 𝗲𝗻𝘁𝗿𝘆 𝗽𝗼𝗶𝗻𝘁 𝗮𝗻𝗱 𝗺𝗮𝗸𝗲 𝗶𝘁 ✍️ 𝗿𝗶𝘀𝗸-𝗳𝗿𝗲𝗲 𝘁𝗿𝗮𝗱𝗲 🎯",
+        "GOLD SELL LIMIT  4013 - 4014 |  | SL 4020",
+        "If you want accurate and pinpoint short 🎯 signals, Round 3 will be posted in our VIP shortly. Join now and trade with proper risk management.  |  | https://t.me/m/9P3r5ktjMDZk"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "FOREX_MARKET_CNP0",
+    "status": "RESOLVED",
+    "channelTitle": "𝗙𝗢𝗥𝗘𝗫 𝗠𝗔𝗥𝗞𝗘𝗧 𝗖𝗢𝗡𝗤𝗨𝗘𝗥",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 1,
+      "updates": 4,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 14
+    },
+    "parserStats": {
+      "intendedSignals": 15,
+      "actionableSignals": 1,
+      "successRate": 7,
+      "failures": [
+        {
+          "id": 27791,
+          "text": "GOLD BUY HIT TP (1) 80+ pips from entry 4047 to 4055 |  | Move SL to your entry and close bad💰💰💰💰",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27790,
+          "text": "GOLD SELL Running 120 + pips Profit | 💵💵💵",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27789,
+          "text": "Alhumdullah super short 🥳🥳🥳",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27788,
+          "text": "GOLD SELL HIT TP (1) 90+ pips from entry 4017 to 4008 |  | Move SL to your entry and close bad entry💵💵",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27787,
+          "text": "GOLD SELL Running 50+ pips Profit | 💵💵💵",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27786,
+          "text": "GOLD SE  4017.4018 |  | TP 4010 | TP 4000 | TP 3950 |  | SL 4023",
+          "missing": [
+            "action",
+            "entry"
+          ]
+        },
+        {
+          "id": 27785,
+          "text": "GOLD SELL 4018.4017",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27783,
+          "text": "GOLD SE  4015.4016 |  | TP 4008 | TP 4000 | TP 3950 |  | SL 4021",
+          "missing": [
+            "action",
+            "entry"
+          ]
+        },
+        {
+          "id": 27782,
+          "text": "GOLD SELL 4016.4015",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27778,
+          "text": "GOLD BUY  Running 450+ pips Profit | 💵💵💵",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27776,
+          "text": "GOLD BUY HIT TP (2) 280+ pips from entry 3990 to 4018 |  | Move SL to your entry and close bad entry💰💰",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27775,
+          "text": "Super entry guys😮😮😮😮",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27774,
+          "text": "GOLD BUY  Running 180+ pips Profit | 💵💵💵",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 27773,
+          "text": "GOLD BUY HIT TP (1) 140+ pips from entry 3990 to 4004 |  | Move SL to your entry and close bad entry💵💵",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "GOLD BUY HIT TP (1) 80+ pips from entry 4047 to 4055 |  | Move SL to your entry and close bad💰💰💰💰",
+        "GOLD SELL Running 120 + pips Profit | 💵💵💵",
+        "Alhumdullah super short 🥳🥳🥳"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Aliwithtrade71",
+    "status": "RESOLVED",
+    "channelTitle": "GOLD SCALPER",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 3,
+      "updates": 0,
+      "promo": 4,
+      "analysis": 0,
+      "news": 0,
+      "noise": 13
+    },
+    "parserStats": {
+      "intendedSignals": 13,
+      "actionableSignals": 3,
+      "successRate": 23,
+      "failures": [
+        {
+          "id": 14570,
+          "text": "📊 XAUUSD BUY ALL TP DONE 470+ PIPS 🙏",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14569,
+          "text": "📊 XAUUSD BUY TP3 DONE 170+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14568,
+          "text": "📊 XAUUSD BUY TP2 DONE 120+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14567,
+          "text": "📊 XAUUSD BUY TP1 DONE 70+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14563,
+          "text": "📊 XAUUSD SELL ALL TP DONE 370+ PIPS 🙏",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14561,
+          "text": "📊 XAUUSD SELL BOOM BOOM RUNNING 300+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14560,
+          "text": "📊 XAUUSD SELL TP3 DONE 170+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14559,
+          "text": "📊 XAUUSD SELL TP2 DONE 120+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14558,
+          "text": "📊 XAUUSD SELL BOOM BOOM RUNNING 100+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 14557,
+          "text": "📊 XAUUSD SELL TP1 DONE 70+ PIPS 🙏",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "📊 XAUUSD BUY ALL TP DONE 470+ PIPS 🙏",
+        "📊 XAUUSD BUY TP3 DONE 170+ PIPS 🙏",
+        "📊 XAUUSD BUY TP2 DONE 120+ PIPS 🙏"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "xauuusdpipsocietyofficial",
+    "status": "RESOLVED",
+    "channelTitle": "XAUUUSD PIP SOCIETY OFFICIAL",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 4,
+      "updates": 10,
+      "promo": 0,
+      "analysis": 3,
+      "news": 0,
+      "noise": 3
+    },
+    "parserStats": {
+      "intendedSignals": 18,
+      "actionableSignals": 4,
+      "successRate": 22,
+      "failures": [
+        {
+          "id": 8577,
+          "text": "#GOLD #XAUUSD signal sell  📈📈 Target ²nd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 100+",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8576,
+          "text": "#GOLD #XAUUSD signal sell 📈📈Target ¹st Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 40+ Pi",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8573,
+          "text": "#GOLD #XAUUSD signal buy 📈📈 Target All Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 220+ P",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8572,
+          "text": "#GOLD #XAUUSD signal buy 📈📈 Target ³rd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 160+ P",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8571,
+          "text": "Continue buy trade's guys ☄️☄️",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8570,
+          "text": "#GOLD #XAUUSD signal buy  📈📈 Target ²nd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 80+ P",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8569,
+          "text": "#GOLD #XAUUSD signal buy 📈📈 Target ¹st Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 40+ Pi",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8567,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target All Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 250+ ",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8566,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target ³rd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 150+ ",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8565,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target ²nd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 120+ ",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8564,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target ¹st Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 50+ P",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8562,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target ³rd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 120+ ",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8561,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target ²nd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 80+ P",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 8560,
+          "text": "#GOLD #XAUUSD signal sell 📈📈 Target ¹st Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 40+ P",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#GOLD #XAUUSD signal sell  📈📈 Target ²nd Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 100+ Pips profit done 📊 | ²nd Target Hit 🎯 🎯🔥🔥 |  | always use risk management👀",
+        "#GOLD #XAUUSD signal sell 📈📈Target ¹st Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 40+ Pips profit done 📊 | ¹st Target Hit 🎯 🎯🔥🔥 |  | always use risk management👀",
+        "#GOLD #XAUUSD signal buy 📈📈 Target All Hit  🔥🔥🔥 | Amazing shot done by sniper shooter ✅✅✅✅ | 220+ Pips profit done 📊 | ALL Target Hit 🎯 🎯🔥🔥 |  | always use risk management👀"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "pureblizzfx",
+    "status": "RESOLVED",
+    "channelTitle": "Pure fx",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 4,
+      "updates": 1,
+      "promo": 1,
+      "analysis": 0,
+      "news": 0,
+      "noise": 14
+    },
+    "parserStats": {
+      "intendedSignals": 4,
+      "actionableSignals": 4,
+      "successRate": 100,
+      "failures": [],
+      "unparsedSamples": []
+    },
+    "valueCategory": "HIGH VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GolddExpert",
+    "status": "RESOLVED",
+    "channelTitle": "FOREX GOLD SIGNALS 📊",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 1,
+      "promo": 8,
+      "analysis": 0,
+      "news": 0,
+      "noise": 9
+    },
+    "parserStats": {
+      "intendedSignals": 8,
+      "actionableSignals": 2,
+      "successRate": 25,
+      "failures": [
+        {
+          "id": 17509,
+          "text": "#XAUUSD #GOLD BUY 90+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 2 HIT 🎯 ",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17504,
+          "text": "#XAUUSD #GOLD BUY 60+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 1 HIT 🎯 ",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17497,
+          "text": "#XAUUSD #GOLD BUY 220+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 4 HIT 🎯",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17491,
+          "text": "#XAUUSD #GOLD BUY 180+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 3 HIT 🎯",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17490,
+          "text": "#XAUUSD #GOLD BUY 110+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 2 HIT 🎯",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17489,
+          "text": "#XAUUSD #GOLD BUY 60+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 1 HIT 🎯 ",
+          "missing": [
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "#XAUUSD #GOLD BUY 90+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 2 HIT 🎯 🎯 🔥🔥💥💥💥💥 | STAY TUNED",
+        "#XAUUSD #GOLD BUY 60+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 1 HIT 🎯 🎯 🔥🔥💥💥💥💥 | STAY TUNED",
+        "#XAUUSD #GOLD BUY 220+ PIPS PROFIT DONE  | Check here accuracy  WOOHOO✅✅✅✅ |  ENJOY PROFITS  | TP 4 HIT 🎯 🎯 🔥🔥💥💥💥💥 | STAY TUNED"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "TheKingOfForexXPro",
+    "status": "RESOLVED",
+    "channelTitle": "𝐓𝐇𝐄 𝐊𝐈𝐍𝐆 𝐎𝐅 𝐅𝐎𝐑𝐄𝐗 𝐏𝐑𝐎",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 2,
+      "promo": 14,
+      "analysis": 0,
+      "news": 0,
+      "noise": 2
+    },
+    "parserStats": {
+      "intendedSignals": 10,
+      "actionableSignals": 2,
+      "successRate": 20,
+      "failures": [
+        {
+          "id": 17130,
+          "text": "XAUUSD|GOLD LONG TP BUY |  | 410+PIPS RUNNING IN PROFIT VIP ROOM✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17128,
+          "text": "XAUUSD/GOLD BUY Position | TP 5 Has Successfully Achieved Over 300+Pips in Profit |  | All targets Within ",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17127,
+          "text": "XAUUSD/GOLD BUY Position |  | Our Realizing a Profit Running 290+ PIPS Within the VIP Room✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17126,
+          "text": "XAUUSD/GOLD BUY Position |  | Our Realizing a Profit Running 270+ PIPS Within the VIP Room✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17117,
+          "text": "XAUUSD|GOLD LONG TP BUY | 420+PIPS RUNNING IN PROFIT VIP ROOM |  | KING IS ALWAYS KING✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17116,
+          "text": "XAUUSD/GOLD BUY Position | TP 5 Has Successfully Achieved Over 320+Pips in Profit |  | All targets Within ",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17115,
+          "text": "XAUUSD/GOLD BUY Position |  | Our Realizing a Profit Running 280+ PIPS Within the VIP Room✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 17113,
+          "text": "XAUUSD/GOLD BUY Position |  | Our Realizing a Profit Running 190+ PIPS Within the VIP Room✅",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "XAUUSD|GOLD LONG TP BUY |  | 410+PIPS RUNNING IN PROFIT VIP ROOM✅",
+        "XAUUSD/GOLD BUY Position | TP 5 Has Successfully Achieved Over 300+Pips in Profit |  | All targets Within the VIP Room have Been met✅",
+        "XAUUSD/GOLD BUY Position |  | Our Realizing a Profit Running 290+ PIPS Within the VIP Room✅"
+      ]
+    },
+    "valueCategory": "REJECT",
+    "reasons": [
+      "Excessive marketing spam (>60% of feed)"
+    ]
+  },
+  {
+    "channel": "EasyForexPips",
+    "status": "RESOLVED",
+    "channelTitle": "Easy Forex 👑 OFFICIAL CHANNEL",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 2,
+      "promo": 9,
+      "analysis": 0,
+      "news": 0,
+      "noise": 7
+    },
+    "parserStats": {
+      "intendedSignals": 4,
+      "actionableSignals": 2,
+      "successRate": 50,
+      "failures": [
+        {
+          "id": 58024,
+          "text": "Monday 15/06/2026 closed trades: |  | GBPUSD BUY TP +50 pips✅ | GBPUSD BUY TP +50 pips✅ | EURUSD BUY TP +50 ",
+          "missing": [
+            "entry",
+            "targets"
+          ]
+        },
+        {
+          "id": 58022,
+          "text": "🔵🔵19 JUNE FREE signal EUR/USD buy at 1.1455 forecast: |  | ⭐️⭐️⭐️Become a VIP member => https://easyfo",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "Monday 15/06/2026 closed trades: |  | GBPUSD BUY TP +50 pips✅ | GBPUSD BUY TP +50 pips✅ | EURUSD BUY TP +50 pips✅ | GBPUSD BUY TP +50 pips✅ |  | Tuesday 16/06/2026 closed trades: |  | GBPUSD BUY TP +50 pips✅ | GBPUSD BUY TP +20 pips✅ | GBPUSD BUY TP +20 pips✅ | EURUSD BUY TP +20 pips✅ | EURUSD BUY TP +20 pips✅ | EURJPY SELL SL -60pips  | GBPJPY SELL TP +20 pips✅ |  | Wednesday 17/06/2026 closed trades: |  | EURUSD BUY TP +100 pips✅ | EURUSD BUY TP +100 pips✅ | AUDUSD BUY TP +50 pips✅ | GBPJPY SELL TP +50 pips✅ | EURJPY SELL TP +50 pips✅ | AUDUSD SELL TP +20 pips✅ | CHFJPY SELL TP +20 pips✅ | CHFJPY SELL TP +20 pips✅ |  | Thursday 18/06/2026 closed trades: |  | GBPJPY SELL TP +100 pips✅ | EURJPY SELL TP +100 pips✅ | EURJPY SELL TP +50 pips✅ | GBPJPY SELL TP +50 pips✅ | EURJPY SELL TP +50 pips✅ | EURJPY SELL TP +20 pips✅ | GBPJPY SELL TP +20 pips✅ | EURJPY SELL SL -60pips  | GBPJPY SELL TP +20 pips✅ |  | Friday 19/06/2026 closed trades: |  | GBPUSD SELL TP +120 pips✅ | GBPUSD SELL TP +120 pips✅ | GBPJPY SELL TP +120 pips✅ | GBPUSD SELL TP +120 pips✅ | EURUSD SELL TP +100 pips✅ | GBPUSD SELL TP +100 pips✅ | GBPJPY SELL -60pips  | CHFJPY SELL TP +100 pips✅ | EURJPY SELL TP +100 pips✅ |  | TOTAL: +2,190 PIPS✅ |  | 🌐Website: | https://easyforexpips.com |  | Support➡️ t.me/EFPsignals",
+        "🔵🔵19 JUNE FREE signal EUR/USD buy at 1.1455 forecast: |  | ⭐️⭐️⭐️Become a VIP member => https://easyforexpips.com | 💻📱Our Forex Course👉 bit.ly/FXcourse11"
+      ]
+    },
+    "valueCategory": "MEDIUM VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "arshafokuscapital",
+    "status": "RESOLVED",
+    "channelTitle": "ARSHA CAPITAL",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 0,
+      "updates": 0,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 20
+    },
+    "parserStats": {
+      "intendedSignals": 5,
+      "actionableSignals": 0,
+      "successRate": 0,
+      "failures": [
+        {
+          "id": 19020,
+          "text": "Kalian Lihat aja #FLIPACCOUNT INI HASILNYA!! |  | FLIP ACCOUNT Day 1 ✅ | FLIP ACCOUNT Day 2 ✅ | FLIP ACCOUNT",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 19018,
+          "text": "TERIMAKASIH GOLD ! hari ini rezeky kita melimpah 🔥🔥 |  | SETUP 1 : BUY 100PIPS✅ | SETUP 2 : BUY 50PIPS✅ | ",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 19013,
+          "text": "Arsha tekan Buy Gold Lagi✅✅✅ |  | Price 4140 | TP Open | SL 4131",
+          "missing": [
+            "entry"
+          ]
+        },
+        {
+          "id": 19008,
+          "text": "Arsha Buy Gold Now✅✅✅ |  | Price 4050 | TP Open | SL 4040",
+          "missing": [
+            "entry"
+          ]
+        },
+        {
+          "id": 19003,
+          "text": "Yuk Arsha Buy Gold Now!! |  | Price 4076 | TP Open | CL 4066",
+          "missing": [
+            "entry",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "Kalian Lihat aja #FLIPACCOUNT INI HASILNYA!! |  | FLIP ACCOUNT Day 1 ✅ | FLIP ACCOUNT Day 2 ✅ | FLIP ACCOUNT Day 3 ✅ | Daily 5 hingga 6 SETUP ⭐️ | Trading Plan Flip Wajib Hit TP🤙 |  | Kalian jadi penonton aja jangan ikutan Sebab nanti akan Kaya🤪 |  | ARSHA WD DULU AH MAU BELANJA SESUATU 🔥",
+        "TERIMAKASIH GOLD ! hari ini rezeky kita melimpah 🔥🔥 |  | SETUP 1 : BUY 100PIPS✅ | SETUP 2 : BUY 50PIPS✅ | SETUP 3 : BUY 100PIPS✅ |  | nikmat gak follow arsha ? jelas dong arsha kan enak 🤣🔥",
+        "Arsha tekan Buy Gold Lagi✅✅✅ |  | Price 4140 | TP Open | SL 4131"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "Wolfforextrading1",
+    "status": "RESOLVED",
+    "channelTitle": "⚡️⚡️ WOLF TRADING🐺",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 1,
+      "updates": 3,
+      "promo": 12,
+      "analysis": 0,
+      "news": 0,
+      "noise": 4
+    },
+    "parserStats": {
+      "intendedSignals": 15,
+      "actionableSignals": 1,
+      "successRate": 7,
+      "failures": [
+        {
+          "id": 25205,
+          "text": "If you want Daily 3 to 4 Good Risk Reward proper signals with Entry point TP and SL on my Analysis T",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25202,
+          "text": "Update ❤️❤️✅ |  | Xauusd sniper entry smashed running 200 Pips profit move your sl into half profit and ",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25201,
+          "text": "Xauusd sell now 3993 |  | Tp.      3966 |  | Sl.       4002",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25200,
+          "text": "Update ❤️❤️✅ |  | Xauusd sniper entry smashed running 70 Pips profit move your sl into half profit and t",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25199,
+          "text": "If you want Daily 3 to 4 Good Risk Reward proper signals with Entry point TP and SL on my Analysis T",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25198,
+          "text": "I hope you taste my signal and earn money for VIP subscription | As I told you no signal in free join ",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25195,
+          "text": "Update ❤️💥✅ |  | Xauusd sniper entry smashed running 220 Pips profit move your sl into half profit and ",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25194,
+          "text": "Update 👍❤️✅ |  | Xauusd sniper entry smashed running 80 Pips profit move your sl into half profit and t",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25192,
+          "text": "Usdjpy sell now 161.730 |  | Tp1.    161.465 | Tp2.    161.073 |  |   Sl.      161.946",
+          "missing": [
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25187,
+          "text": "Update 👍❤️✅ |  | Xauusd sniper entry smashed running boom boom 300 pips profit move your sl into half p",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25186,
+          "text": "Xauusd sell now 4090 |  | Tp.    4051 |  | Sl.      4101",
+          "missing": [
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25185,
+          "text": "Update 👍👍✅ |  | Xauusd Sniper entry smashed 30 Pips profit move your sl into half profit and take same",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25184,
+          "text": "Update 💥❤️ |  | Xauusd sniper entry smashed running 140 pips profit and take same profit and take same ",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 25183,
+          "text": "Xauusd sell now 4090 |  | Tp.    4051 |  | Sl.      4101",
+          "missing": [
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "If you want Daily 3 to 4 Good Risk Reward proper signals with Entry point TP and SL on my Analysis Then join our premium (VIP) channel. |  | For Vip Channel Signal Contact now @WOLFTRADING34",
+        "Update ❤️❤️✅ |  | Xauusd sniper entry smashed running 200 Pips profit move your sl into half profit and take same profit 👆💥👍 |  | Signal was post in vip chanel 💥❤️✅",
+        "Xauusd sell now 3993 |  | Tp.      3966 |  | Sl.       4002"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "wfr_analysis",
+    "status": "RESOLVED",
+    "channelTitle": "🌐wσrld fσrєх rєѕєαrch💱⚜",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 2,
+      "updates": 3,
+      "promo": 2,
+      "analysis": 0,
+      "news": 0,
+      "noise": 13
+    },
+    "parserStats": {
+      "intendedSignals": 8,
+      "actionableSignals": 2,
+      "successRate": 25,
+      "failures": [
+        {
+          "id": 31587,
+          "text": "I will update about XAUUSD is short time.",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 31584,
+          "text": "XAUUSD LONG TERM  | SIGNAL WILL BE POST AFTER CONFIRMATION",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 31582,
+          "text": "XAGUSD(SILVER)✅✅ |  | we just closed at entry point but it took both tps 225+ pips 2rr zero drawdown 💥✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 31581,
+          "text": "XAGUSD(SILVER)✅✅ |  | we just closed at entry point but it took both tps 225+ pips 2rr zero drawdown 💥✅",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 31579,
+          "text": "As i mentioned  when XAUUSD was at 4002 (130+ pips)that XAUUSD is risky set sl b.e take half profit.",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 31576,
+          "text": "Xauusd ✅✅📈 |  | 120+ pips profits running 📊 | Move sl to entry point 🛡️ |  | This trade looks risky ⚠️",
+          "missing": [
+            "action",
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "I will update about XAUUSD is short time.",
+        "XAUUSD LONG TERM  | SIGNAL WILL BE POST AFTER CONFIRMATION",
+        "XAGUSD(SILVER)✅✅ |  | we just closed at entry point but it took both tps 225+ pips 2rr zero drawdown 💥✅ | We will count it as zero pips 💥✅ |  | Signal was posted in Vip channel only 💥✅"
+      ]
+    },
+    "valueCategory": "LOW VALUE",
+    "reasons": []
+  },
+  {
+    "channel": "GOLDTRADERJACK510",
+    "status": "RESOLVED",
+    "channelTitle": "Gold Trader Jack",
+    "totalMessages": 20,
+    "classifications": {
+      "signals": 3,
+      "updates": 6,
+      "promo": 0,
+      "analysis": 0,
+      "news": 0,
+      "noise": 11
+    },
+    "parserStats": {
+      "intendedSignals": 5,
+      "actionableSignals": 3,
+      "successRate": 60,
+      "failures": [
+        {
+          "id": 37852,
+          "text": "Gold Buy Now",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        },
+        {
+          "id": 37836,
+          "text": "Gold Sell Now",
+          "missing": [
+            "entry",
+            "targets",
+            "stopLoss"
+          ]
+        }
+      ],
+      "unparsedSamples": [
+        "Gold Buy Now",
+        "Gold Sell Now"
+      ]
+    },
+    "valueCategory": "MEDIUM VALUE",
+    "reasons": []
+  }
+]

@@ -48,18 +48,22 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
       finalClassification
     );
 
+    const isOpenTarget = entities.targets.includes("OPEN");
+    const filteredTargets = entities.targets.filter((t) => t !== "OPEN" && typeof t === "number");
+
     const parsedSignal = {
       pair: entities.pair,
       action: entities.action,
       bias: entities.bias,
       entry: entities.entryInfo.entry,
       entryRange: entities.entryInfo.entryRange,
-      target: entities.targets.find((targetValue) => typeof targetValue === "number") || null,
-      targets: entities.targets,
+      target: filteredTargets[0] || null,
+      targets: filteredTargets,
       pipTargets: entities.pipTargets,
       stopLoss: entities.stopLoss,
       hiddenStopLoss: entities.hiddenStopLoss,
       timeframe: entities.timeframe,
+      isOpenTarget,
       timestamp: rawMessage.timestamp || null,
       createdAt: interpretation.freshness.createdAt,
       channel: rawMessage.channel || "unknown",
@@ -117,15 +121,19 @@ function runEntityExtractionStage(normalized) {
   const pair = extractPair(normalized.cleanedText);
   const bias = extractBias(normalized.compactText);
   const action = extractAction(normalized.compactText, bias);
+  const entryInfo = extractEntry(normalized, action);
+  const stopLoss = extractStopLoss(normalized);
+  const pipTargets = extractPipTargets(normalized.compactText);
+  const targets = extractTargets(normalized.cleanedText, action, entryInfo, stopLoss);
 
   return {
     pair,
     bias,
     action,
-    entryInfo: extractEntry(normalized, action),
-    pipTargets: extractPipTargets(normalized.compactText),
-    targets: extractTargets(normalized.cleanedText),
-    stopLoss: extractStopLoss(normalized),
+    entryInfo,
+    pipTargets,
+    targets,
+    stopLoss,
     hiddenStopLoss: extractHiddenStopLoss(normalized.compactText),
     timeframe: extractTimeframe(normalized.compactText),
     managementAction: extractManagementAction(normalized.compactText),
@@ -259,6 +267,8 @@ function extractEntry(normalized, action) {
   const pairPattern = createPairTokenPattern().source;
   const pairPrefix = `(?:\\s*#?\\s*(?:${pairPattern}))?`;
   const labeledPatterns = [
+    new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)?\\s*ZONE\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
+    new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+NOW\\b\\s*@?\\s*${pairPrefix}\\s*@?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT|LEVEL)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:CURRENT\\s+PRICE|CMP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+(?:LIMIT|STOP)\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
@@ -309,17 +319,16 @@ function extractEntry(normalized, action) {
   const numbers = extractNumbers(entrySegment);
   const entry = numbers[0] || null;
   const entryRange = getEntryRangeFromLine(entrySegment, numbers, entry);
-
   return {
     entry,
     entryRange,
   };
 }
 
-function extractTargets(text) {
+function extractTargets(text, action = null, entryInfo = null, stopLoss = null) {
   const cleanedText = String(text || "").replace(/\b\d+(?:\.\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?\s*%/g, " ");
   const targets = [];
-  const groupedTargets = cleanedText.match(/\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,80}/gi) || [];
+  const groupedTargets = cleanedText.match(/(?:(?<!\.)\b\d{1,2}\s*[_.]?\s*)?\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,80}/gi) || [];
 
   for (const group of groupedTargets) {
     if (containsPipTarget(group)) {
@@ -336,6 +345,9 @@ function extractTargets(text) {
   }
 
   const directPatterns = [
+    new RegExp(`\\bTP\\s*\\d{1,2}\\b(?:[\\s:@-]|\\.{2,})+\\s*(${numberPattern})`, "gi"),
+    new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*TP\\b(?:[\\s:@-]|\\.{2,})*\\s*(${numberPattern})`, "gi"),
+    new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*TARGET\\b(?:[\\s:@-]|\\.{2,})*\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bTP\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bTAKE\\s+PROFIT\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bTAKE\\s+PROFITS\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
@@ -350,6 +362,63 @@ function extractTargets(text) {
   }
 
   collectOpenTargets(cleanedText, targets);
+
+  // Unlabeled multi-line targets fallback
+  if (targets.length === 0 && action && entryInfo) {
+    const entry = entryInfo.entry;
+    const entryRange = entryInfo.entryRange;
+    const unlabeled = extractUnlabeledTargets(cleanedText, action, entry, stopLoss, entryRange);
+    for (const val of unlabeled) {
+      addUniqueNumber(targets, val);
+    }
+  }
+
+  return targets;
+}
+
+function extractUnlabeledTargets(text, action, entry, stopLoss, entryRange) {
+  if (!action || entry === null || stopLoss === null) {
+    return [];
+  }
+
+  const targets = [];
+  const lines = text.split("\n");
+  const numberRegex = new RegExp(numberPattern, "g");
+
+  for (const line of lines) {
+    if (/\b(?:SL|STOP\s*LOSS|STOPLOSS|ENTRY|ENTRIES|CMP|CURRENT|RISK|RISK\s+PRICE)\b/i.test(line)) {
+      continue;
+    }
+
+    const matches = [...line.matchAll(numberRegex)]
+      .map((m) => toNumber(m[0]))
+      .filter((n) => n !== null);
+
+    for (const num of matches) {
+      if (num === entry || num === stopLoss) {
+        continue;
+      }
+
+      if (entryRange && entryRange.length > 0) {
+        if (entryRange.includes(num)) {
+          continue;
+        }
+        if (entryRange.length === 2 && num >= entryRange[0] && num <= entryRange[1]) {
+          continue;
+        }
+      }
+
+      if (action === "BUY") {
+        if (num > entry && num < entry * 1.5) {
+          addUniqueTarget(targets, num);
+        }
+      } else if (action === "SELL") {
+        if (num < entry && num > entry * 0.5) {
+          addUniqueTarget(targets, num);
+        }
+      }
+    }
+  }
 
   return targets;
 }
@@ -369,6 +438,9 @@ function extractPipTargets(text) {
 
 function extractStopLoss(normalized) {
   const patterns = [
+    new RegExp(`\\bSL\\b\\s*[\\s:@.-]+\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bRISK\\s+PRICE\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bRISK\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSL\\b\\s*(?:PRICE)?\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSL(?=${numberPattern})\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSTOP\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
@@ -647,21 +719,45 @@ function stripPairTokens(text) {
 }
 
 function extractIndexedTargetNumbers(text) {
-  const indexedTargetPattern = new RegExp(
-    `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(${numberPattern})\\b`,
-    "gi"
-  );
+  const targets = [];
 
-  return [...String(text).matchAll(indexedTargetPattern)]
-    .map((match) => toNumber(match[1]))
-    .filter((value) => value !== null);
+  const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*(\\d{1,2})\\b(?:[\\s:@-]|\\.{2,})+\\s*(${numberPattern})`, "gi");
+  for (const match of text.matchAll(pat1)) {
+    const val = toNumber(match[2]);
+    if (val !== null) {
+      addUniqueTarget(targets, val);
+    }
+  }
+
+  const pat2 = new RegExp(`(?<!\\.)\\b(\\d{1,2})\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.{2,})*\\s*(${numberPattern})`, "gi");
+  for (const match of text.matchAll(pat2)) {
+    const val = toNumber(match[2]);
+    if (val !== null) {
+      addUniqueTarget(targets, val);
+    }
+  }
+
+  const legacyPat = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(${numberPattern})\\b`, "gi");
+  for (const match of text.matchAll(legacyPat)) {
+    const val = toNumber(match[1]);
+    if (val !== null) {
+      addUniqueTarget(targets, val);
+    }
+  }
+
+  return targets;
 }
 
 function isSpacedTargetIndex(text) {
-  return new RegExp(
+  const hasSpaced = new RegExp(
     `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(?:${numberPattern}|OPEN\\+?)\\b`,
     "i"
   ).test(text);
+  if (hasSpaced) return true;
+
+  const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*\\d{1,2}\\b(?:[\\s:@-]|\\.{2,})+\\s*${numberPattern}`, "i");
+  const pat2 = new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.{2,})*\\s*${numberPattern}`, "i");
+  return pat1.test(text) || pat2.test(text);
 }
 
 function getEntryRangeFromLine(line, numbers, entry) {
@@ -812,7 +908,7 @@ function calculateConfidence(signal) {
     if (signal.pair) score += 0.25;
     if (signal.action) score += 0.25;
     if (signal.entry !== null) score += 0.2;
-    if (signal.targets.length > 0) score += 0.15;
+    if (signal.targets.length > 0 || signal.isOpenTarget) score += 0.15;
     if (signal.pipTargets.length > 0) score += 0.1;
     if (signal.stopLoss !== null || signal.hiddenStopLoss) score += 0.15;
   }
@@ -849,7 +945,7 @@ function getMissingFields(signal) {
 
   return expectedNewSignalFields.filter((field) => {
     if (field === "targets") {
-      return signal.targets.length === 0;
+      return signal.targets.length === 0 && !signal.isOpenTarget;
     }
 
     if (field === "stopLoss" && signal.hiddenStopLoss) {

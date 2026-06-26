@@ -194,7 +194,24 @@ const promoPatterns = [
   /\bjoin\s+channel\b/i,
   /\binvite\s+friends\b/i,
   /\bgiveaway\b/i,
-  /\bcontest\b/i
+  /\bcontest\b/i,
+  
+  // Custom VIP / Promotion extensions
+  /\bpremium\s+access\b/i,
+  /\bvip\s+(?:room|channel|access|subscription|setup|alert)\b/i,
+  /\bjoin\s+(?:here|now|vip|premium|channel)\b/i,
+  /\bcontact\s+(?:admin|support|me|us)\b/i,
+  /\bdm\s+(?:admin|me)\b/i,
+  /\bmessage\s+(?:admin|me)\b/i,
+  /\bdeposit\s+(?:instructions?|bonus|now|fund)\b/i,
+  /\bpayment\s+(?:screenshot|proof|receipt|received|done)\b/i,
+  /\b(?:broker|referral|affiliate|invite|promo|discount)\s+link\b/i,
+  /\bsign\s*up\s*(?:with|on)?\s*broker\b/i,
+  /\bopen\s+account\b/i,
+  /\bexclusive\s+offer\b/i,
+  /\blimited\s+spots?\b/i,
+  /\bclaim\s+your\s+spot\b/i,
+  /\bwin\s*rate\b/i
 ];
 
 function isPromoByKeywords(text) {
@@ -222,12 +239,20 @@ export function classifyMessage(rawMessage = {}) {
   const hasPair = !!parsed.pair && parsed.pair !== "unknown";
   const hasAction = !!parsed.action;
   const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
-  const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
+  const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0) || parsed.isOpenTarget;
   const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
 
   const isSignal = hasPair && hasAction && hasEntry && hasTP && hasSL;
   const containsPromoKeywords = isPromoByKeywords(normalized.originalText);
-  const hasResultPhrase = /\b(?:stopped out|stoped out|tp hit|target hit|closed in profit|closed in loss|result|setup failed)\b/i.test(normalized.originalText);
+  
+  // Expand hasResultPhrase to capture running profits, hits, pips done, updates, etc.
+  const hasResultPhrase = /\b(?:stopped? out|tp\s*\d*\s*(?:hitted|hit|complete|achieved|done|miss(?:ed)?)|targets?\s*(?:\d+|[¹²³⁴⁵])?\s*(?:hitted|hit|complete|achieved|done|miss(?:ed)?)|closed? in (?:profit|loss)|setup failed|running\s+(?:profit|pips?)|\d+\s*\+?\s*pips?\s*(?:running|profit|done|gain|secured)|\d+\s*(?:hitted|hit|complete|achieved|done|gain)\s*pips?|boom\s*boom\s*tp|closed?\s+manually|manual\s+close|book\s+profit|secure\s+profit|secured\s+profit|profit\s+secured|running\s+\d+\s*\+?\s*pips?)\b/i.test(normalized.originalText) ||
+                          /\b(XAUUSD|GOLD|GBPUSD|EURUSD|US30|GER30)\s+(BUY|SELL|LONG|SHORT)\b[\s\S]{0,50}\b(?:\+\d+\+?\s*pips?|\d+\+\s*pips?|\+?\d+\+?\s*pips?\s*running|\+?\d+\+?\s*pips?\s*(?:profit|done|gain))\b/i.test(normalized.originalText);
+
+  // Check payment screenshots / proofs
+  const hasMedia = Boolean(rawMessage.hasMedia || rawMessage.mediaType || reasons.hasMedia);
+  const containsPaymentKeywords = /\b(?:payment|deposit|proof|screenshot|receipt|transfer|sent|joined|join vip|vip access|registered|deposit done)\b/i.test(normalized.originalText);
+  const isPaymentScreenshotPromo = hasMedia && containsPaymentKeywords;
 
   let classification;
 
@@ -236,7 +261,7 @@ export function classifyMessage(rawMessage = {}) {
   } else if (isSignal) {
     // Dominance Rule: Signals override promo keywords
     classification = "NEW_SIGNAL";
-  } else if (containsPromoKeywords) {
+  } else if (containsPromoKeywords || isPaymentScreenshotPromo) {
     classification = "PROMO";
   } else {
     const teaserPatterns = [
@@ -285,7 +310,7 @@ function isValidActiveSignal(parsed, rawMessage) {
   if (!parsed.pair || !parsed.action) return false;
 
   const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
-  const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0);
+  const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0) || parsed.isOpenTarget;
   const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
 
   const paramCount = (hasEntry ? 1 : 0) + (hasTP ? 1 : 0) + (hasSL ? 1 : 0);

@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getSignalsController } from "../controllers/signalController.js";
+import { getParsedSignalsController } from "../controllers/parsedSignalController.js";
 
 const router = Router();
 
-router.get("/", getSignalsController);
+router.get("/", getParsedSignalsController);
 
 export default router;
