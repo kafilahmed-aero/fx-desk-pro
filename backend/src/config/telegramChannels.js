@@ -411,6 +411,161 @@ export const monitoredTelegramChannels = [
     username: "GOLDTRADERJACK510",
     title: "Gold Trader Jack",
   },
+  {
+    ref: "SkyPipsTeamuk_89",
+    username: "SkyPipsTeamuk_89",
+    title: "SkyPipsTeamuk_89",
+  },
+  {
+    ref: "dstader1",
+    username: "dstader1",
+    title: "dstader1",
+  },
+  {
+    ref: "MehtabEducationTeam753",
+    username: "MehtabEducationTeam753",
+    title: "MehtabEducationTeam753",
+  },
+  {
+    ref: "James_Trading_education",
+    username: "James_Trading_education",
+    title: "James_Trading_education",
+  },
+  {
+    ref: "TRADING_SIGNALS4X",
+    username: "TRADING_SIGNALS4X",
+    title: "TRADING_SIGNALS4X",
+  },
+  {
+    ref: "goldsnipersignals",
+    username: "goldsnipersignals",
+    title: "goldsnipersignals",
+  },
+  {
+    ref: "fxtv_freesignals",
+    username: "fxtv_freesignals",
+    title: "fxtv_freesignals",
+  },
+  {
+    ref: "fesadgyuioklpteku1",
+    username: "fesadgyuioklpteku1",
+    title: "fesadgyuioklpteku1",
+  },
+  {
+    ref: "TETAcademy",
+    username: "TETAcademy",
+    title: "TETAcademy",
+  },
+  {
+    ref: "Xauusd_Signal_Copytrading",
+    username: "Xauusd_Signal_Copytrading",
+    title: "Xauusd_Signal_Copytrading",
+  },
+  {
+    ref: "shaikh_forex_trading",
+    username: "shaikh_forex_trading",
+    title: "shaikh_forex_trading",
+  },
+  {
+    ref: "bullrunz",
+    username: "bullrunz",
+    title: "bullrunz",
+  },
+  {
+    ref: "GoldEducationHub",
+    username: "GoldEducationHub",
+    title: "GoldEducationHub",
+  },
+  {
+    ref: "FX_Gold_killler",
+    username: "FX_Gold_killler",
+    title: "FX_Gold_killler",
+  },
+  {
+    ref: "qt123123",
+    username: "qt123123",
+    title: "qt123123",
+  },
+  {
+    ref: "TheGoldSignals88",
+    username: "TheGoldSignals88",
+    title: "TheGoldSignals88",
+  },
+  {
+    ref: "goldfree8361",
+    username: "goldfree8361",
+    title: "goldfree8361",
+  },
+  {
+    ref: "The_Gold_Signals1",
+    username: "The_Gold_Signals1",
+    title: "The_Gold_Signals1",
+  },
+  {
+    ref: "FOREXEMIRE_UAS",
+    username: "FOREXEMIRE_UAS",
+    title: "FOREXEMIRE_UAS",
+  },
+  {
+    ref: "https://t.me/+Z7vgdIbg1zZlZDdk",
+    username: null,
+    title: "Private Telegram invite channel",
+  },
+  {
+    ref: "https://t.me/+nU3VIwk57jM4ODI0",
+    username: null,
+    title: "Private Telegram invite channel",
+  },
+  {
+    ref: "omanianfxtrade15",
+    username: "omanianfxtrade15",
+    title: "omanianfxtrade15",
+  },
+  {
+    ref: "Qayyumfx1100",
+    username: "Qayyumfx1100",
+    title: "Qayyumfx1100",
+  },
+  {
+    ref: "forexexpert450",
+    username: "forexexpert450",
+    title: "forexexpert450",
+  },
+  {
+    ref: "RoyalGoldSignals8",
+    username: "RoyalGoldSignals8",
+    title: "RoyalGoldSignals8",
+  },
+  {
+    ref: "tradewithzeen",
+    username: "tradewithzeen",
+    title: "tradewithzeen",
+  },
+  {
+    ref: "PFOREXPLATOT",
+    username: "PFOREXPLATOT",
+    title: "PFOREXPLATOT",
+  },
+  {
+    ref: "RonaldoProTrader321",
+    username: "RonaldoProTrader321",
+    title: "RonaldoProTrader321",
+  },
+  {
+    ref: "The_trading_zonefxH",
+    username: "The_trading_zonefxH",
+    title: "The_trading_zonefxH",
+  },
+  {
+    ref: "FXGoldProMaster",
+    username: "FXGoldProMaster",
+    title: "FXGoldProMaster",
+  },
+  {
+    ref: "ForexTrading_Point",
+    username: "ForexTrading_Point",
+    title: "ForexTrading_Point",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);
