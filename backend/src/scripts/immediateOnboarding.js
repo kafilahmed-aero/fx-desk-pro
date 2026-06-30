@@ -12,38 +12,17 @@ import { logger } from "../utils/logger.js";
 logger.level = "warn";
 
 const channelsList = [
-  "https://t.me/SkyPipsTeamuk_89",
-  "https://t.me/dstader1",
-  "https://t.me/MehtabEducationTeam753",
-  "https://t.me/James_Trading_education",
-  "https://t.me/TRADING_SIGNALS4X",
-  "https://t.me/goldsnipersignals",
-  "https://t.me/fxtv_freesignals",
-  "https://t.me/fesadgyuioklpteku1",
-  "https://t.me/TETAcademy",
-  "https://t.me/Xauusd_Signal_Copytrading",
-  "https://t.me/shaikh_forex_trading",
-  "https://t.me/bullrunz",
-  "https://t.me/GoldEducationHub",
-  "https://t.me/FX_Gold_killler",
-  "https://t.me/qt123123",
-  "https://t.me/TheGoldSignals88",
-  "https://t.me/goldfree8361",
-  "https://t.me/The_Gold_Signals1",
-  "https://t.me/FOREXEMIRE_UAS",
-  "https://t.me/+Z7vgdIbg1zZlZDdk",
-  "https://t.me/+nU3VIwk57jM4ODI0",
-  "https://t.me/omanianfxtrade15",
-  "https://t.me/Qayyumfx1100",
-  "https://t.me/danifx08",
-  "https://t.me/forexexpert450",
-  "https://t.me/RoyalGoldSignals8",
-  "https://t.me/tradewithzeen",
-  "https://t.me/PFOREXPLATOT",
-  "https://t.me/RonaldoProTrader321",
-  "https://t.me/The_trading_zonefxH",
-  "https://t.me/FXGoldProMaster",
-  "https://t.me/ForexTrading_Point"
+  "https://t.me/+ua1zqZQYznRmOGNk",
+  "https://t.me/+mqca6AmDO4M5ZjI0",
+  "https://t.me/tradewithhuve",
+  "https://t.me/Vincentgoldtreder",
+  "https://t.me/Btcusdtt15",
+  "https://t.me/Isabelle_QueenOfGolds",
+  "https://t.me/GoldScalpingSingnals",
+  "https://t.me/Goldscalper7860",
+  "https://t.me/MikalTraders",
+  "https://t.me/TeamPerfect1489",
+  "https://t.me/+Hl8jUVLvWLw1MDc0"
 ];
 
 function getChannelRef(url) {
@@ -55,7 +34,7 @@ function getChannelRef(url) {
 }
 
 async function run() {
-  console.log("=== Immediate Onboarding & Backfill (Batch 3) ===");
+  console.log("=== Immediate Onboarding & Backfill (Batch 4) ===");
   console.log(`Total channels requested: ${channelsList.length}`);
 
   // Connect DB

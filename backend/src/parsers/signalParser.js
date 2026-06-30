@@ -14,7 +14,7 @@ const CHANNEL_DEFAULT_PAIRS = {
 // Rules-based extraction for noisy Telegram messages. Every field is optional:
 // partial signals are useful input for later consensus, so malformed messages
 // should become low-confidence records instead of parser crashes.
-export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_SIGNAL") {
+export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_SIGNAL", options = {}) {
   try {
     const normalized = runNormalizationStage(rawMessage);
     const entities = runEntityExtractionStage(normalized);
@@ -22,6 +22,26 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
     // Apply channel-specific default pair if no pair is detected
     if ((!entities.pair || entities.pair === "unknown") && rawMessage.channel && CHANNEL_DEFAULT_PAIRS[rawMessage.channel]) {
       entities.pair = CHANNEL_DEFAULT_PAIRS[rawMessage.channel];
+    }
+
+    // Apply dynamic market price validation if currentPrice is provided in options
+    if (options && options.currentPrice && typeof options.currentPrice === "number" && entities.pair && entities.pair !== "unknown") {
+      const minAllowed = options.currentPrice * 0.25;
+      const maxAllowed = options.currentPrice * 4.0;
+      const isValid = (val) => val === "OPEN" || (typeof val === "number" && val >= minAllowed && val <= maxAllowed);
+
+      if (entities.entryInfo.entry !== null && !isValid(entities.entryInfo.entry)) {
+        entities.entryInfo.entry = null;
+      }
+      if (entities.entryInfo.entryRange) {
+        entities.entryInfo.entryRange = entities.entryInfo.entryRange.filter(isValid);
+      }
+      if (entities.targets) {
+        entities.targets = entities.targets.filter(isValid);
+      }
+      if (entities.stopLoss !== null && !isValid(entities.stopLoss)) {
+        entities.stopLoss = null;
+      }
     }
 
     const hasPair = !!entities.pair && entities.pair !== "unknown";
@@ -314,7 +334,7 @@ function extractEntry(normalized, action) {
   }
 
   const entrySegment = stripPairTokens(
-    actionLine.split(/\b(TP|TARGET|TAKE PROFIT|SL|STOP LOSS)\b/)[0]
+    actionLine.split(/\b(TP\d*|TARGET\d*|TAKE PROFIT\d*|SL|STOP LOSS)\b/)[0]
   );
   const numbers = extractNumbers(entrySegment);
   const entry = numbers[0] || null;
@@ -328,7 +348,7 @@ function extractEntry(normalized, action) {
 function extractTargets(text, action = null, entryInfo = null, stopLoss = null) {
   const cleanedText = String(text || "").replace(/\b\d+(?:\.\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?\s*%/g, " ");
   const targets = [];
-  const groupedTargets = cleanedText.match(/(?:(?<!\.)\b\d{1,2}\s*[_.]?\s*)?\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,80}/gi) || [];
+  const groupedTargets = cleanedText.match(/(?:(?<!\.)\b\d{1,2}\s*[_.]?\s*)?\b(TP|TARGETS?|TAKE PROFITS?)(?:\d{1,2})?\b[\s\S]{0,80}/gi) || [];
 
   for (const group of groupedTargets) {
     if (containsPipTarget(group)) {
@@ -425,7 +445,7 @@ function extractUnlabeledTargets(text, action, entry, stopLoss, entryRange) {
 
 function extractPipTargets(text) {
   const pipTargets = [];
-  const pipGroups = text.match(/\b(TP|TARGETS?|TAKE PROFITS?)\b[\s\S]{0,45}(?:\b|(?<=\d))PIPS?\b/gi) || [];
+  const pipGroups = text.match(/\b(TP|TARGETS?|TAKE PROFITS?)(?:\d{1,2})?\b[\s\S]{0,45}(?:\b|(?<=\d))PIPS?\b/gi) || [];
 
   for (const group of pipGroups) {
     for (const value of extractTargetNumbers(group)) {
@@ -706,13 +726,31 @@ function extractAtEntry(normalized) {
 function extractTargetNumbers(text) {
   const numbers = extractNumbers(text);
 
-  if (isSpacedTargetIndex(text)) {
-    const indexedTargets = extractIndexedTargetNumbers(text);
-    return indexedTargets.length > 0 ? indexedTargets : numbers.slice(1);
+  // Identify numbers that are actually target indices (e.g. "TP 1", "TP2", "TARGET 3", "TAKE PROFIT 4")
+  const targetIndices = new Set();
+  const indexMatches = text.matchAll(/\b(?:TP|TARGET|TAKE PROFIT)\s*(\d{1,2})\b/gi);
+  for (const m of indexMatches) {
+    const val = parseInt(m[1], 10);
+    if (val <= 10) {
+      targetIndices.add(val);
+    }
   }
 
-  return numbers;
+  // Filter out target indices from our numbers list
+  const filteredNumbers = numbers.filter(n => !(Number.isInteger(n) && targetIndices.has(n)));
+
+  if (filteredNumbers.length === 0) {
+    return [];
+  }
+
+  if (isSpacedTargetIndex(text)) {
+    const indexedTargets = extractIndexedTargetNumbers(text);
+    return indexedTargets.length > 0 ? indexedTargets : filteredNumbers;
+  }
+
+  return filteredNumbers;
 }
+
 
 function stripPairTokens(text) {
   return String(text || "").replace(new RegExp(createPairTokenPattern().source, "g"), " ");
@@ -721,7 +759,7 @@ function stripPairTokens(text) {
 function extractIndexedTargetNumbers(text) {
   const targets = [];
 
-  const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*(\\d{1,2})\\b(?:[\\s:@-]|\\.{2,})+\\s*(${numberPattern})`, "gi");
+  const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*(\\d{1,2})\\b(?:[\\s:@-]|\\.(?!\\d)|\\.{2,})+\\s*(${numberPattern})`, "gi");
   for (const match of text.matchAll(pat1)) {
     const val = toNumber(match[2]);
     if (val !== null) {
@@ -729,7 +767,7 @@ function extractIndexedTargetNumbers(text) {
     }
   }
 
-  const pat2 = new RegExp(`(?<!\\.)\\b(\\d{1,2})\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.{2,})*\\s*(${numberPattern})`, "gi");
+  const pat2 = new RegExp(`(?<!\\.)\\b(\\d{1,2})\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.(?!\\d)|\\.{2,})*\\s*(${numberPattern})`, "gi");
   for (const match of text.matchAll(pat2)) {
     const val = toNumber(match[2]);
     if (val !== null) {
@@ -737,7 +775,7 @@ function extractIndexedTargetNumbers(text) {
     }
   }
 
-  const legacyPat = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(${numberPattern})\\b`, "gi");
+  const legacyPat = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*(?:[:@-]|\\.(?!\\d))?\\s*(${numberPattern})\\b`, "gi");
   for (const match of text.matchAll(legacyPat)) {
     const val = toNumber(match[1]);
     if (val !== null) {
@@ -750,13 +788,13 @@ function extractIndexedTargetNumbers(text) {
 
 function isSpacedTargetIndex(text) {
   const hasSpaced = new RegExp(
-    `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*[:@-]?\\s*(?:${numberPattern}|OPEN\\+?)\\b`,
+    `\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*(?:[:@-]|\\.(?!\\d))?\\s*(?:${numberPattern}|OPEN\\+?)\\b`,
     "i"
   ).test(text);
   if (hasSpaced) return true;
 
-  const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*\\d{1,2}\\b(?:[\\s:@-]|\\.{2,})+\\s*${numberPattern}`, "i");
-  const pat2 = new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.{2,})*\\s*${numberPattern}`, "i");
+  const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*\\d{1,2}\\b(?:[\\s:@-]|\\.(?!\\d)|\\.{2,})+\\s*${numberPattern}`, "i");
+  const pat2 = new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.(?!\\d)|\\.{2,})*\\s*${numberPattern}`, "i");
   return pat1.test(text) || pat2.test(text);
 }
 

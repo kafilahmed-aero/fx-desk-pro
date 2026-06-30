@@ -15,6 +15,7 @@ import {
   UserCircle,
   TrendingUp,
   Shield,
+  ShieldAlert,
 } from "lucide-react";
 import {
   BrowserRouter,
@@ -32,6 +33,9 @@ import PairPerformance from "./pages/PairPerformance";
 import ReliabilityScores from "./pages/ReliabilityScores";
 import Settings from "./pages/Settings";
 import Signals from "./pages/Signals";
+import SystemMonitor from "./pages/SystemMonitor";
+import ChannelOperations from "./pages/ChannelOperations";
+import ParserDiagnostics from "./pages/ParserDiagnostics";
 import { ThemeProvider } from "./context/ThemeContext";
 import { useTheme } from "./context/useTheme";
 import { getCurrentUser, logout } from "./services/authService";
@@ -42,6 +46,8 @@ const navigationItems = [
   { label: "Reliability", path: "/reliability", icon: Award },
   { label: "Pair Performance", path: "/pair-performance", icon: Activity },
   { label: "Reliability Scores", path: "/reliability-scores", icon: TrendingUp },
+  { label: "System Monitor", path: "/system-monitor", icon: Shield },
+  { label: "Parser Diagnostics", path: "/parser-diagnostics", icon: ShieldAlert },
   { label: "Settings", path: "/settings", icon: SettingsIcon },
 ];
 
@@ -303,6 +309,30 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 element={
                   <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <ReliabilityScores />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/system-monitor"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <SystemMonitor />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/channel-operations"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <ChannelOperations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parser-diagnostics"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <ParserDiagnostics />
                   </ProtectedRoute>
                 }
               />

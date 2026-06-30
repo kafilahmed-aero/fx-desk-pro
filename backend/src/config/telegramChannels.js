@@ -566,6 +566,61 @@ export const monitoredTelegramChannels = [
     username: "ForexTrading_Point",
     title: "ForexTrading_Point",
   },
+  {
+    ref: "https://t.me/+ua1zqZQYznRmOGNk",
+    username: null,
+    title: "Private Telegram invite channel",
+  },
+  {
+    ref: "https://t.me/+mqca6AmDO4M5ZjI0",
+    username: null,
+    title: "Private Telegram invite channel",
+  },
+  {
+    ref: "tradewithhuve",
+    username: "tradewithhuve",
+    title: "tradewithhuve",
+  },
+  {
+    ref: "Vincentgoldtreder",
+    username: "Vincentgoldtreder",
+    title: "Vincentgoldtreder",
+  },
+  {
+    ref: "Btcusdtt15",
+    username: "Btcusdtt15",
+    title: "Btcusdtt15",
+  },
+  {
+    ref: "Isabelle_QueenOfGolds",
+    username: "Isabelle_QueenOfGolds",
+    title: "Isabelle_QueenOfGolds",
+  },
+  {
+    ref: "GoldScalpingSingnals",
+    username: "GoldScalpingSingnals",
+    title: "GoldScalpingSingnals",
+  },
+  {
+    ref: "Goldscalper7860",
+    username: "Goldscalper7860",
+    title: "Goldscalper7860",
+  },
+  {
+    ref: "MikalTraders",
+    username: "MikalTraders",
+    title: "MikalTraders",
+  },
+  {
+    ref: "TeamPerfect1489",
+    username: "TeamPerfect1489",
+    title: "TeamPerfect1489",
+  },
+  {
+    ref: "https://t.me/+Hl8jUVLvWLw1MDc0",
+    username: null,
+    title: "Private Telegram invite channel",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);

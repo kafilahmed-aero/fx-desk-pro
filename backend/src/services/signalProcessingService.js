@@ -1,5 +1,6 @@
 import { classifyMessage } from "../parsers/noiseFilter.js";
 import { parseSignalMessage } from "../parsers/signalParser.js";
+import { detectTradingPair } from "../parsers/pairDetector.js";
 import { storeParsedSignal } from "./parsedSignalStore.js";
 import {
   createChannelReliabilityFoundation,
@@ -12,6 +13,7 @@ import { broadcastLiveUpdateEvent } from "./liveUpdateService.js";
 import { sendTelegramAlert } from "./telegramAlertService.js";
 import { getPairState } from "./pairStateEngine.js";
 import { initializeOutcome, processSignalUpdate } from "./signalOutcomeEngine.js";
+import { getCurrentPrice } from "./priceIngestionService.js";
 
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
@@ -53,10 +55,76 @@ export async function processRawMessage(rawMessage) {
       };
     }
 
-    const extractedSignal = parseSignalMessage(
+    let currentPrice = null;
+    try {
+      const pair = detectTradingPair(rawMessage?.text || "");
+      if (pair && pair !== "unknown") {
+        const priceInfo = await getCurrentPrice(pair);
+        if (priceInfo && typeof priceInfo.price === "number") {
+          currentPrice = priceInfo.price;
+        }
+      }
+    } catch (err) {
+      logger.warn("signal_processing.price_fetch_failed", {
+        channel: rawMessage?.channel,
+        messageId: rawMessage?.messageId,
+        error: err.message,
+      });
+    }
+
+    const extractedSignal = classificationResult.parsed || parseSignalMessage(
       rawMessage,
       classificationResult.classification
     );
+
+    extractedSignal.parserClassification = classificationResult.classification;
+
+    // Apply dynamic market price validation if currentPrice is provided
+    if (currentPrice && typeof currentPrice === "number" && extractedSignal.pair && extractedSignal.pair !== "unknown") {
+      const minAllowed = currentPrice * 0.25;
+      const maxAllowed = currentPrice * 4.0;
+      const isValid = (val) => val === "OPEN" || (typeof val === "number" && val >= minAllowed && val <= maxAllowed);
+
+      if (extractedSignal.entry !== null && !isValid(extractedSignal.entry)) {
+        extractedSignal.entry = null;
+      }
+      if (extractedSignal.entryRange) {
+        extractedSignal.entryRange = extractedSignal.entryRange.filter(isValid);
+      }
+      if (extractedSignal.targets) {
+        extractedSignal.targets = extractedSignal.targets.filter(isValid);
+        const openFiltered = extractedSignal.targets.filter((t) => t !== "OPEN" && typeof t === "number");
+        extractedSignal.target = openFiltered[0] || null;
+      }
+      if (extractedSignal.stopLoss !== null && !isValid(extractedSignal.stopLoss)) {
+        extractedSignal.stopLoss = null;
+      }
+
+      // Check if price validation filtered out mandatory fields and demote to Noise if so
+      const hasEntry = (extractedSignal.entry !== null && extractedSignal.entry !== undefined) || (extractedSignal.entryRange && extractedSignal.entryRange.length > 0);
+      const hasTP = (extractedSignal.targets && extractedSignal.targets.length > 0) || (extractedSignal.pipTargets && extractedSignal.pipTargets.length > 0) || extractedSignal.isOpenTarget;
+      const hasSL = (extractedSignal.stopLoss !== null && extractedSignal.stopLoss !== undefined) || extractedSignal.hiddenStopLoss;
+
+      if (!(hasEntry && hasTP && hasSL)) {
+        extractedSignal.parserClassification = "NOISE";
+      }
+    }
+
+    if (extractedSignal.parserClassification === "NOISE") {
+      logger.info("message.skipped", {
+        messageKey,
+        normalizedText: classificationResult.normalized.normalizedText,
+        classification: classificationResult.classification,
+        reason: "market_validation_failed_demoted_to_noise",
+        reasons: classificationResult.reasons,
+      });
+
+      return {
+        classification: "NOISE",
+        parsedSignal: null,
+        stored: false,
+      };
+    }
 
     if (!extractedSignal.pair || extractedSignal.pair === "unknown") {
       logger.info("message.skipped", {

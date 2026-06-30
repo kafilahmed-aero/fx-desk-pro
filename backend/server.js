@@ -25,6 +25,10 @@ import {
 } from "./src/services/priceMonitoringScheduler.js";
 import { logger } from "./src/utils/logger.js";
 import { hydratePairStatesFromDb } from "./src/services/pairStateHydrationService.js";
+import {
+  startKeepAlive,
+  stopKeepAlive,
+} from "./src/services/keepAliveService.js";
 
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
@@ -59,6 +63,7 @@ async function startServer() {
   });
 
   const shutdown = async () => {
+    stopKeepAlive();
     stopMarketEngine();
     stopPriceMonitoring();
     stopPerformanceAggregation();
@@ -75,6 +80,7 @@ async function startServer() {
 }
 
 async function initializeBackgroundServices() {
+  startKeepAlive();
   await connectDatabase();
   await hydratePairStatesFromDb();
   startMarketEngine();

@@ -300,7 +300,7 @@ export function classifyMessage(rawMessage = {}) {
     }
   }
 
-  return createResult(classification, normalized, reasons);
+  return createResult(classification, normalized, reasons, parsed);
 }
 
 function isValidActiveSignal(parsed, rawMessage) {
@@ -344,7 +344,7 @@ function isValidActiveSignal(parsed, rawMessage) {
   return true;
 }
 
-function createResult(classification, normalized, reasons) {
+function createResult(classification, normalized, reasons, parsed) {
   return {
     classification,
     signalScore: reasons.signalScore || 0,
@@ -356,6 +356,7 @@ function createResult(classification, normalized, reasons) {
     noiseScore: reasons.noiseScore || 0,
     reasons,
     normalized,
+    parsed: parsed || null,
   };
 }
 
