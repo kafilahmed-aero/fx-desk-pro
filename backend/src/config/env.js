@@ -40,7 +40,7 @@ export const config = {
   mongoUri:
     process.env.MONGODB_URI ||
     "mongodb://127.0.0.1:27017/telegram_signal_consensus",
-  signalExpirationMinutes: Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 120,
+  signalExpirationMinutes: Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60,
   telegram: {
     apiId: Number(process.env.TELEGRAM_API_ID) || null,
     apiHash: process.env.TELEGRAM_API_HASH || "",
