@@ -10,6 +10,12 @@ import { logger } from "../utils/logger.js";
  */
 export async function getParsedSignalsController(req, res) {
   try {
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     const isMongoConnected = mongoose.connection.readyState === 1;
     if (isMongoConnected) {
       const signals = await ParsedSignal.find({})

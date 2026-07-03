@@ -24,7 +24,11 @@ function Signals() {
 
   useEffect(() => {
     let isMounted = true;
+    let isRequestActive = false;
+
     const load = async () => {
+      if (isRequestActive) return;
+      isRequestActive = true;
       try {
         const data = await getParsedSignals();
         if (isMounted) {
@@ -39,11 +43,16 @@ function Signals() {
         if (isMounted) {
           setLoading(false);
         }
+        isRequestActive = false;
       }
     };
+
     load();
+    const interval = window.setInterval(load, 30000);
+
     return () => {
       isMounted = false;
+      window.clearInterval(interval);
     };
   }, []);
 

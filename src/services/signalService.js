@@ -43,7 +43,7 @@ async function fetchJson(path, errorLabel, options = {}) {
 
 export async function getParsedSignals(options = {}) {
   const signals = await fetchJson(
-    "/signals",
+    `/signals?_t=${Date.now()}`,
     "Failed to load parsed signals",
     options
   );
