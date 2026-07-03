@@ -140,6 +140,7 @@ export async function fetchPrices(pairs) {
   // Fetch Binance Prices sequentially (usually crypto is limited to BTC and ETH in signals)
   if (binancePairs.length > 0) {
     for (const item of binancePairs) {
+      let fetchedOk = false;
       try {
         const url = `https://api.binance.com/api/v3/ticker/bookTicker?symbol=${item.symbol}`;
         const response = await fetch(url);
@@ -158,11 +159,40 @@ export async function fetchPrices(pairs) {
           results.set(item.pair, priceInfo);
           priceCache.set(item.pair, priceInfo);
           saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
+          fetchedOk = true;
         } else {
           logger.warn("price_ingestion.binance_failed_http", { symbol: item.symbol, status: response.status });
         }
       } catch (err) {
         logger.error("price_ingestion.binance_failed", { symbol: item.symbol, error: err.message });
+      }
+
+      // Fallback to Yahoo Finance for crypto (e.g. BTCUSD -> BTC-USD) if Binance fails
+      if (!fetchedOk) {
+        try {
+          const yahooCryptoSymbol = item.pair.replace("USD", "-USD");
+          logger.info("price_ingestion.binance_fallback_to_yahoo", { pair: item.pair, yahooSymbol: yahooCryptoSymbol });
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooCryptoSymbol}?interval=1m&range=1d`;
+          const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+          if (response.ok) {
+            const json = await response.json();
+            const meta = json?.chart?.result?.[0]?.meta;
+            if (meta && meta.regularMarketPrice !== undefined) {
+              const price = Number(meta.regularMarketPrice);
+              const priceInfo = {
+                price,
+                bid: price,
+                ask: price,
+                lastUpdated: new Date(),
+              };
+              results.set(item.pair, priceInfo);
+              priceCache.set(item.pair, priceInfo);
+              saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
+            }
+          }
+        } catch (yahooErr) {
+          logger.error("price_ingestion.binance_yahoo_fallback_failed", { pair: item.pair, error: yahooErr.message });
+        }
       }
     }
   }
