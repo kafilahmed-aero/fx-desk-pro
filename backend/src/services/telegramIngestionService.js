@@ -10,6 +10,18 @@ import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { classifyMessage } from "../parsers/noiseFilter.js";
 import { logger } from "../utils/logger.js";
 
+function withTimeout(promise, ms, description = "Operation") {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`${description} timed out after ${ms}ms`));
+    }, ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timer);
+  });
+}
+
 let listenerTimer = null;
 let listenerRunning = false;
 let pollingInProgress = false;
@@ -29,6 +41,12 @@ const ingestionMetrics = {
   lastPollCompletedAt: null,
   lastReconnectAt: null,
   lastError: null,
+  lastSuccessfulPollAt: null,
+  lastPollDurationMs: null,
+  lastFailedChannel: null,
+  channelsPolledSuccessfully: 0,
+  channelsSkipped: 0,
+  timeoutEventsCount: 0,
 };
 
 // Telegram ingestion lifecycle.
@@ -118,26 +136,60 @@ async function pollTelegramChannels() {
   pollingInProgress = true;
   ingestionMetrics.pollCycles += 1;
   ingestionMetrics.lastPollStartedAt = new Date().toISOString();
+  
+  logger.info("telegram.poll_cycle_started", {
+    pollCycles: ingestionMetrics.pollCycles,
+    timestamp: ingestionMetrics.lastPollStartedAt,
+  });
+
   const startedAt = Date.now();
+  let success = false;
 
   try {
     const client = await connectTelegramWithSavedSession();
 
+    ingestionMetrics.channelsPolledSuccessfully = 0;
+    ingestionMetrics.channelsSkipped = 0;
+
     for (const channel of config.telegram.channels) {
-      await fetchAndStoreChannelMessages(client, channel);
+      const channelResult = await fetchAndStoreChannelMessages(client, channel);
+      if (channelResult && channelResult.success) {
+        ingestionMetrics.channelsPolledSuccessfully += 1;
+      } else {
+        ingestionMetrics.channelsSkipped += 1;
+      }
     }
-  } finally {
-    ingestionMetrics.lastPollCompletedAt = new Date().toISOString();
-    pollingInProgress = false;
-    logger.info("telegram.poll_cycle_complete", {
+    success = true;
+  } catch (error) {
+    ingestionMetrics.lastError = error.message;
+    logger.error("telegram.poll_cycle_failed", {
       pollCycles: ingestionMetrics.pollCycles,
+      error: error.message,
       durationMs: Date.now() - startedAt,
-      channels: config.telegram.channels.length,
-      messagesFetched: ingestionMetrics.messagesFetched,
-      messagesStored: ingestionMetrics.messagesStored,
-      messagesQueued: ingestionMetrics.messagesQueued,
-      duplicateMessages: ingestionMetrics.duplicateMessages,
     });
+  } finally {
+    const durationMs = Date.now() - startedAt;
+    ingestionMetrics.lastPollDurationMs = durationMs;
+    ingestionMetrics.lastPollCompletedAt = new Date().toISOString();
+    
+    logger.info("telegram.poll_cycle_duration_ms", {
+      pollCycles: ingestionMetrics.pollCycles,
+      durationMs,
+    });
+
+    if (success) {
+      ingestionMetrics.lastSuccessfulPollAt = ingestionMetrics.lastPollCompletedAt;
+      logger.info("telegram.poll_cycle_completed", {
+        pollCycles: ingestionMetrics.pollCycles,
+        durationMs,
+        messagesFetched: ingestionMetrics.messagesFetched,
+        messagesStored: ingestionMetrics.messagesStored,
+        messagesQueued: ingestionMetrics.messagesQueued,
+        duplicateMessages: ingestionMetrics.duplicateMessages,
+      });
+    }
+
+    pollingInProgress = false;
   }
 }
 
@@ -213,70 +265,82 @@ async function validateStartupChannel(client, channel) {
   };
 
   try {
-    const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
-    validation.sourceChannel = resolvedChannel.channelLabel;
-    validation.channelId = resolvedChannel.channelId;
-    validation.channelUsername = resolvedChannel.channelUsername;
-    validation.channelTitle = resolvedChannel.channelTitle;
-    validation.found = true;
+    await withTimeout((async () => {
+      const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
+      validation.sourceChannel = resolvedChannel.channelLabel;
+      validation.channelId = resolvedChannel.channelId;
+      validation.channelUsername = resolvedChannel.channelUsername;
+      validation.channelTitle = resolvedChannel.channelTitle;
+      validation.found = true;
 
-    logger.info("telegram.channel_validation_found", {
-      channelRef: channel,
-      sourceChannel: resolvedChannel.channelLabel,
-      channelId: resolvedChannel.channelId,
-      channelUsername: resolvedChannel.channelUsername,
-      channelTitle: resolvedChannel.channelTitle,
-    });
+      logger.info("telegram.channel_validation_found", {
+        channelRef: channel,
+        sourceChannel: resolvedChannel.channelLabel,
+        channelId: resolvedChannel.channelId,
+        channelUsername: resolvedChannel.channelUsername,
+        channelTitle: resolvedChannel.channelTitle,
+      });
 
-    validation.joined = true;
-    logger.info("telegram.channel_validation_joined", {
-      channelRef: channel,
-      sourceChannel: resolvedChannel.channelLabel,
-      channelId: resolvedChannel.channelId,
-      channelUsername: resolvedChannel.channelUsername,
-      channelTitle: resolvedChannel.channelTitle,
-      joinMode: resolvedChannel.isPrivateInvite
-        ? "invite_joined_or_already_participating"
-        : "public_or_already_accessible",
-    });
+      validation.joined = true;
+      logger.info("telegram.channel_validation_joined", {
+        channelRef: channel,
+        sourceChannel: resolvedChannel.channelLabel,
+        channelId: resolvedChannel.channelId,
+        channelUsername: resolvedChannel.channelUsername,
+        channelTitle: resolvedChannel.channelTitle,
+        joinMode: resolvedChannel.isPrivateInvite
+          ? "invite_joined_or_already_participating"
+          : "public_or_already_accessible",
+      });
 
-    const messages = await client.getMessages(resolvedChannel.entity, {
-      limit: config.telegram.pollLimit,
-    });
-    validation.accessible = true;
-    validation.sampledMessages = messages.length;
-    validation.parserCoverageStats = getParserCoverageStats(messages, resolvedChannel);
+      const messages = await client.getMessages(resolvedChannel.entity, {
+        limit: config.telegram.pollLimit,
+      });
+      validation.accessible = true;
+      validation.sampledMessages = messages.length;
+      validation.parserCoverageStats = getParserCoverageStats(messages, resolvedChannel);
 
-    logger.info("telegram.channel_validation_accessible", {
-      channelRef: channel,
-      sourceChannel: resolvedChannel.channelLabel,
-      channelId: resolvedChannel.channelId,
-      channelUsername: resolvedChannel.channelUsername,
-      channelTitle: resolvedChannel.channelTitle,
-      sampledMessages: validation.sampledMessages,
-    });
+      logger.info("telegram.channel_validation_accessible", {
+        channelRef: channel,
+        sourceChannel: resolvedChannel.channelLabel,
+        channelId: resolvedChannel.channelId,
+        channelUsername: resolvedChannel.channelUsername,
+        channelTitle: resolvedChannel.channelTitle,
+        sampledMessages: validation.sampledMessages,
+      });
 
-    logger.info("telegram.channel_parser_coverage_stats", {
-      channelRef: channel,
-      sourceChannel: resolvedChannel.channelLabel,
-      channelId: resolvedChannel.channelId,
-      channelUsername: resolvedChannel.channelUsername,
-      channelTitle: resolvedChannel.channelTitle,
-      ...validation.parserCoverageStats,
-    });
+      logger.info("telegram.channel_parser_coverage_stats", {
+        channelRef: channel,
+        sourceChannel: resolvedChannel.channelLabel,
+        channelId: resolvedChannel.channelId,
+        channelUsername: resolvedChannel.channelUsername,
+        channelTitle: resolvedChannel.channelTitle,
+        ...validation.parserCoverageStats,
+      });
+    })(), 15000, `Validate channel ${channel}`);
   } catch (error) {
     validation.error = error.message;
-    logger.error("telegram.channel_startup_validation_failed", {
-      channelRef: channel,
-      sourceChannel: validation.sourceChannel,
-      channelId: validation.channelId,
-      channelUsername: validation.channelUsername,
-      channelTitle: validation.channelTitle,
-      found: validation.found,
-      joined: validation.joined,
-      accessible: validation.accessible,
-      error: error.message,
-    });
+    ingestionMetrics.lastFailedChannel = channel;
+    
+    if (error.message.includes("timed out")) {
+      ingestionMetrics.timeoutEventsCount += 1;
+      logger.error("telegram.channel_validation_timeout", {
+        channelRef: channel,
+        error: error.message,
+      });
+    } else {
+      logger.warn("telegram.channel_startup_validation_failed_skipped", {
+        channelRef: channel,
+        sourceChannel: validation.sourceChannel,
+        channelId: validation.channelId,
+        channelUsername: validation.channelUsername,
+        channelTitle: validation.channelTitle,
+        found: validation.found,
+        joined: validation.joined,
+        accessible: validation.accessible,
+        error: error.message,
+      });
+    }
   }
 
   return validation;
@@ -338,87 +402,103 @@ function isActionableClassification(classification) {
 
 async function fetchAndStoreChannelMessages(client, channel) {
   try {
-    const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
-    logChannelDiscovered(channel, resolvedChannel);
-    const messages = await client.getMessages(resolvedChannel.entity, {
-      limit: config.telegram.pollLimit,
-    });
-    logChannelSubscribed(channel, resolvedChannel);
-    logChannelPollingActive(channel, resolvedChannel);
-    ingestionMetrics.messagesFetched += messages.length;
-
-    for (const message of messages) {
-      const text = message.message || "";
-      const hasMedia = Boolean(message.media);
-      const channelTitle =
-        resolvedChannel.channelTitle || message.chat?.title || message.sender?.username || null;
-      const rawMessage = {
-        channel: resolvedChannel.channelLabel,
-        channelTitle,
-        messageId: message.id,
-        text,
-        hasText: text.trim().length > 0,
-        hasMedia,
-        mediaType: hasMedia ? getMediaType(message.media) : null,
-        textLength: text.length,
-        timestamp: formatMessageDate(message.date),
-        fetchedAt: new Date().toISOString(),
-      };
-      logger.info("telegram.channel_message_received", {
-        sourceChannel: resolvedChannel.channelLabel,
-        messageId: message.id,
-        messageTimestamp: rawMessage.timestamp,
+    await withTimeout((async () => {
+      const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
+      logChannelDiscovered(channel, resolvedChannel);
+      const messages = await client.getMessages(resolvedChannel.entity, {
+        limit: config.telegram.pollLimit,
       });
-      const testSignalMetadata = createTestSignalMetadata(rawMessage);
-      rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
+      logChannelSubscribed(channel, resolvedChannel);
+      logChannelPollingActive(channel, resolvedChannel);
+      ingestionMetrics.messagesFetched += messages.length;
 
-      if (resolvedChannel.isPrivateInvite) {
-        logger.debug("telegram.private_channel_message_received", {
-          messageId: message.id,
-          hasText: rawMessage.hasText,
-        });
-      }
-
-      const result = await storeRawMessage(rawMessage);
-
-      if (result.stored) {
-        ingestionMetrics.messagesStored += 1;
-        logger.info("telegram.message_stored", {
+      for (const message of messages) {
+        const text = message.message || "";
+        const hasMedia = Boolean(message.media);
+        const channelTitle =
+          resolvedChannel.channelTitle || message.chat?.title || message.sender?.username || null;
+        const rawMessage = {
           channel: resolvedChannel.channelLabel,
+          channelTitle,
           messageId: message.id,
-          hasText: rawMessage.hasText,
-          hasMedia: rawMessage.hasMedia,
-          mediaType: rawMessage.mediaType,
-          isTestSignal: rawMessage.isTestSignal,
+          text,
+          hasText: text.trim().length > 0,
+          hasMedia,
+          mediaType: hasMedia ? getMediaType(message.media) : null,
+          textLength: text.length,
+          timestamp: formatMessageDate(message.date),
+          fetchedAt: new Date().toISOString(),
+        };
+        logger.info("telegram.channel_message_received", {
+          sourceChannel: resolvedChannel.channelLabel,
+          messageId: message.id,
+          messageTimestamp: rawMessage.timestamp,
         });
-        const queueResult = enqueueRawMessageProcessing(rawMessage);
-        if (resolvedChannel.isPrivateInvite && queueResult.queued) {
-          logger.debug("telegram.private_channel_message_queued", {
+        const testSignalMetadata = createTestSignalMetadata(rawMessage);
+        rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
+
+        if (resolvedChannel.isPrivateInvite) {
+          logger.debug("telegram.private_channel_message_received", {
             messageId: message.id,
+            hasText: rawMessage.hasText,
           });
         }
-        if (queueResult.queued) {
-          ingestionMetrics.messagesQueued += 1;
-        }
-        if (queueResult.duplicate) {
+
+        const result = await storeRawMessage(rawMessage);
+
+        if (result.stored) {
+          ingestionMetrics.messagesStored += 1;
+          logger.info("telegram.message_stored", {
+            channel: resolvedChannel.channelLabel,
+            messageId: message.id,
+            hasText: rawMessage.hasText,
+            hasMedia: rawMessage.hasMedia,
+            mediaType: rawMessage.mediaType,
+            isTestSignal: rawMessage.isTestSignal,
+          });
+          const queueResult = enqueueRawMessageProcessing(rawMessage);
+          if (resolvedChannel.isPrivateInvite && queueResult.queued) {
+            logger.debug("telegram.private_channel_message_queued", {
+              messageId: message.id,
+            });
+          }
+          if (queueResult.queued) {
+            ingestionMetrics.messagesQueued += 1;
+          }
+          if (queueResult.duplicate) {
+            ingestionMetrics.duplicateMessages += 1;
+          }
+          logger.info("telegram.message_queued", {
+            channel: resolvedChannel.channelLabel,
+            messageId: message.id,
+            ...queueResult,
+          });
+        } else {
           ingestionMetrics.duplicateMessages += 1;
         }
-        logger.info("telegram.message_queued", {
-          channel: resolvedChannel.channelLabel,
-          messageId: message.id,
-          ...queueResult,
-        });
-      } else {
-        ingestionMetrics.duplicateMessages += 1;
       }
-    }
+    })(), 15000, `Fetch and store messages for ${channel}`);
+    return { success: true };
   } catch (error) {
     ingestionMetrics.channelFetchFailures += 1;
     ingestionMetrics.lastError = error.message;
-    logger.error("telegram.channel_fetch_failed", {
-      channel,
-      error: error.message,
-    });
+    ingestionMetrics.lastFailedChannel = channel;
+
+    const isTimeout = error.message.includes("timed out");
+    if (isTimeout) {
+      ingestionMetrics.timeoutEventsCount += 1;
+      logger.error("telegram.channel_fetch_timeout", {
+        channel,
+        error: error.message,
+      });
+    } else {
+      logger.warn("telegram.channel_fetch_failed_skipped", {
+        channel,
+        error: error.message,
+      });
+    }
+
+    return { success: false, timeout: isTimeout };
   }
 }
 
@@ -527,108 +607,119 @@ export async function backfillChannelMessages(client, channel) {
   };
 
   try {
-    const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
-    logChannelDiscovered(channel, resolvedChannel);
+    await withTimeout((async () => {
+      const resolvedChannel = await resolveTelegramChannelEntity(client, channel);
+      logChannelDiscovered(channel, resolvedChannel);
 
-    const backfillHours = config.telegram.backfillHours;
-    const backfillLimit = config.telegram.backfillLimit;
-    const minTime = new Date(Date.now() - backfillHours * 60 * 60 * 1000);
+      const backfillHours = config.telegram.backfillHours;
+      const backfillLimit = config.telegram.backfillLimit;
+      const minTime = new Date(Date.now() - backfillHours * 60 * 60 * 1000);
 
-    let offsetId = 0;
-    let fetchedCount = 0;
-    let keepFetching = true;
+      let offsetId = 0;
+      let fetchedCount = 0;
+      let keepFetching = true;
 
-    while (keepFetching && fetchedCount < backfillLimit) {
-      const limit = Math.min(100, backfillLimit - fetchedCount);
-      const messages = await client.getMessages(resolvedChannel.entity, {
-        limit,
-        offsetId,
-      });
+      while (keepFetching && fetchedCount < backfillLimit) {
+        const limit = Math.min(100, backfillLimit - fetchedCount);
+        const messages = await client.getMessages(resolvedChannel.entity, {
+          limit,
+          offsetId,
+        });
 
-      if (messages.length === 0) {
-        break;
-      }
+        if (messages.length === 0) {
+          break;
+        }
 
-      channelMetrics.messagesFetched += messages.length;
-      fetchedCount += messages.length;
+        channelMetrics.messagesFetched += messages.length;
+        fetchedCount += messages.length;
 
-      for (const message of messages) {
-        const messageDate = new Date(message.date * 1000);
+        for (const message of messages) {
+          const messageDate = new Date(message.date * 1000);
 
-        if (messageDate >= minTime) {
-          const text = message.message || "";
-          const hasMedia = Boolean(message.media);
-          const channelTitle =
-            resolvedChannel.channelTitle || message.chat?.title || message.sender?.username || null;
+          if (messageDate >= minTime) {
+            const text = message.message || "";
+            const hasMedia = Boolean(message.media);
+            const channelTitle =
+              resolvedChannel.channelTitle || message.chat?.title || message.sender?.username || null;
 
-          const rawMessage = {
-            channel: resolvedChannel.channelLabel,
-            channelTitle,
-            messageId: message.id,
-            text,
-            hasText: text.trim().length > 0,
-            hasMedia,
-            mediaType: hasMedia ? getMediaType(message.media) : null,
-            textLength: text.length,
-            timestamp: formatMessageDate(message.date),
-            fetchedAt: new Date().toISOString(),
-          };
+            const rawMessage = {
+              channel: resolvedChannel.channelLabel,
+              channelTitle,
+              messageId: message.id,
+              text,
+              hasText: text.trim().length > 0,
+              hasMedia,
+              mediaType: hasMedia ? getMediaType(message.media) : null,
+              textLength: text.length,
+              timestamp: formatMessageDate(message.date),
+              fetchedAt: new Date().toISOString(),
+            };
 
-          const testSignalMetadata = createTestSignalMetadata(rawMessage);
-          rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
+            const testSignalMetadata = createTestSignalMetadata(rawMessage);
+            rawMessage.isTestSignal = testSignalMetadata.isTestSignal;
 
-          const result = await storeRawMessage(rawMessage);
+            const result = await storeRawMessage(rawMessage);
 
-          if (result.stored) {
-            channelMetrics.messagesStored += 1;
-            ingestionMetrics.messagesStored += 1;
-            
-            const queueResult = enqueueRawMessageProcessing(rawMessage);
-            if (queueResult.queued) {
-              channelMetrics.messagesQueued += 1;
-              ingestionMetrics.messagesQueued += 1;
-            }
-            if (queueResult.duplicate) {
+            if (result.stored) {
+              channelMetrics.messagesStored += 1;
+              ingestionMetrics.messagesStored += 1;
+              
+              const queueResult = enqueueRawMessageProcessing(rawMessage);
+              if (queueResult.queued) {
+                channelMetrics.messagesQueued += 1;
+                ingestionMetrics.messagesQueued += 1;
+              }
+              if (queueResult.duplicate) {
+                channelMetrics.duplicateMessages += 1;
+                ingestionMetrics.duplicateMessages += 1;
+              }
+            } else {
               channelMetrics.duplicateMessages += 1;
               ingestionMetrics.duplicateMessages += 1;
             }
           } else {
-            channelMetrics.duplicateMessages += 1;
-            ingestionMetrics.duplicateMessages += 1;
+            keepFetching = false;
+            break;
           }
-        } else {
-          keepFetching = false;
+        }
+
+        if (messages.length < limit) {
           break;
         }
+
+        offsetId = messages[messages.length - 1].id;
       }
 
-      if (messages.length < limit) {
-        break;
+      ingestionMetrics.messagesFetched += channelMetrics.messagesFetched;
+      logChannelSubscribed(channel, resolvedChannel);
+      logChannelPollingActive(channel, resolvedChannel);
+
+      if (fetchedCount >= backfillLimit && keepFetching) {
+        channelMetrics.safetyLimitReached = true;
+        logger.warn("telegram.backfill_safety_limit_reached", {
+          channelRef: channel,
+          sourceChannel: resolvedChannel.channelLabel,
+          limitReached: backfillLimit,
+        });
       }
-
-      offsetId = messages[messages.length - 1].id;
-    }
-
-    ingestionMetrics.messagesFetched += channelMetrics.messagesFetched;
-    logChannelSubscribed(channel, resolvedChannel);
-    logChannelPollingActive(channel, resolvedChannel);
-
-    if (fetchedCount >= backfillLimit && keepFetching) {
-      channelMetrics.safetyLimitReached = true;
-      logger.warn("telegram.backfill_safety_limit_reached", {
-        channelRef: channel,
-        sourceChannel: resolvedChannel.channelLabel,
-        limitReached: backfillLimit,
-      });
-    }
-
+    })(), 20000, `Backfill channel ${channel}`);
   } catch (error) {
     ingestionMetrics.channelFetchFailures += 1;
     ingestionMetrics.lastError = error.message;
-    logger.error("telegram.backfill_channel_failed", {
-      channel,
-      error: error.message,
-    });
+    ingestionMetrics.lastFailedChannel = channel;
+
+    if (error.message.includes("timed out")) {
+      ingestionMetrics.timeoutEventsCount += 1;
+      logger.error("telegram.backfill_timeout", {
+        channel,
+        error: error.message,
+      });
+    } else {
+      logger.warn("telegram.backfill_failed_skipped", {
+        channel,
+        error: error.message,
+      });
+    }
   }
 
   return channelMetrics;
