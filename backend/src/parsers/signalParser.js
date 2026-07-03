@@ -44,6 +44,39 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
       }
     }
 
+    // Hardened Dynamic Validation (Issue 10): filter out indices, ratios, and invalid low values globally
+    if (entities.pair && entities.pair !== "unknown") {
+      const isForex = ["EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY", "EURGBP", "EURJPY", "GBPJPY"].includes(entities.pair);
+      
+      const isInvalidValue = (val) => {
+        if (val === null || val === undefined || val === "OPEN") return false;
+        const num = Number(val);
+        if (!Number.isFinite(num)) return false;
+        
+        // Rule A: Whole integers <= 10 are always garbage/pollution (e.g. indices or ratios)
+        if (Number.isInteger(num) && num <= 10) return true;
+        
+        // Rule B: Low values <= 10 for non-forex assets are invalid (except low-priced assets like NATGAS)
+        const isLowPriceAsset = isForex || entities.pair === "NATGAS";
+        if (!isLowPriceAsset && num <= 10) return true;
+        
+        return false;
+      };
+
+      if (isInvalidValue(entities.entryInfo.entry)) {
+        entities.entryInfo.entry = null;
+      }
+      if (entities.entryInfo.entryRange) {
+        entities.entryInfo.entryRange = entities.entryInfo.entryRange.filter(v => !isInvalidValue(v));
+      }
+      if (entities.targets) {
+        entities.targets = entities.targets.filter(v => !isInvalidValue(v));
+      }
+      if (isInvalidValue(entities.stopLoss)) {
+        entities.stopLoss = null;
+      }
+    }
+
     const hasPair = !!entities.pair && entities.pair !== "unknown";
     const hasAction = !!entities.action;
     const hasEntry = (entities.entryInfo.entry !== null && entities.entryInfo.entry !== undefined) || (entities.entryInfo.entryRange && entities.entryInfo.entryRange.length > 0);
@@ -287,6 +320,7 @@ function extractEntry(normalized, action) {
   const pairPattern = createPairTokenPattern().source;
   const pairPrefix = `(?:\\s*#?\\s*(?:${pairPattern}))?`;
   const labeledPatterns = [
+    new RegExp(`\\b(?:ENT(?:RY|RIES)?\\s*ZONE|ZONE|ENT(?:RY|RIES)?)\\s*[1-9]\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/]|TO)\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)?\\s*ZONE\\b\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\b(?:BUY|SELL|LONG|SHORT)\\s+NOW\\b\\s*@?\\s*${pairPrefix}\\s*@?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
     new RegExp(`\\bENT(?:RY|RIES)?\\b\\s*(?:ZONE|PRICE|AREA|POINT|LEVEL)?\\s*[:@-]?\\s*${pairPrefix}\\s*[:@-]?\\s*(${numberPattern})(?:\\s*(?://|[-/])\\s*(${numberPattern}))?`, "i"),
@@ -365,13 +399,12 @@ function extractTargets(text, action = null, entryInfo = null, stopLoss = null) 
   }
 
   const directPatterns = [
-    new RegExp(`\\bTP\\s*\\d{1,2}\\b(?:[\\s:@-]|\\.{2,})+\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTP\\s*(?:\\d{1,2})?\\b(?:[\\s:@-]|\\.{2,})+\\s*(${numberPattern})`, "gi"),
     new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*TP\\b(?:[\\s:@-]|\\.{2,})*\\s*(${numberPattern})`, "gi"),
     new RegExp(`(?<!\\.)\\b\\d{1,2}\\s*[_.]?\\s*TARGET\\b(?:[\\s:@-]|\\.{2,})*\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTP\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTAKE\\s+PROFIT\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTAKE\\s+PROFITS\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
-    new RegExp(`\\bTARGET\\s*\\d{1,2}\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTP\\s*(?:\\d{1,2})?\\b\\s*@?\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTAKE\\s+PROFITS?\\s*(?:\\d{1,2})?\\b\\s*@?\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
+    new RegExp(`\\bTARGETS?\\s*(?:\\d{1,2})?\\b\\s*@?\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
     new RegExp(`\\bGOAL\\s*(?:\\d{1,2})?\\b\\s*[:@-]?\\s*(${numberPattern})`, "gi"),
   ];
 
@@ -469,11 +502,9 @@ function extractStopLoss(normalized) {
     new RegExp(`\\bINVALID(?:ATION)?\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
   ];
 
-  for (const line of normalized.upperLines) {
-    const val = findFirstNumberByPattern(line, patterns);
-    if (val !== null) {
-      return val;
-    }
+  const val = findFirstNumberByPattern(normalized.compactText, patterns);
+  if (val !== null) {
+    return val;
   }
 
   return null;
@@ -736,8 +767,8 @@ function extractTargetNumbers(text) {
     }
   }
 
-  // Filter out target indices from our numbers list
-  const filteredNumbers = numbers.filter(n => !(Number.isInteger(n) && targetIndices.has(n)));
+  // Filter out target indices (including integers between 1 and 10 globally) from our numbers list
+  const filteredNumbers = numbers.filter(n => !(Number.isInteger(n) && (targetIndices.has(n) || (n >= 1 && n <= 10))));
 
   if (filteredNumbers.length === 0) {
     return [];
@@ -762,7 +793,7 @@ function extractIndexedTargetNumbers(text) {
   const pat1 = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s*(\\d{1,2})\\b(?:[\\s:@-]|\\.(?!\\d)|\\.{2,})+\\s*(${numberPattern})`, "gi");
   for (const match of text.matchAll(pat1)) {
     const val = toNumber(match[2]);
-    if (val !== null) {
+    if (val !== null && !(Number.isInteger(val) && val >= 1 && val <= 10)) {
       addUniqueTarget(targets, val);
     }
   }
@@ -770,7 +801,7 @@ function extractIndexedTargetNumbers(text) {
   const pat2 = new RegExp(`(?<!\\.)\\b(\\d{1,2})\\s*[_.]?\\s*(?:TP|TARGET|TAKE PROFIT)\\b(?:[\\s:@-]|\\.(?!\\d)|\\.{2,})*\\s*(${numberPattern})`, "gi");
   for (const match of text.matchAll(pat2)) {
     const val = toNumber(match[2]);
-    if (val !== null) {
+    if (val !== null && !(Number.isInteger(val) && val >= 1 && val <= 10)) {
       addUniqueTarget(targets, val);
     }
   }
@@ -778,7 +809,7 @@ function extractIndexedTargetNumbers(text) {
   const legacyPat = new RegExp(`\\b(?:TP|TARGET|TAKE PROFIT)\\s+\\d{1,2}(?!\\d)\\s*(?:[:@-]|\\.(?!\\d))?\\s*(${numberPattern})\\b`, "gi");
   for (const match of text.matchAll(legacyPat)) {
     const val = toNumber(match[1]);
-    if (val !== null) {
+    if (val !== null && !(Number.isInteger(val) && val >= 1 && val <= 10)) {
       addUniqueTarget(targets, val);
     }
   }

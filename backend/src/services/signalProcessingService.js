@@ -142,6 +142,32 @@ export async function processRawMessage(rawMessage) {
       };
     }
 
+    if (classificationResult.classification === "RESULT_SIGNAL") {
+      const parsedSignal = {
+        ...extractedSignal,
+        ...createTestSignalMetadata(rawMessage),
+        channelTitle: rawMessage.channelTitle || null,
+        classification: classificationResult.classification,
+        classificationReasons: classificationResult.reasons,
+        dedupe: createDedupeFoundation(extractedSignal),
+        channelReliability: createChannelReliabilityFoundation(rawMessage.channel),
+        updateContext: createUpdateContextFoundation(extractedSignal),
+      };
+
+      await processSignalUpdate(parsedSignal).catch((err) => {
+        logger.error("outcome_update.failed", {
+          messageKey,
+          error: err.message,
+        });
+      });
+
+      return {
+        classification: classificationResult.classification,
+        parsedSignal,
+        stored: false,
+      };
+    }
+
     const parsedSignal = {
       ...extractedSignal,
       ...createTestSignalMetadata(rawMessage),

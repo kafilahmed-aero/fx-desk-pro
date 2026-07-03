@@ -136,6 +136,19 @@ const marketAnalysisKeywords = [
   "4H",
   "1H",
   "DAILY",
+  "CONFIRMATION",
+  "PATTERN",
+  "LAYERS",
+  "DAILY ANALYSIS",
+  "MACRO LAYERS",
+  "SELL CONFIRMATION",
+  "BULLISH PATTERN",
+  "BEARISH PATTERN",
+  "DAILY CONTEXT CHECK",
+  "PD HIGH",
+  "PD LOW",
+  "LOOKS LIKE",
+  "MY DEAR FOLLOWERS",
 ];
 
 const promoPatterns = [
@@ -246,7 +259,7 @@ export function classifyMessage(rawMessage = {}) {
   const containsPromoKeywords = isPromoByKeywords(normalized.originalText);
   
   // Expand hasResultPhrase to capture running profits, hits, pips done, updates, etc.
-  const hasResultPhrase = /\b(?:stopped? out|tp\s*\d*\s*(?:hitted|hit|complete|achieved|done|miss(?:ed)?)|targets?\s*(?:\d+|[¹²³⁴⁵])?\s*(?:hitted|hit|complete|achieved|done|miss(?:ed)?)|closed? in (?:profit|loss)|setup failed|running\s+(?:profit|pips?)|\d+\s*\+?\s*pips?\s*(?:running|profit|done|gain|secured)|\d+\s*(?:hitted|hit|complete|achieved|done|gain)\s*pips?|boom\s*boom\s*tp|closed?\s+manually|manual\s+close|book\s+profit|secure\s+profit|secured\s+profit|profit\s+secured|running\s+\d+\s*\+?\s*pips?)\b/i.test(normalized.originalText) ||
+  const hasResultPhrase = /\b(?:stopped? out|tp\s*\d*\s*(?:hitted|hit|complete|achieved|done|miss(?:ed)?)|targets?\s*(?:\d+|[¹²³⁴⁵])?\s*(?:hitted|hit|complete|achieved|done|miss(?:ed)?)|closed? in (?:profit|loss)|setup failed|running\s+(?:profit|pips?)|\d+\s*\+?\s*pips?\s*(?:running|profit|done|gain|secured|hit)|\d+\s*(?:hitted|hit|complete|achieved|done|gain)\s*pips?|boom\s*boom\s*tp|closed?\s+manually|manual\s+close|book\s+profit|secure\s+profit|secured\s+profit|profit\s+secured|running\s+\d+\s*\+?\s*pips?|\+?\s*\d+\s*\+\s*pips?|\d+\s*pips?\s*profit|\d+\s*pips?\s*done|profit\s+done)\b/i.test(normalized.originalText) ||
                           /\b(XAUUSD|GOLD|GBPUSD|EURUSD|US30|GER30)\s+(BUY|SELL|LONG|SHORT)\b[\s\S]{0,50}\b(?:\+\d+\+?\s*pips?|\d+\+\s*pips?|\+?\d+\+?\s*pips?\s*running|\+?\d+\+?\s*pips?\s*(?:profit|done|gain))\b/i.test(normalized.originalText);
 
   // Check payment screenshots / proofs
@@ -291,7 +304,7 @@ export function classifyMessage(rawMessage = {}) {
       classification = "UPDATE_SIGNAL";
     } else if (isPromoByKeywords(normalized.originalText) || reasons.promoScore >= 1 || /WIN\s*RATE|ACCURACY|VIP|SUBSCRIBE|JOIN\s*NOW/i.test(normalized.originalText)) {
       classification = "PROMO";
-    } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS/i.test(normalized.originalText)) {
+    } else if (reasons.marketAnalysisScore >= 1 || /PREDICT|FORECAST|OUTLOOK|COMMENTARY|ANALYSIS|BIAS|CONFIRMATION|PATTERN|LAYERS|LOOKS\s*LIKE|FOLLOWERS/i.test(normalized.originalText)) {
       classification = "MARKET_ANALYSIS";
     } else if (reasons.newsScore >= 1) {
       classification = "NEWS";

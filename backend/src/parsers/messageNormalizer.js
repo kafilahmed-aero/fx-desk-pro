@@ -14,6 +14,18 @@ export function normalizeMessageText(text = "") {
     .replace(/\b([a-zA-Z0-9]{3,8})[_:\-|](BUY|SELL|LONG|SHORT)\b/gi, "$1 $2")
     .replace(/\b(BUY|SELL|LONG|SHORT)[_:\-|]([a-zA-Z0-9]{3,8})\b/gi, "$1 $2");
 
+  // Support shorthand slash range notation (e.g. 4042/40 -> 4042-4040, 3986/83 -> 3986-3983)
+  cleaned = cleaned.replace(/\b(\d{1,4})(\d{2})\s*\/\s*(\d{2})\b/g, "$1$2-$1$3");
+
+  // Clean out promotional deposit messages
+  cleaned = cleaned.replace(/\b(?:minimum\s+)?deposit\s+\d+(?:\.\d+)?\b/gi, " ");
+
+  // Clean out percentages (e.g. 76% win rate, or any standalone \d%)
+  cleaned = cleaned.replace(/\b\d+(?:\.\d+)?\s*%/g, " ");
+
+  // Clean out risk-reward and leverage ratios (e.g. 1:2 RR, 1:3000 leverage)
+  cleaned = cleaned.replace(/\b\d+(?:\.\d+)?\s*:\s*\d+(?:\.\d+)?\s*(?:RR|RISK\s*REWARD|RISK\s*:\s*REWARD|LEVERAGE|LEV)\b/gi, " ");
+
   const cleanedText = cleaned
     .replace(/[|_]+/g, " ")
     .replace(/(\d),(?=\d{3}(?:\.\d+)?(?:\D|$))/g, "$1")
