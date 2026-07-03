@@ -189,7 +189,10 @@ function SystemMonitor() {
               <div className="flex items-center justify-between py-3">
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white">Yahoo Finance API</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">Tracked assets: XAUUSD, EURUSD, Indexes</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    Tracked assets: XAUUSD, EURUSD, Indexes
+                    {health.priceFeeds.yahoo.source && ` (Active Source: ${health.priceFeeds.yahoo.source})`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-xs font-semibold text-slate-500">{health.priceFeeds.yahoo.latencyMs} ms</span>
@@ -205,7 +208,10 @@ function SystemMonitor() {
               <div className="flex items-center justify-between py-3">
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white">Binance Exchange Feed</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">Tracked assets: BTCUSD, ETHUSD</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    Tracked assets: BTCUSD, ETHUSD
+                    {health.priceFeeds.binance.source && ` (Active Source: ${health.priceFeeds.binance.source})`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3 text-right">
                   <span className="text-xs font-semibold text-slate-500">{health.priceFeeds.binance.latencyMs} ms</span>

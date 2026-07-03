@@ -3,12 +3,18 @@ const repeatedSymbolPattern = /([+/@:\-.#])\1{2,}/g;
 
 // Normalization keeps both a compact searchable string and line boundaries.
 // Telegram formatting is chaotic, so parsers should consume this shape instead
-// of assuming one strict message layout.
 export function normalizeMessageText(text = "") {
   const originalText = String(text || "");
-  const cleanedText = originalText
+  let cleaned = originalText
     .normalize("NFKC")
-    .replace(/\r\n/g, "\n")
+    .replace(/\r\n/g, "\n");
+
+  // Split combined pair/action tokens (e.g. Xauusd_Buy, XAUUSD-SELL, XAUUSD:BUY, XAUUSD|BUY)
+  cleaned = cleaned
+    .replace(/\b([a-zA-Z0-9]{3,8})[_:\-|](BUY|SELL|LONG|SHORT)\b/gi, "$1 $2")
+    .replace(/\b(BUY|SELL|LONG|SHORT)[_:\-|]([a-zA-Z0-9]{3,8})\b/gi, "$1 $2");
+
+  const cleanedText = cleaned
     .replace(/[|_]+/g, " ")
     .replace(/(\d),(?=\d{3}(?:\.\d+)?(?:\D|$))/g, "$1")
     .replace(/(?<=\d),(?=\d)/g, ".")

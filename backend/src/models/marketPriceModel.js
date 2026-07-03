@@ -32,6 +32,10 @@ const marketPriceSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    source: {
+      type: String,
+      default: "UNKNOWN",
+    },
   },
   {
     collection: "marketPrices",

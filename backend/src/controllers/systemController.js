@@ -30,20 +30,28 @@ export async function getSystemHealthController(req, res) {
     // Check Price Feeds
     let yahooStatus = "OFFLINE";
     let yahooLatency = 0;
+    let yahooSource = "YAHOO";
     try {
       const start = Date.now();
       const price = await getCurrentPrice("XAUUSD");
       yahooLatency = Date.now() - start;
-      if (price) yahooStatus = "HEALTHY";
+      if (price) {
+        yahooStatus = "HEALTHY";
+        yahooSource = price.source || "YAHOO";
+      }
     } catch (e) {}
 
     let binanceStatus = "OFFLINE";
     let binanceLatency = 0;
+    let binanceSource = "BINANCE";
     try {
       const start = Date.now();
       const price = await getCurrentPrice("BTCUSD");
       binanceLatency = Date.now() - start;
-      if (price) binanceStatus = "HEALTHY";
+      if (price) {
+        binanceStatus = "HEALTHY";
+        binanceSource = price.source || "BINANCE";
+      }
     } catch (e) {}
 
     const telegramMetrics = getTelegramIngestionMetrics();
@@ -71,8 +79,8 @@ export async function getSystemHealthController(req, res) {
         timeoutEvents: telegramMetrics.timeoutEventsCount,
       },
       priceFeeds: {
-        yahoo: { status: yahooStatus, latencyMs: yahooLatency, lastChecked: new Date() },
-        binance: { status: binanceStatus, latencyMs: binanceLatency, lastChecked: new Date() },
+        yahoo: { status: yahooStatus, latencyMs: yahooLatency, source: yahooSource, lastChecked: new Date() },
+        binance: { status: binanceStatus, latencyMs: binanceLatency, source: binanceSource, lastChecked: new Date() },
         trackedPairs: Object.keys(SYMBOL_MAP),
       },
       activeServices: {

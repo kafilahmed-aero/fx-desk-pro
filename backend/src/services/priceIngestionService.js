@@ -117,6 +117,7 @@ export async function fetchPrices(pairs) {
                 bid: price,
                 ask: price,
                 lastUpdated: new Date(),
+                source: "YAHOO",
               };
               results.set(item.pair, priceInfo);
               priceCache.set(item.pair, priceInfo);
@@ -155,6 +156,7 @@ export async function fetchPrices(pairs) {
             bid,
             ask,
             lastUpdated: new Date(),
+            source: "BINANCE",
           };
           results.set(item.pair, priceInfo);
           priceCache.set(item.pair, priceInfo);
@@ -184,6 +186,7 @@ export async function fetchPrices(pairs) {
                 bid: price,
                 ask: price,
                 lastUpdated: new Date(),
+                source: "YAHOO_FALLBACK",
               };
               results.set(item.pair, priceInfo);
               priceCache.set(item.pair, priceInfo);
@@ -240,6 +243,7 @@ export async function getCurrentPrice(pair) {
           bid: stored.bid || stored.price,
           ask: stored.ask || stored.price,
           lastUpdated: stored.lastUpdated,
+          source: stored.source || "UNKNOWN",
         };
         // Re-hydrate cache
         priceCache.set(normalized, priceInfo);
@@ -271,6 +275,7 @@ async function saveMarketPriceToDB(pair, symbol, priceInfo) {
           bid: priceInfo.bid,
           ask: priceInfo.ask,
           lastUpdated: priceInfo.lastUpdated,
+          source: priceInfo.source || "UNKNOWN",
         },
       },
       { upsert: true, new: true }
