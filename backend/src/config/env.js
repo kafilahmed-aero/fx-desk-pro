@@ -58,6 +58,8 @@ export const config = {
     botToken: process.env.TELEGRAM_ALERT_BOT_TOKEN || "",
     channelId: process.env.TELEGRAM_ALERT_CHANNEL_ID || "",
   },
+  aiSessionStartIst: process.env.AI_SESSION_START_IST || "17:30",
+  aiSessionEndIst: process.env.AI_SESSION_END_IST || "21:30",
   pipeline: {
     processingConcurrency: Math.max(
       1,

@@ -3,6 +3,7 @@ import { getXauusdRecommendation, getActiveXauusdSignals } from "./geminiAdvisor
 import { getXauusdNewsContext } from "./xauusdNewsService.js";
 import { getCurrentPrice } from "./priceIngestionService.js";
 import { logger } from "../utils/logger.js";
+import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "./tradingSessionService.js";
 
 // In-memory state storage (backend session life-cycle only)
 const state = {
@@ -78,6 +79,19 @@ export async function generateRecommendationIfNeeded(triggerSource, triggerData)
     }
     const newsString = JSON.stringify(newsContext);
     const currentNewsHash = hashString(newsString);
+
+    // Enforce trading session window or emergency overrides
+    const sessionActive = isAiTradingSessionActive();
+    const hasOverride = hasEmergencyMacroEvent(newsContext);
+
+    if (!sessionActive && !hasOverride) {
+      logger.info("ai_state.skipped_outside_session", {
+        triggerSource,
+        currentPrice,
+        message: "AI generation skipped: outside London-US session"
+      });
+      return;
+    }
 
     // 4. Evaluate triggers
     let shouldGenerate = false;

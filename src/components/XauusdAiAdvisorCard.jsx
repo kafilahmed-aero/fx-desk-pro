@@ -94,6 +94,24 @@ function XauusdAiAdvisorCard({ refreshTrigger }) {
     );
   }
 
+  // Render Offline State
+  if (data && data.status === "offline") {
+    return (
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/50 p-6 shadow-xl shadow-slate-200/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-slate-400"></div>
+        <div className="flex items-center gap-3">
+          <span className="text-xl">⚪</span>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">🤖 XAUUSD AI Advisor Offline</h3>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Waiting for London–New York overlap (17:30–21:30 IST)
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render Pending State
   if (data && data.status === "pending") {
     return (

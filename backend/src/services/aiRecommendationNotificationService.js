@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { config } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "./tradingSessionService.js";
+import { getXauusdNewsContext } from "./xauusdNewsService.js";
 
 // In-memory deduplication state
 const state = {
@@ -40,6 +42,23 @@ export function getNotificationState() {
 export async function sendAiRecommendationIfChanged(recommendation) {
   if (!recommendation || recommendation.status === "error" || recommendation.status === "pending") {
     logger.debug("ai_notification.skipped_invalid_recommendation");
+    return;
+  }
+
+  // Enforce trading session window or emergency overrides
+  const sessionActive = isAiTradingSessionActive();
+  let hasOverride = false;
+  try {
+    const newsContext = await getXauusdNewsContext();
+    hasOverride = hasEmergencyMacroEvent(newsContext);
+  } catch (err) {
+    logger.warn("ai_notification.check_override_failed", { error: err.message });
+  }
+
+  if (!sessionActive && !hasOverride) {
+    logger.info("ai_notification.skipped_outside_session", {
+      message: "AI notification skipped: outside trading session"
+    });
     return;
   }
 

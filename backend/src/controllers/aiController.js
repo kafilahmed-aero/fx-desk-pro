@@ -1,5 +1,7 @@
 import { getXauusdRecommendation } from "../services/geminiAdvisorService.js";
 import { getLastRecommendation } from "../services/aiRecommendationStateService.js";
+import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "../services/tradingSessionService.js";
+import { getXauusdNewsContext } from "../services/xauusdNewsService.js";
 import { logger } from "../utils/logger.js";
 
 /**
@@ -28,6 +30,25 @@ export async function getXauusdRecommendationController(req, res) {
  */
 export async function getLatestXauusdRecommendationController(req, res) {
   try {
+    const sessionActive = isAiTradingSessionActive();
+    let hasOverride = false;
+
+    if (!sessionActive) {
+      try {
+        const newsContext = await getXauusdNewsContext();
+        hasOverride = hasEmergencyMacroEvent(newsContext);
+      } catch (err) {
+        logger.warn("api.latest_check_override_failed", { error: err.message });
+      }
+    }
+
+    if (!sessionActive && !hasOverride) {
+      return res.status(200).json({
+        status: "offline",
+        message: "AI Advisor Offline"
+      });
+    }
+
     const recommendation = getLastRecommendation();
 
     if (!recommendation) {
