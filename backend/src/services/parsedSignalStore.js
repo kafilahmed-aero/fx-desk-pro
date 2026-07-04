@@ -55,6 +55,16 @@ export async function storeParsedSignal(signal) {
 
   updatePairStateFromSignal(signalWithDuplicateMetadata);
 
+  if (
+    signalWithDuplicateMetadata.pair === "XAUUSD" &&
+    signalWithDuplicateMetadata.classification === "NEW_SIGNAL" &&
+    signalWithDuplicateMetadata.signalState === "ACTIVE"
+  ) {
+    import("./aiRecommendationStateService.js").then((mod) => {
+      mod.generateRecommendationIfNeeded("NEW_SIGNAL", signalWithDuplicateMetadata).catch(() => {});
+    }).catch(() => {});
+  }
+
   return {
     stored: true,
     duplicate: false,

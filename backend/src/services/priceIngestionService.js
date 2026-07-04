@@ -200,6 +200,13 @@ export async function fetchPrices(pairs) {
     }
   }
 
+  const xauusdPrice = results.get("XAUUSD");
+  if (xauusdPrice && typeof xauusdPrice.price === "number") {
+    import("./aiRecommendationStateService.js").then((mod) => {
+      mod.generateRecommendationIfNeeded("PRICE_CHANGE", xauusdPrice.price).catch(() => {});
+    }).catch(() => {});
+  }
+
   return results;
 }
 

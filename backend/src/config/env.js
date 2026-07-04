@@ -26,6 +26,7 @@ export const config = {
   port: process.env.PORT || 5000,
   nodeEnv,
   isProduction,
+  geminiApiKey: process.env.GEMINI_API_KEY || "",
   logLevel: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
   clientUrl: clientUrls[0],
   clientUrls,

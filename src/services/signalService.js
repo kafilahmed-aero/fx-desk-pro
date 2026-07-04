@@ -183,3 +183,11 @@ function parseSsePayload(event, eventName) {
     return null;
   }
 }
+
+export async function getLatestXauusdRecommendation(options = {}) {
+  return fetchJson(
+    "/ai/xauusd/latest",
+    "Failed to load latest AI recommendation",
+    options
+  );
+}

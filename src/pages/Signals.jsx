@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { RadioTower, RefreshCw, AlertCircle } from "lucide-react";
 import { getParsedSignals } from "../services/signalService";
+import XauusdAiAdvisorCard from "../components/XauusdAiAdvisorCard";
 
 function Signals() {
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchSignalsData = async (showRefreshing = false) => {
     if (showRefreshing) setIsRefreshing(true);
+    setRefreshTrigger((prev) => prev + 1);
     try {
       const data = await getParsedSignals();
       setSignals(data);
@@ -29,6 +32,7 @@ function Signals() {
     const load = async () => {
       if (isRequestActive) return;
       isRequestActive = true;
+      setRefreshTrigger((prev) => prev + 1);
       try {
         const data = await getParsedSignals();
         if (isMounted) {
@@ -211,6 +215,11 @@ function Signals() {
         >
           <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
         </button>
+      </div>
+
+      {/* AI Advisor Card */}
+      <div className="mt-8">
+        <XauusdAiAdvisorCard refreshTrigger={refreshTrigger} />
       </div>
 
       {/* Feed Table container */}

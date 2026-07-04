@@ -3,6 +3,7 @@ import { createApp } from "./src/app.js";
 import { connectDatabase } from "./src/config/database.js";
 import { config } from "./src/config/env.js";
 import { getSessionCookieStartupLogDetails } from "./src/config/sessionCookie.js";
+import { generateRecommendationIfNeeded } from "./src/services/aiRecommendationStateService.js";
 import {
   startTelegramListener,
   stopTelegramListener,
@@ -87,6 +88,12 @@ async function initializeBackgroundServices() {
   startPriceMonitoring();
   startPerformanceAggregation();
   startPairPerformanceAggregation();
+  
+  // Initial recommendation run after DB connection & price monitoring are established
+  generateRecommendationIfNeeded("STARTUP").catch((err) => {
+    logger.warn("server.initial_recommendation_failed", { error: err.message });
+  });
+
   await startTelegramListener();
 }
 
