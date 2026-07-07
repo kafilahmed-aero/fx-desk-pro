@@ -21,16 +21,7 @@ export function createDedupeFoundation(signal) {
   };
 }
 
-export function createChannelReliabilityFoundation(channel) {
-  return {
-    channel: channel || "unknown",
-    reliabilityScore: null,
-    spamScore: null,
-    consistencyScore: null,
-    sampleSize: 0,
-    scoringVersion: "foundation-v1",
-  };
-}
+
 
 export function createUpdateContextFoundation(signal) {
   const canLink =

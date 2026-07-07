@@ -1,4 +1,9 @@
-import { getActiveAndPendingOutcomes } from "./signalOutcomeStore.js";
+import {
+  getActiveAndPendingOutcomes,
+  purgeHistoricalOutcomes,
+  getActiveAndPendingAiOutcomes,
+  adaptAiToSignalOutcome
+} from "./signalOutcomeStore.js";
 import { fetchPrices } from "./priceIngestionService.js";
 import { updateOutcomePrice } from "./signalOutcomeEngine.js";
 import { logger } from "../utils/logger.js";
@@ -19,18 +24,22 @@ export async function runMonitoringCycle() {
   try {
     // 1. Fetch only outcomes requiring evaluation
     const activeOutcomes = await getActiveAndPendingOutcomes();
-    activeOutcomeCount = activeOutcomes.length;
-    if (activeOutcomes.length === 0) {
+    const activeAiOutcomes = await getActiveAndPendingAiOutcomes();
+    const adaptedAiOutcomes = activeAiOutcomes.map(adaptAiToSignalOutcome);
+    const combinedOutcomes = [...activeOutcomes, ...adaptedAiOutcomes];
+
+    activeOutcomeCount = combinedOutcomes.length;
+    if (combinedOutcomes.length === 0) {
       logger.debug("price_monitor.idle", { reason: "no_active_outcomes" });
       cycleInProgress = false;
       return;
     }
 
     // 2. Extract unique pairs
-    const uniquePairs = [...new Set(activeOutcomes.map((o) => o.pair))];
+    const uniquePairs = [...new Set(combinedOutcomes.map((o) => o.pair))];
     monitoredPairsCount = uniquePairs.length;
     logger.info("price_monitor.cycle_started", {
-      activeOutcomesCount: activeOutcomes.length,
+      activeOutcomesCount: combinedOutcomes.length,
       pairsCount: uniquePairs.length,
       pairs: uniquePairs,
     });
@@ -40,7 +49,7 @@ export async function runMonitoringCycle() {
 
     // 4. Update outcomes individually
     let updatedCount = 0;
-    for (const outcome of activeOutcomes) {
+    for (const outcome of combinedOutcomes) {
       const priceInfo = pricesMap.get(outcome.pair);
       if (priceInfo && priceInfo.price) {
         try {
@@ -61,8 +70,13 @@ export async function runMonitoringCycle() {
       }
     }
 
+    // 5. Purge obsolete historical outcomes
+    await purgeHistoricalOutcomes().catch((purgeErr) => {
+      logger.error("price_monitor.purge_failed", { error: purgeErr.message });
+    });
+
     logger.info("price_monitor.cycle_complete", {
-      evaluated: activeOutcomes.length,
+      evaluated: combinedOutcomes.length,
       updated: updatedCount,
     });
   } catch (error) {

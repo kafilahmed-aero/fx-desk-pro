@@ -11,7 +11,10 @@ const state = {
   lastGenerationTime: null,
   lastGoldPrice: null,
   lastNewsHash: null,
-  lastSignalHash: null
+  lastSignalHash: null,
+  signalsUsed: 0,
+  newestSignalTime: null,
+  oldestSignalTime: null
 };
 
 // Lock to prevent concurrent overlapping executions
@@ -131,7 +134,7 @@ export async function generateRecommendationIfNeeded(triggerSource, triggerData)
         signalCount: activeSignals.length
       });
 
-      const recommendation = await getXauusdRecommendation();
+      const recommendation = await getXauusdRecommendation(triggerSource);
 
       if (recommendation && recommendation.status === "error") {
         logger.warn("ai_state.generation_failed_retaining_last", { error: recommendation.message });
@@ -142,6 +145,16 @@ export async function generateRecommendationIfNeeded(triggerSource, triggerData)
         state.lastGoldPrice = currentPrice;
         state.lastSignalHash = currentSignalHash;
         state.lastNewsHash = currentNewsHash;
+
+        state.signalsUsed = activeSignals.length;
+        if (activeSignals.length > 0) {
+          const times = activeSignals.map(s => new Date(s.timestamp || s.createdAt || Date.now()).getTime());
+          state.newestSignalTime = new Date(Math.max(...times)).toISOString();
+          state.oldestSignalTime = new Date(Math.min(...times)).toISOString();
+        } else {
+          state.newestSignalTime = null;
+          state.oldestSignalTime = null;
+        }
 
         logger.info("ai_state.generation_success", {
           direction: recommendation.direction,

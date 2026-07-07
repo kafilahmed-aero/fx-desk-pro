@@ -1,33 +1,9 @@
 import {
-  forexPairs,
-  recentSignals,
-  signalChartData,
-  strengthChartData,
-} from "../data/signals";
-import {
   createCredentialedEventSource,
   fetchWithCredentials,
 } from "./apiClient";
 
-const API_DELAY = 900;
 const smartAlertDebugPrefix = "[SMART_ALERT_DEBUG]";
-
-const simulateRequest = (data, delay = API_DELAY) =>
-  new Promise((resolve) => {
-    window.setTimeout(() => {
-      resolve(data);
-    }, delay);
-  });
-
-export const getForexPairs = () => simulateRequest(forexPairs);
-
-export const getRecentSignals = () => simulateRequest(recentSignals);
-
-export const getChartData = () =>
-  simulateRequest({
-    signalChartData,
-    strengthChartData,
-  });
 
 async function fetchJson(path, errorLabel, options = {}) {
   const response = await fetchWithCredentials(path, {
@@ -188,6 +164,14 @@ export async function getLatestXauusdRecommendation(options = {}) {
   return fetchJson(
     "/ai/xauusd/latest",
     "Failed to load latest AI recommendation",
+    options
+  );
+}
+
+export async function getAiAnalyticsData(options = {}) {
+  return fetchJson(
+    "/ai/analytics",
+    "Failed to load AI analytics data",
     options
   );
 }

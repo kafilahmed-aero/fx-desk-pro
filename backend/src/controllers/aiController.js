@@ -1,7 +1,8 @@
 import { getXauusdRecommendation } from "../services/geminiAdvisorService.js";
-import { getLastRecommendation } from "../services/aiRecommendationStateService.js";
+import { getLastRecommendation, getRecommendationState } from "../services/aiRecommendationStateService.js";
 import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "../services/tradingSessionService.js";
 import { getXauusdNewsContext } from "../services/xauusdNewsService.js";
+import { getAiAnalytics } from "../services/aiAnalyticsService.js";
 import { logger } from "../utils/logger.js";
 
 /**
@@ -58,12 +59,36 @@ export async function getLatestXauusdRecommendationController(req, res) {
       });
     }
 
-    return res.status(200).json(recommendation);
+    const state = getRecommendationState();
+
+    return res.status(200).json({
+      ...recommendation,
+      lastGenerationTime: state.lastGenerationTime,
+      signalsUsed: state.signalsUsed || 0,
+      newestSignalTime: state.newestSignalTime || null,
+      oldestSignalTime: state.oldestSignalTime || null
+    });
   } catch (err) {
     logger.error("api.get_latest_recommendation_failed", { error: err.message });
     return res.status(500).json({
       status: "error",
       message: "Internal server error"
+    });
+  }
+}
+
+/**
+ * Controller to fetch AI trade analytics.
+ */
+export async function getAiAnalyticsController(req, res) {
+  try {
+    const analytics = await getAiAnalytics();
+    return res.status(200).json(analytics);
+  } catch (err) {
+    logger.error("api.get_ai_analytics_failed", { error: err.message });
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve AI analytics"
     });
   }
 }

@@ -13,7 +13,12 @@ import {
   getLiveMarketOverview,
   getWeightedConsensus,
   subscribeToConsensusEvents,
+  getLatestXauusdRecommendation,
+  getAiAnalyticsData,
 } from "../services/signalService";
+import XauusdAiAdvisorCard from "../components/XauusdAiAdvisorCard";
+import AiAnalyticsCard from "../components/AiAnalyticsCard";
+import { fetchWithCredentials } from "../services/apiClient";
 const fallbackRefreshMs = 30000;
 
 const directionStyles = {
@@ -43,6 +48,9 @@ function Dashboard() {
   const [opportunities, setOpportunities] = useState([]);
   const [consensusPairs, setConsensusPairs] = useState([]);
   const [marketOverview, setMarketOverview] = useState(null);
+  const [aiRecommendation, setAiRecommendation] = useState(null);
+  const [systemHealth, setSystemHealth] = useState(null);
+  const [aiAnalytics, setAiAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
@@ -64,11 +72,26 @@ function Dashboard() {
       hasPendingRefresh = false;
 
       try {
-        const [nextOverview, nextOpportunities, nextConsensusPairs] =
+        const [nextOverview, nextOpportunities, nextConsensusPairs, nextAiData, nextHealthData, nextAnalyticsData] =
           await Promise.all([
             getLiveMarketOverview({ signal: activeController.signal }),
             getActiveOpportunities({ signal: activeController.signal }),
             getWeightedConsensus({ signal: activeController.signal }),
+            getLatestXauusdRecommendation({ signal: activeController.signal }),
+            fetchWithCredentials("/system/health", { signal: activeController.signal })
+              .then((res) => {
+                if (!res.ok) throw new Error("Failed to load health status");
+                return res.json();
+              })
+              .catch((err) => {
+                console.warn("Dashboard system health fetch failed", err);
+                return null;
+              }),
+            getAiAnalyticsData({ signal: activeController.signal })
+              .catch((err) => {
+                console.warn("Dashboard AI analytics fetch failed", err);
+                return null;
+              }),
           ]);
 
         if (!isMounted) return;
@@ -76,6 +99,9 @@ function Dashboard() {
         setOpportunities(nextOpportunities);
         setConsensusPairs(nextConsensusPairs);
         setMarketOverview(nextOverview);
+        setAiRecommendation(nextAiData);
+        setSystemHealth(nextHealthData);
+        setAiAnalytics(nextAnalyticsData);
         setError("");
         setLastLoadedAt(new Date());
         if (import.meta.env.DEV) {
@@ -213,6 +239,7 @@ function Dashboard() {
 
   return (
     <div className="animate-dashboard-in space-y-4 pb-8">
+      {/* 1. Live market overview header */}
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220] dark:shadow-black/10 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -243,12 +270,128 @@ function Dashboard() {
         )}
       </section>
 
+      {/* 2. XAUUSD AI Advisor Card */}
+      <XauusdAiAdvisorCard 
+        data={aiRecommendation} 
+        loading={isLoading} 
+        refreshTrigger={lastLoadedAt ? lastLoadedAt.getTime() : 0} 
+      />
+
+      {/* AI Analytics Card */}
+      <AiAnalyticsCard 
+        data={aiAnalytics} 
+        loading={isLoading} 
+      />
+
+      {/* 3. Weighted Consensus Summary grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {opportunities.map((pair) => (
+          <div key={pair.pair} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-[#0B1220]/90">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-white/5">
+              <span className="text-base font-bold text-slate-900 dark:text-white">{pair.pair}</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Updated {formatTime(pair.lastUpdated)}
+              </span>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">BUY Weight / %</p>
+                <p className="mt-1 text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                  {pair.buyWeight.toFixed(1)} ({pair.buyConfidence}%)
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">SELL Weight / %</p>
+                <p className="mt-1 text-sm font-extrabold text-rose-600 dark:text-rose-400">
+                  {pair.sellWeight.toFixed(1)} ({pair.sellConfidence}%)
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Active BUY Signals</p>
+                <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                  {pair.buySignalsCount || 0}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Active SELL Signals</p>
+                <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                  {pair.sellSignalsCount || 0}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 border-t border-slate-100 pt-3 dark:border-white/5 flex items-center justify-between text-xs text-slate-555 dark:text-slate-455">
+              <span>Total Active Signals:</span>
+              <span className="font-extrabold text-slate-800 dark:text-slate-200">{pair.signalCount}</span>
+            </div>
+          </div>
+        ))}
+        {opportunities.length === 0 && (
+          <div className="col-span-full rounded-2xl border border-slate-200 bg-white/80 p-6 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-[#0B1220]/90">
+            No active weighted consensus data.
+          </div>
+        )}
+      </div>
+
+      {/* 4. Market Status Widget */}
+      <section className="rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220]/90 dark:shadow-black/10">
+        <div className="border-b border-slate-200 p-4 dark:border-white/10">
+          <h2 className="text-base font-semibold text-slate-950 dark:text-white flex items-center gap-2">
+            Market Status
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 divide-y divide-slate-200 dark:divide-white/10 sm:grid-cols-5 sm:divide-x sm:divide-y-0 text-sm">
+          <div className="p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Current Gold Price</p>
+            <p className="mt-2 text-lg font-black text-slate-950 dark:text-white">
+              {systemHealth?.priceFeeds?.xauusdPrice ? `$${systemHealth.priceFeeds.xauusdPrice.toFixed(2)}` : "--"}
+            </p>
+          </div>
+          <div className="p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">AI Advisor Status</p>
+            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+              {aiRecommendation?.status === "offline" ? "OFFLINE" : aiRecommendation?.status === "pending" ? "PENDING" : "ONLINE"}
+            </p>
+          </div>
+          <div className="p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Telegram Status</p>
+            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+              {systemHealth?.telegram?.status === "CONNECTED" ? "CONNECTED" : "DISCONNECTED"}
+            </p>
+          </div>
+          <div className="p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Price Feed Status</p>
+            <div className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-350 space-y-1">
+              <div className="flex justify-between">
+                <span>Yahoo:</span>
+                <span className="font-extrabold">{systemHealth?.priceFeeds?.yahoo?.status || "UNKNOWN"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Binance:</span>
+                <span className="font-extrabold">{systemHealth?.priceFeeds?.binance?.status || "UNKNOWN"}</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Trading Session</p>
+            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+              {systemHealth?.tradingSession?.active ? "ACTIVE" : "INACTIVE"}
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {systemHealth?.tradingSession?.start || "17:30"} - {systemHealth?.tradingSession?.end || "21:30"} IST
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Active Opportunities Table */}
       <section className="rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220]/90 dark:shadow-black/10">
         <div className="flex flex-col gap-2 border-b border-slate-200 p-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="inline-flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
               <Activity size={18} className="text-blue-500 dark:text-sky-300" />
-              Weighted Consensus
+              Active Opportunities Table
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {formatConsensusSummary(consensusPairs)}

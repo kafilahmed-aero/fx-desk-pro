@@ -3,7 +3,6 @@ import { parseSignalMessage } from "../parsers/signalParser.js";
 import { detectTradingPair } from "../parsers/pairDetector.js";
 import { storeParsedSignal } from "./parsedSignalStore.js";
 import {
-  createChannelReliabilityFoundation,
   createDedupeFoundation,
   createUpdateContextFoundation,
 } from "./signalIntelligenceMetadata.js";
@@ -150,7 +149,6 @@ export async function processRawMessage(rawMessage) {
         classification: classificationResult.classification,
         classificationReasons: classificationResult.reasons,
         dedupe: createDedupeFoundation(extractedSignal),
-        channelReliability: createChannelReliabilityFoundation(rawMessage.channel),
         updateContext: createUpdateContextFoundation(extractedSignal),
       };
 
@@ -175,7 +173,6 @@ export async function processRawMessage(rawMessage) {
       classification: classificationResult.classification,
       classificationReasons: classificationResult.reasons,
       dedupe: createDedupeFoundation(extractedSignal),
-      channelReliability: createChannelReliabilityFoundation(rawMessage.channel),
       updateContext: createUpdateContextFoundation(extractedSignal),
     };
     const storeResult = await storeParsedSignal(parsedSignal);

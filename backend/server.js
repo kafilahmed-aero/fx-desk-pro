@@ -13,14 +13,6 @@ import {
   stopMarketEngine,
 } from "./src/services/marketEngineService.js";
 import {
-  startPerformanceAggregation,
-  stopPerformanceAggregation,
-} from "./src/services/channelPerformanceScheduler.js";
-import {
-  startPairPerformanceAggregation,
-  stopPairPerformanceAggregation,
-} from "./src/services/pairPerformanceScheduler.js";
-import {
   startPriceMonitoring,
   stopPriceMonitoring,
 } from "./src/services/priceMonitoringScheduler.js";
@@ -30,6 +22,10 @@ import {
   startKeepAlive,
   stopKeepAlive,
 } from "./src/services/keepAliveService.js";
+import {
+  startMt5SyncService,
+  stopMt5SyncService,
+} from "./src/services/mt5SyncService.js";
 
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
@@ -67,8 +63,7 @@ async function startServer() {
     stopKeepAlive();
     stopMarketEngine();
     stopPriceMonitoring();
-    stopPerformanceAggregation();
-    stopPairPerformanceAggregation();
+    stopMt5SyncService();
     await stopTelegramListener();
     server.close(() => {
       logger.info("server.stopped");
@@ -86,8 +81,7 @@ async function initializeBackgroundServices() {
   await hydratePairStatesFromDb();
   startMarketEngine();
   startPriceMonitoring();
-  startPerformanceAggregation();
-  startPairPerformanceAggregation();
+  startMt5SyncService();
   
   // Initial recommendation run after DB connection & price monitoring are established
   generateRecommendationIfNeeded("STARTUP").catch((err) => {

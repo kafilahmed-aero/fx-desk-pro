@@ -1,14 +1,10 @@
 import "dotenv/config";
 import { createApp } from "../app.js";
 import { saveOutcome, resetOutcomeStore } from "../services/signalOutcomeStore.js";
-import { aggregateChannelPerformance, resetPerformanceStore } from "../services/channelPerformanceService.js";
-import { aggregatePairPerformance, resetPairPerformanceStore } from "../services/pairPerformanceService.js";
 import mongoose from "mongoose";
 
 async function seedData() {
   resetOutcomeStore();
-  resetPerformanceStore();
-  resetPairPerformanceStore();
   
   // Seed GoldTradePrecision1:
   // - 15 FULL_TP, 5 SL_HIT, 4 PARTIAL_TP on "XAUUSD" (completed = 24, winRate = 75%)
@@ -62,8 +58,7 @@ async function seedData() {
     await saveOutcome(buildMockOutcome("TestVIPPremium", "BTCUSD", "PARTIAL_TP", 60));
   }
 
-  await aggregateChannelPerformance();
-  await aggregatePairPerformance();
+
   console.log("Mock data seeded and aggregated successfully in-memory!");
 }
 

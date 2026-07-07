@@ -73,6 +73,8 @@ function formatPairIntelligence(pairState) {
     buyWeight: pairState.buyWeight,
     sellWeight: pairState.sellWeight,
     signalCount: pairState.signalCount,
+    buySignalsCount: activeSignals.filter(s => s.action === "BUY").length,
+    sellSignalsCount: activeSignals.filter(s => s.action === "SELL").length,
     channelCount,
     freshnessLevel: pairState.freshnessLevel,
     buyZones: pairState.buyZones,

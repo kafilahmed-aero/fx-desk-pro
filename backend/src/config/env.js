@@ -42,6 +42,7 @@ export const config = {
     process.env.MONGODB_URI ||
     "mongodb://127.0.0.1:27017/telegram_signal_consensus",
   signalExpirationMinutes: Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60,
+  priceHistoryRetentionHours: Number(process.env.PRICE_HISTORY_RETENTION_HOURS) || 24,
   telegram: {
     apiId: Number(process.env.TELEGRAM_API_ID) || null,
     apiHash: process.env.TELEGRAM_API_HASH || "",
@@ -88,6 +89,11 @@ export const config = {
       Number(process.env.MARKET_ENGINE_MAX_SIGNALS_PER_PAIR) || 250
     ),
   },
+  retention: {
+    outcomeDays: Math.max(0, Number(process.env.OUTCOME_RETENTION_DAYS) || 0),
+    rawMessageDays: Math.max(1, Number(process.env.RAW_MESSAGE_RETENTION_DAYS) || 30),
+    parsedSignalDays: Math.max(1, Number(process.env.PARSED_SIGNAL_RETENTION_DAYS) || 90),
+  },
   liveValidation: {
     intervalMs: Math.max(
       10000,
@@ -98,6 +104,14 @@ export const config = {
       Number(process.env.LIVE_VALIDATION_DURATION_MS) || 0
     ),
   },
+  paperRisk: {
+    maxOpenTrades: Number(process.env.PAPER_RISK_MAX_OPEN_TRADES) || 2,
+    maxDailyTrades: Number(process.env.PAPER_RISK_MAX_DAILY_TRADES) || 10,
+    maxConsecutiveLosses: Number(process.env.PAPER_RISK_MAX_CONSECUTIVE_LOSSES) || 3,
+    dailyLossLimitR: Number(process.env.PAPER_RISK_DAILY_LOSS_LIMIT_R) || 3,
+    dailyProfitTargetR: Number(process.env.PAPER_RISK_DAILY_PROFIT_TARGET_R) || 6,
+    slCooldownMinutes: Number(process.env.PAPER_RISK_SL_COOLDOWN_MINUTES) || 30
+  }
 };
 
 validateProductionConfig();

@@ -1,9 +1,39 @@
 import mongoose from "mongoose";
 import { MarketPrice } from "../models/marketPriceModel.js";
 import { logger } from "../utils/logger.js";
+import { config } from "../config/env.js";
 
 const CACHE_TTL_MS = 60000; // 1 minute
 const priceCache = new Map(); // pair -> { price, bid, ask, lastUpdated }
+
+export const priceHistoryCache = new Map(); // pair -> Array<{ price, timestamp }>
+
+export function recordPriceHistory(pair, price) {
+  const normalized = String(pair).toUpperCase().trim();
+  if (!priceHistoryCache.has(normalized)) {
+    priceHistoryCache.set(normalized, []);
+  }
+  const history = priceHistoryCache.get(normalized);
+  history.push({ price, timestamp: Date.now() });
+
+  // Keep only the configured hours of history
+  const retentionHours = config.priceHistoryRetentionHours || 24;
+  const cutoff = Date.now() - retentionHours * 60 * 60 * 1000;
+  while (history.length > 0 && history[0].timestamp < cutoff) {
+    history.shift();
+  }
+}
+
+export function getPriceHistory(pair) {
+  const normalized = String(pair).toUpperCase().trim();
+  return priceHistoryCache.get(normalized) || [];
+}
+
+export function updatePriceCacheAndHistory(pair, priceInfo) {
+  const normalized = String(pair).toUpperCase().trim();
+  priceCache.set(normalized, priceInfo);
+  recordPriceHistory(normalized, priceInfo.price);
+}
 
 const SYMBOL_MAP = {
   // Metals
@@ -110,6 +140,10 @@ export async function fetchPrices(pairs) {
           if (response.ok) {
             const json = await response.json();
             const meta = json?.chart?.result?.[0]?.meta;
+            const result = json?.chart?.result?.[0];
+            const timestamps = result?.timestamp || [];
+            const closes = result?.indicators?.quote?.[0]?.close || [];
+
             if (meta && meta.regularMarketPrice !== undefined) {
               const price = Number(meta.regularMarketPrice);
               const priceInfo = {
@@ -120,8 +154,22 @@ export async function fetchPrices(pairs) {
                 source: "YAHOO",
               };
               results.set(item.pair, priceInfo);
-              priceCache.set(item.pair, priceInfo);
+              updatePriceCacheAndHistory(item.pair, priceInfo);
               saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
+
+              // Pre-populate historical price cache from Yahoo's chart history!
+              if (timestamps.length > 0 && closes.length > 0) {
+                const history = [];
+                for (let idx = 0; idx < timestamps.length; idx++) {
+                  const p = closes[idx];
+                  if (p !== null && p !== undefined && !Number.isNaN(p)) {
+                    history.push({ price: p, timestamp: timestamps[idx] * 1000 });
+                  }
+                }
+                const retentionHours = config.priceHistoryRetentionHours || 24;
+                const cutoff = Date.now() - retentionHours * 60 * 60 * 1000;
+                priceHistoryCache.set(item.pair, history.filter(h => h.timestamp >= cutoff));
+              }
             } else {
               logger.warn("price_ingestion.yahoo_meta_missing", { symbol: item.symbol });
             }
@@ -159,7 +207,7 @@ export async function fetchPrices(pairs) {
             source: "BINANCE",
           };
           results.set(item.pair, priceInfo);
-          priceCache.set(item.pair, priceInfo);
+          updatePriceCacheAndHistory(item.pair, priceInfo);
           saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
           fetchedOk = true;
         } else {
@@ -179,6 +227,9 @@ export async function fetchPrices(pairs) {
           if (response.ok) {
             const json = await response.json();
             const meta = json?.chart?.result?.[0]?.meta;
+            const result = json?.chart?.result?.[0];
+            const timestamps = result?.timestamp || [];
+            const closes = result?.indicators?.quote?.[0]?.close || [];
             if (meta && meta.regularMarketPrice !== undefined) {
               const price = Number(meta.regularMarketPrice);
               const priceInfo = {
@@ -189,8 +240,21 @@ export async function fetchPrices(pairs) {
                 source: "YAHOO_FALLBACK",
               };
               results.set(item.pair, priceInfo);
-              priceCache.set(item.pair, priceInfo);
+              updatePriceCacheAndHistory(item.pair, priceInfo);
               saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
+
+              // Pre-populate historical price cache from Yahoo fallback chart history!
+              if (timestamps.length > 0 && closes.length > 0) {
+                const history = [];
+                for (let idx = 0; idx < timestamps.length; idx++) {
+                  const p = closes[idx];
+                  if (p !== null && p !== undefined && !Number.isNaN(p)) {
+                    history.push({ price: p, timestamp: timestamps[idx] * 1000 });
+                  }
+                }
+                const cutoff = Date.now() - 65 * 60 * 1000;
+                priceHistoryCache.set(item.pair, history.filter(h => h.timestamp >= cutoff));
+              }
             }
           }
         } catch (yahooErr) {
@@ -253,7 +317,7 @@ export async function getCurrentPrice(pair) {
           source: stored.source || "UNKNOWN",
         };
         // Re-hydrate cache
-        priceCache.set(normalized, priceInfo);
+        updatePriceCacheAndHistory(normalized, priceInfo);
         return priceInfo;
       }
     } catch (dbErr) {

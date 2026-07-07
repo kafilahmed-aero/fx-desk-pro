@@ -6,9 +6,6 @@ import consensusRoutes from "./routes/consensusRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import rawMessageRoutes from "./routes/rawMessageRoutes.js";
 import signalRoutes from "./routes/signalRoutes.js";
-import channelPerformanceRoutes from "./routes/channelPerformanceRoutes.js";
-import pairPerformanceRoutes from "./routes/pairPerformanceRoutes.js";
-import reliabilityScoreRoutes from "./routes/reliabilityScoreRoutes.js";
 import systemRoutes from "./routes/systemRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
@@ -38,9 +35,6 @@ export function createApp() {
   app.use("/api/raw-messages", requireAuth, rawMessageRoutes);
   app.use("/api/signals", requireAuth, signalRoutes);
   app.use("/api/consensus", requireAuth, consensusRoutes);
-  app.use("/api/channel-performance", requireAuth, channelPerformanceRoutes);
-  app.use("/api/pair-performance", requireAuth, pairPerformanceRoutes);
-  app.use("/api/reliability-scores", requireAuth, reliabilityScoreRoutes);
   app.use("/api/system", requireAuth, systemRoutes);
   app.use("/api/ai", requireAuth, aiRoutes);
 

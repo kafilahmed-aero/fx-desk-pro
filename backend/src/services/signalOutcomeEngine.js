@@ -2,6 +2,7 @@ import { saveOutcome, getOutcomeByMessageKey, getActiveAndPendingOutcomes } from
 import { logger } from "../utils/logger.js";
 import { updateParsedSignalState, updateParsedSignalLifecycle } from "./parsedSignalStore.js";
 import { updateInMemorySignalState, updateInMemorySignalLifecycle } from "./pairStateEngine.js";
+import { canOpenTrade, formatBlockReason } from "./paperRiskManager.js";
 
 
 const DEFAULT_EXPIRATION_HOURS = 72;
@@ -220,8 +221,8 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
     outcome.hitTargets = [];
   }
 
-  // If already in a terminal state (FULL_TP, SL_HIT, EXPIRED, CANCELLED), skip price updates
-  if (["FULL_TP", "SL_HIT", "EXPIRED", "CANCELLED"].includes(outcome.status)) {
+  // If already in a terminal state (FULL_TP, SL_HIT, EXPIRED, CANCELLED, BREAK_EVEN, SL), skip price updates
+  if (["FULL_TP", "SL_HIT", "EXPIRED", "CANCELLED", "BREAK_EVEN", "SL"].includes(outcome.status)) {
     return outcome;
   }
 
@@ -231,7 +232,21 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
 
   // 1. Evaluate Expiration First
   if (t >= new Date(outcome.expiresAt)) {
-    outcome.status = "EXPIRED";
+    if (outcome.isAiOutcomeAdapter) {
+      outcome.status = "EXPIRED";
+      outcome.rawAiOutcome.status = "EXPIRED";
+      if (outcome.rawAiOutcome.executionStatus === "WAITING") {
+        outcome.rawAiOutcome.executionStatus = "EXPIRED";
+      }
+      outcome.rawAiOutcome.outcomePrice = price;
+      outcome.rawAiOutcome.outcomeTime = t;
+      outcome.rawAiOutcome.simulationNotes = outcome.rawAiOutcome.simulationNotes || [];
+      if (!outcome.rawAiOutcome.simulationNotes.includes("Trade expired")) {
+        outcome.rawAiOutcome.simulationNotes.push("Trade expired");
+      }
+    } else {
+      outcome.status = "EXPIRED";
+    }
     outcome.outcomePrice = price;
     outcome.outcomeTime = t;
     outcome.outcomeReason = "PRICE_MONITOR";
@@ -260,14 +275,55 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
     }
 
     if (entryTriggered) {
-      outcome.status = "ACTIVE";
-      statusChanged = true;
-      logger.info("outcome.state_transition", {
-        messageKey: outcome.messageKey,
-        from: originalStatus,
-        to: "ACTIVE",
-        triggerPrice: price,
-      });
+      if (outcome.isAiOutcomeAdapter) {
+        if (outcome.rawAiOutcome.executionStatus === "BLOCKED") {
+          // Skip if already blocked
+        } else {
+          // Perform risk manager check
+          const decision = await canOpenTrade(outcome.pair, t, outcome.rawAiOutcome.recommendationId);
+          outcome.rawAiOutcome.simulationNotes = outcome.rawAiOutcome.simulationNotes || [];
+
+          if (decision.allowed) {
+            outcome.status = "ACTIVE";
+            outcome.rawAiOutcome.status = "ACTIVE";
+            outcome.rawAiOutcome.executionStatus = "EXECUTED";
+            outcome.rawAiOutcome.simulatedEntryPrice = price;
+            outcome.rawAiOutcome.simulatedEntryTime = t;
+            outcome.rawAiOutcome.simulatedSL = outcome.stopLoss;
+            if (!outcome.rawAiOutcome.simulationNotes.includes("Trade allowed")) {
+              outcome.rawAiOutcome.simulationNotes.push("Trade allowed");
+            }
+            if (!outcome.rawAiOutcome.simulationNotes.includes("Entry triggered")) {
+              outcome.rawAiOutcome.simulationNotes.push("Entry triggered");
+            }
+            statusChanged = true;
+            logger.info("outcome.state_transition.allowed", {
+              messageKey: outcome.messageKey,
+              triggerPrice: price
+            });
+          } else {
+            // Blocked by Risk Manager
+            outcome.rawAiOutcome.executionStatus = "BLOCKED";
+            outcome.rawAiOutcome.blockReason = decision.reason;
+            outcome.rawAiOutcome.blockedAt = t;
+            
+            const readableReason = formatBlockReason(decision.reason);
+            const noteText = `Trade blocked: ${readableReason}`;
+            if (!outcome.rawAiOutcome.simulationNotes.includes(noteText)) {
+              outcome.rawAiOutcome.simulationNotes.push(noteText);
+            }
+            // persist executionStatus change
+            statusChanged = true;
+            logger.info("outcome.state_transition.blocked", {
+              messageKey: outcome.messageKey,
+              reason: decision.reason
+            });
+          }
+        }
+      } else {
+        outcome.status = "ACTIVE";
+        statusChanged = true;
+      }
     }
   }
 
@@ -297,7 +353,49 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
       }
 
       if (slHit) {
-        outcome.status = "SL_HIT";
+        if (outcome.isAiOutcomeAdapter) {
+          outcome.rawAiOutcome.simulationNotes = outcome.rawAiOutcome.simulationNotes || [];
+          if (outcome.status === "PARTIAL_TP") {
+            outcome.status = "BREAK_EVEN";
+            outcome.rawAiOutcome.status = "BREAK_EVEN";
+            outcome.rawAiOutcome.exitType = "BREAK_EVEN";
+            outcome.rawAiOutcome.closedAtBreakEven = true;
+            if (!outcome.rawAiOutcome.simulationNotes.includes("Closed at breakeven")) {
+              outcome.rawAiOutcome.simulationNotes.push("Closed at breakeven");
+            }
+          } else {
+            outcome.status = "SL";
+            outcome.rawAiOutcome.status = "SL";
+            outcome.rawAiOutcome.exitType = "SL";
+            if (!outcome.rawAiOutcome.simulationNotes.includes("Closed at SL")) {
+              outcome.rawAiOutcome.simulationNotes.push("Closed at SL");
+            }
+          }
+          outcome.rawAiOutcome.outcomePrice = price;
+          outcome.rawAiOutcome.outcomeTime = t;
+
+          // Calculate riskRMultiple using plannedRiskR
+          const entry = outcome.rawAiOutcome.simulatedEntryPrice;
+          const exit = outcome.rawAiOutcome.outcomePrice;
+          const sl = outcome.rawAiOutcome.simulatedSL !== null ? outcome.rawAiOutcome.simulatedSL : outcome.rawAiOutcome.sl;
+          const plannedRiskR = outcome.rawAiOutcome.plannedRiskR !== undefined && outcome.rawAiOutcome.plannedRiskR !== null ? outcome.rawAiOutcome.plannedRiskR : 1;
+          if (entry && exit && sl && entry !== sl) {
+            const riskPoints = Math.abs(entry - sl);
+            if (riskPoints > 0) {
+              let r = 0;
+              if (outcome.status === "BREAK_EVEN") {
+                r = 0;
+              } else if (outcome.rawAiOutcome.direction === "BUY") {
+                r = ((exit - entry) / riskPoints) * plannedRiskR;
+              } else if (outcome.rawAiOutcome.direction === "SELL") {
+                r = ((entry - exit) / riskPoints) * plannedRiskR;
+              }
+              outcome.rawAiOutcome.riskRMultiple = Number(r.toFixed(2));
+            }
+          }
+        } else {
+          outcome.status = "SL_HIT";
+        }
         outcome.outcomePrice = price;
         outcome.outcomeTime = t;
         outcome.outcomeReason = "PRICE_MONITOR";
@@ -305,7 +403,7 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
         logger.info("outcome.state_transition", {
           messageKey: outcome.messageKey,
           from: originalStatus,
-          to: "SL_HIT",
+          to: outcome.status,
           triggerPrice: price,
         });
       }
@@ -351,13 +449,68 @@ export async function updateOutcomePrice(outcome, currentPrice, timestamp = new 
         const hitCount = outcome.hitTargets.length;
 
         if (hitCount === totalTargets) {
-          outcome.status = "FULL_TP";
+          if (outcome.isAiOutcomeAdapter) {
+            outcome.status = "FULL_TP";
+            outcome.rawAiOutcome.status = "FULL_TP";
+            outcome.rawAiOutcome.exitType = "TP";
+            outcome.rawAiOutcome.outcomePrice = price;
+            outcome.rawAiOutcome.outcomeTime = t;
+            outcome.rawAiOutcome.simulationNotes = outcome.rawAiOutcome.simulationNotes || [];
+            if (!outcome.rawAiOutcome.simulationNotes.includes("Closed at TP3")) {
+              outcome.rawAiOutcome.simulationNotes.push("Closed at TP3");
+            }
+
+            // Calculate riskRMultiple using plannedRiskR
+            const entry = outcome.rawAiOutcome.simulatedEntryPrice;
+            const exit = outcome.rawAiOutcome.outcomePrice;
+            const sl = outcome.rawAiOutcome.simulatedSL !== null ? outcome.rawAiOutcome.simulatedSL : outcome.rawAiOutcome.sl;
+            const plannedRiskR = outcome.rawAiOutcome.plannedRiskR !== undefined && outcome.rawAiOutcome.plannedRiskR !== null ? outcome.rawAiOutcome.plannedRiskR : 1;
+            if (entry && exit && sl && entry !== sl) {
+              const riskPoints = Math.abs(entry - sl);
+              if (riskPoints > 0) {
+                let r = 0;
+                if (outcome.rawAiOutcome.direction === "BUY") {
+                  r = ((exit - entry) / riskPoints) * plannedRiskR;
+                } else if (outcome.rawAiOutcome.direction === "SELL") {
+                  r = ((entry - exit) / riskPoints) * plannedRiskR;
+                }
+                outcome.rawAiOutcome.riskRMultiple = Number(r.toFixed(2));
+              }
+            }
+          } else {
+            outcome.status = "FULL_TP";
+          }
           outcome.outcomePrice = price;
           outcome.outcomeTime = t;
           outcome.outcomeReason = "PRICE_MONITOR";
           statusChanged = true;
         } else if (hitCount > 0) {
-          outcome.status = "PARTIAL_TP";
+          if (outcome.isAiOutcomeAdapter) {
+            outcome.status = "PARTIAL_TP";
+            outcome.rawAiOutcome.status = "PARTIAL_TP";
+            
+            outcome.rawAiOutcome.simulationNotes = outcome.rawAiOutcome.simulationNotes || [];
+            
+            if (outcome.hitTargets.includes(1)) {
+              const entryVal = outcome.rawAiOutcome.simulatedEntryPrice !== null ? outcome.rawAiOutcome.simulatedEntryPrice : price;
+              outcome.rawAiOutcome.simulatedSL = entryVal;
+              outcome.stopLoss = entryVal; // update mapped property
+              
+              if (!outcome.rawAiOutcome.simulationNotes.includes("TP1 reached")) {
+                outcome.rawAiOutcome.simulationNotes.push("TP1 reached");
+              }
+              if (!outcome.rawAiOutcome.simulationNotes.includes("Stop moved to breakeven")) {
+                outcome.rawAiOutcome.simulationNotes.push("Stop moved to breakeven");
+              }
+            } else {
+              const latestTpHit = `TP${Math.max(...outcome.hitTargets)} reached`;
+              if (!outcome.rawAiOutcome.simulationNotes.includes(latestTpHit)) {
+                outcome.rawAiOutcome.simulationNotes.push(latestTpHit);
+              }
+            }
+          } else {
+            outcome.status = "PARTIAL_TP";
+          }
           outcome.outcomePrice = price;
           outcome.outcomeTime = t;
           outcome.outcomeReason = "PRICE_MONITOR";

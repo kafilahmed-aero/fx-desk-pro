@@ -5,8 +5,8 @@ import { SignalOutcome } from "../models/signalOutcomeModel.js";
 import { getTelegramIngestionMetrics } from "../services/telegramIngestionService.js";
 import { getCurrentPrice } from "../services/priceIngestionService.js";
 import { classifyMessage } from "../parsers/noiseFilter.js";
-import { aggregateChannelPerformance } from "../services/channelPerformanceService.js";
-import { getReliabilityScores } from "../services/reliabilityScoreService.js";
+import { isAiTradingSessionActive } from "../services/tradingSessionService.js";
+import { config } from "../config/env.js";
 
 const SYMBOL_MAP = {
   "XAUUSD": "GC=F",
@@ -31,6 +31,7 @@ export async function getSystemHealthController(req, res) {
     let yahooStatus = "OFFLINE";
     let yahooLatency = 0;
     let yahooSource = "YAHOO";
+    let xauusdPrice = null;
     try {
       const start = Date.now();
       const price = await getCurrentPrice("XAUUSD");
@@ -38,12 +39,14 @@ export async function getSystemHealthController(req, res) {
       if (price) {
         yahooStatus = "HEALTHY";
         yahooSource = price.source || "YAHOO";
+        xauusdPrice = price.price;
       }
     } catch (e) {}
 
     let binanceStatus = "OFFLINE";
     let binanceLatency = 0;
     let binanceSource = "BINANCE";
+    let btcusdPrice = null;
     try {
       const start = Date.now();
       const price = await getCurrentPrice("BTCUSD");
@@ -51,6 +54,7 @@ export async function getSystemHealthController(req, res) {
       if (price) {
         binanceStatus = "HEALTHY";
         binanceSource = price.source || "BINANCE";
+        btcusdPrice = price.price;
       }
     } catch (e) {}
 
@@ -81,7 +85,14 @@ export async function getSystemHealthController(req, res) {
       priceFeeds: {
         yahoo: { status: yahooStatus, latencyMs: yahooLatency, source: yahooSource, lastChecked: new Date() },
         binance: { status: binanceStatus, latencyMs: binanceLatency, source: binanceSource, lastChecked: new Date() },
+        xauusdPrice,
+        btcusdPrice,
         trackedPairs: Object.keys(SYMBOL_MAP),
+      },
+      tradingSession: {
+        active: isAiTradingSessionActive(),
+        start: config.aiSessionStartIst,
+        end: config.aiSessionEndIst,
       },
       activeServices: {
         telegramListener: telegramMetrics.listenerRunning,
@@ -94,122 +105,6 @@ export async function getSystemHealthController(req, res) {
   }
 }
 
-export async function getTelegramHealthController(req, res) {
-  try {
-    const metrics = getTelegramIngestionMetrics();
-    
-    // Retrieve reliability performance data to calculate channel health
-    let performances = [];
-    try {
-      performances = await aggregateChannelPerformance();
-    } catch (e) {}
-
-    const channelStats = [];
-    const now = Date.now();
-    const configChannels = metrics.startupChannelReport || {};
-
-    // Get latest raw messages for all configured channels to extract timestamps
-    const latestRawMessages = await RawMessage.aggregate([
-      { $sort: { fetchedAt: -1 } },
-      { $group: { _id: "$channel", lastFetchedAt: { $first: "$fetchedAt" }, lastText: { $first: "$text" } } }
-    ]);
-
-    const latestParsedSignals = await ParsedSignal.aggregate([
-      { $match: { parserClassification: "NEW_SIGNAL" } },
-      { $sort: { createdAt: -1 } },
-      { $group: { _id: "$channel", lastParsedAt: { $first: "$createdAt" } } }
-    ]);
-
-    const msgMap = new Map(latestRawMessages.map(m => [m._id, m]));
-    const sigMap = new Map(latestParsedSignals.map(s => [s._id, s.lastParsedAt]));
-    const perfMap = new Map(performances.map(p => [p.channel, p]));
-
-    // Query counts today per channel
-    const startOfToday = getStartOfToday();
-    const rawTodayCountPerChannel = await RawMessage.aggregate([
-      { $match: { createdAt: { $gte: startOfToday } } },
-      { $group: { _id: "$channel", count: { $sum: 1 } } }
-    ]);
-    const rawTodayMap = new Map(rawTodayCountPerChannel.map(c => [c._id, c.count]));
-
-    const parsedTodayCountPerChannel = await ParsedSignal.aggregate([
-      { $match: { createdAt: { $gte: startOfToday }, parserClassification: "NEW_SIGNAL" } },
-      { $group: { _id: "$channel", count: { $sum: 1 } } }
-    ]);
-    const parsedTodayMap = new Map(parsedTodayCountPerChannel.map(c => [c._id, c.count]));
-
-    const allChannels = Object.keys(configChannels).length > 0
-      ? Object.keys(configChannels)
-      : (metrics.configuredChannels ? [] : []);
-
-    // Fallback if no start report: use telegramChannels list
-    if (allChannels.length === 0) {
-      try {
-        const { telegramChannels } = await import("../config/telegramChannels.js");
-        telegramChannels.forEach(c => allChannels.push(c.username || c.ref));
-      } catch (e) {}
-    }
-
-    for (const ref of allChannels) {
-      const report = configChannels[ref] || { status: "HEALTHY", error: null };
-      const lastMsg = msgMap.get(ref);
-      const lastSigTime = sigMap.get(ref);
-      const perf = perfMap.get(ref);
-
-      const msgsToday = rawTodayMap.get(ref) || 0;
-      const sigsToday = parsedTodayMap.get(ref) || 0;
-
-      // Status derivation
-      let channelStatus = "HEALTHY";
-      if (report.status === "FAILED" || report.error) {
-        channelStatus = "OFFLINE";
-      } else if (lastMsg && (now - new Date(lastMsg.lastFetchedAt).getTime() > 48 * 60 * 60 * 1000)) {
-        channelStatus = "OFFLINE";
-      } else if (lastMsg && (now - new Date(lastMsg.lastFetchedAt).getTime() > 24 * 60 * 60 * 1000)) {
-        channelStatus = "DEGRADED";
-      } else if (!perf || perf.completedSignals < 20) {
-        channelStatus = "UNRATED";
-      }
-
-      channelStats.push({
-        ref,
-        name: ref,
-        status: channelStatus,
-        lastMessageReceived: lastMsg ? lastMsg.lastFetchedAt : null,
-        lastMessageText: lastMsg ? lastMsg.lastText : null,
-        lastParsedSignal: lastSigTime || null,
-        signalsToday: sigsToday,
-        resultsToday: msgsToday - sigsToday, // update signals, result notices etc
-        promotionsFiltered: 0, // dynamic filter count
-        parsingSuccessRate: perf ? Math.round(perf.winRate * 100) : 0,
-        reliabilityScore: perf ? perf.reliabilityScore : null,
-        confidenceTier: perf ? perf.confidenceTier : "UNRATED"
-      });
-    }
-
-    return res.status(200).json({
-      connected: metrics.listenerRunning,
-      polling: metrics.pollingInProgress,
-      lastPollTimestamp: metrics.lastPollCompletedAt || metrics.lastPollStartedAt || null,
-      lastSuccessfulPoll: metrics.lastSuccessfulPollAt,
-      lastPollDurationMs: metrics.lastPollDurationMs,
-      lastFailedChannel: metrics.lastFailedChannel,
-      channelsPolledSuccessfully: metrics.channelsPolledSuccessfully,
-      channelsSkipped: metrics.channelsSkipped,
-      timeoutEvents: metrics.timeoutEventsCount,
-      totalChannels: allChannels.length,
-      accessibleChannels: allChannels.filter(c => (configChannels[c]?.status !== "FAILED")).length,
-      failedChannels: allChannels.filter(c => (configChannels[c]?.status === "FAILED")).length,
-      rateLimitStats: {
-        retryAfter: 0,
-        hits: 0,
-      },
-      channels: channelStats
-    });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
-}
 
 export async function getParserHealthController(req, res) {
   try {
@@ -329,6 +224,23 @@ export async function getMetricsController(req, res) {
         slHitToday,
         expiredToday
       }
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getTelegramHealthController(req, res) {
+  try {
+    const metrics = getTelegramIngestionMetrics();
+    return res.status(200).json({
+      connected: metrics.listenerRunning,
+      polling: metrics.pollingInProgress,
+      lastPollTimestamp: metrics.lastPollCompletedAt || metrics.lastPollStartedAt || null,
+      lastSuccessfulPoll: metrics.lastSuccessfulPollAt,
+      lastPollDurationMs: metrics.lastPollDurationMs,
+      channelsPolledSuccessfully: metrics.channelsPolledSuccessfully,
+      channelsSkipped: metrics.channelsSkipped,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

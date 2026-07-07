@@ -162,10 +162,6 @@ const parsedSignalSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       default: null,
     },
-    channelReliability: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
-    },
     updateContext: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
