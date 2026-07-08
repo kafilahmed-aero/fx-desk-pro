@@ -84,6 +84,91 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
    
    Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC - bytesAvailable: ", bytesAvailable, ", requestedLength: ", bytesAvailable, ", SocketRead return: ", res, ", GetLastError(): ", err);
    
+   if(checkConnected && res > 0) {
+      string hexStr = "";
+      for(int i = 0; i < res; i++) {
+         hexStr += StringFormat("0x%02X ", buf[i]);
+      }
+      string asciiStr = CharArrayToString(buf, 0, res);
+      
+      Print("========================================");
+      Print("SOCKET_READ_DATA DIAGNOSTICS");
+      Print("Total Bytes Received: ", res);
+      Print("Hex Dump: ", hexStr);
+      Print("ASCII Dump: ", asciiStr);
+      Print("========================================");
+
+      int currentOffset = 0;
+      int frameIndex = 1;
+      int bufSize = ArraySize(buf);
+      
+      while(currentOffset < bufSize) {
+         Print("Frame #", frameIndex);
+         
+         if(currentOffset + 2 > bufSize) {
+            Print("BUFFER OVERFLOW WOULD OCCUR - Frame header incomplete at offset ", currentOffset);
+            break;
+         }
+         
+         uchar header1 = buf[currentOffset];
+         uchar header2 = buf[currentOffset + 1];
+         
+         bool fin = (header1 & 0x80) != 0;
+         int opcode = header1 & 0x0F;
+         int payloadLength = header2 & 0x7F;
+         int data_offset = currentOffset + 2;
+         
+         if(payloadLength == 126) {
+            if(currentOffset + 4 > bufSize) {
+               Print("BUFFER OVERFLOW WOULD OCCUR - Payload 126 header incomplete at offset ", currentOffset);
+               break;
+            }
+            payloadLength = (buf[currentOffset + 2] << 8) | buf[currentOffset + 3];
+            data_offset = currentOffset + 4;
+         } else if(payloadLength == 127) {
+            if(currentOffset + 10 > bufSize) {
+               Print("BUFFER OVERFLOW WOULD OCCUR - Payload 127 header incomplete at offset ", currentOffset);
+               break;
+            }
+            payloadLength = (int)buf[currentOffset + 9];
+            data_offset = currentOffset + 10;
+         }
+         
+         bool masked = (header2 & 0x80) != 0;
+         if(masked) {
+            if(data_offset + 4 > bufSize) {
+               Print("BUFFER OVERFLOW WOULD OCCUR - Masking key incomplete at offset ", data_offset);
+               break;
+            }
+            data_offset += 4;
+         }
+         
+         Print("currentOffset: ", currentOffset);
+         Print("payloadLength: ", payloadLength);
+         Print("bufferSize: ", bufSize);
+         Print("FIN bit: ", fin);
+         Print("opcode: ", opcode);
+         Print("frame offset: ", data_offset);
+         
+         if(data_offset + payloadLength > bufSize) {
+            Print("BUFFER OVERFLOW WOULD OCCUR");
+         } else {
+            string frameText = "";
+            uchar frameBuf[];
+            ArrayResize(frameBuf, payloadLength);
+            for(int i = 0; i < payloadLength; i++) {
+               frameBuf[i] = buf[data_offset + i];
+            }
+            frameText = CharArrayToString(frameBuf, 0, payloadLength);
+            Print("Decoded Frame text: ", frameText);
+         }
+         
+         currentOffset = data_offset + payloadLength;
+         frameIndex++;
+      }
+      Print("========================================");
+   }
+   
    if(!checkConnected) {
       Print("MT5 Bridge: DIAGNOSTIC - Handshake SocketRead returned: ", res, ", GetLastError(): ", err);
       if(res > 0) {
