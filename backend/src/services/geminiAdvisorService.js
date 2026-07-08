@@ -1749,6 +1749,9 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
       structure
     );
 
+    // Call Phase 1.7 Institutional Order Flow Intelligence
+    const orderFlow = calculateOrderFlowIntelligence(priceHistory, currentPrice, structure);
+
     // 4. Build prompt incorporating structured indicator blocks in the approved sequence
     const prompt = `You are a professional financial trading advisor specializing in Gold (XAUUSD).
 Analyze the market intelligence indicators, price clusters, active signals, recent high-impact macroeconomic events, gold market news, and multi-timeframe context to make a trading decision.
@@ -2000,6 +2003,18 @@ Trend Quality: ${regimeData.trendQuality}
 Volatility State: ${regimeData.volatilityState}
 Momentum Quality: ${regimeData.momentumQuality}
 Recommended Trading Environment: ${regimeData.recommendedEnv}
+
+====================================
+INSTITUTIONAL ORDER FLOW
+====================================
+${orderFlow !== null ? `Nearest Bullish Order Block: ${orderFlow.nearestBullishOB ? `${orderFlow.nearestBullishOB.top.toFixed(2)} - ${orderFlow.nearestBullishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBullishOB.strengthScore}, Freshness: ${orderFlow.nearestBullishOB.freshness} bars, Mitigated: ${orderFlow.nearestBullishOB.mitigated})` : "None"}
+Nearest Bearish Order Block: ${orderFlow.nearestBearishOB ? `${orderFlow.nearestBearishOB.top.toFixed(2)} - ${orderFlow.nearestBearishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBearishOB.strengthScore}, Freshness: ${orderFlow.nearestBearishOB.freshness} bars, Mitigated: ${orderFlow.nearestBearishOB.mitigated})` : "None"}
+Nearest Bullish FVG: ${orderFlow.nearestBullishFvg ? `Gap from ${orderFlow.nearestBullishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBullishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBullishFvg.timeframe}, Size: ${orderFlow.nearestBullishFvg.size.toFixed(2)})` : "None"}
+Nearest Bearish FVG: ${orderFlow.nearestBearishFvg ? `Gap from ${orderFlow.nearestBearishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBearishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBearishFvg.timeframe}, Size: ${orderFlow.nearestBearishFvg.size.toFixed(2)})` : "None"}
+Nearest Liquidity Pool: ${orderFlow.nearestPool ? `${orderFlow.nearestPool.price.toFixed(2)} (${orderFlow.nearestPool.type}, Priority: ${orderFlow.nearestPool.priority})` : "None"}
+Liquidity Status: Equal Highs: ${orderFlow.liquidity.equalHighs ? orderFlow.liquidity.equalHighs.toFixed(2) : "None"} | Equal Lows: ${orderFlow.liquidity.equalLows ? orderFlow.liquidity.equalLows.toFixed(2) : "None"} | Last Sweep: ${orderFlow.liquidity.lastSweepType}
+Institutional Bias: ${orderFlow.institutionalBias}
+Recommended Interpretation: ${orderFlow.recommendedInterpretation}` : `- Institutional Structure: Institutional Structure Unavailable`}
 
 =========================================
 SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
@@ -2543,23 +2558,50 @@ function calculateMarketRegimeAndScores(
     overallRegime = rawRegime;
   }
 
-  // Calculate Regime Confidence (0 to 100)
-  const tfCoverages = [];
+  // Calculate Regime Confidence (0 to 100) using normalized weighted components:
+  // Components:
+  // - Trend Strength: avgTfTrendScore (0-100)
+  // - Volatility: avgTfVolatilityScore (0-100)
+  // - ATR Expansion: atrExpansionScore (0-100)
+  // - Swing Consistency: swingConsistencyScore (0-100)
+  // - Market Structure: marketStructureScore (0-100)
+  // - Momentum Score: finalMomentumScore (0-100)
+  // - Momentum Alignment: 100 if trend/momentum agree, 10 if conflicting, 50 if neutral
+  let momAlignmentScore = 50;
+  if (momentumDirection !== "Neutral") {
+    if (directionAgreement.includes(momentumDirection)) {
+      momAlignmentScore = 100;
+    } else if (directionAgreement !== "Neutral") {
+      momAlignmentScore = 10; // conflicting
+    }
+  }
+  
+  // - Multi-Timeframe Agreement Score (0-100)
+  let tfAgreementCount = 0;
+  const dominantDir = buyPercentage > sellPercentage ? "Bullish" : (sellPercentage > buyPercentage ? "Bearish" : "Neutral");
   ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
     const data = mtfContext[tf];
-    if (data) {
-      tfCoverages.push(data.historyCoverage || 0);
+    if (data && data.status === "OK") {
+      if (dominantDir !== "Neutral" && data.trendDirection === dominantDir) {
+        tfAgreementCount++;
+      } else if (dominantDir === "Neutral" && data.trendDirection === "Neutral") {
+        tfAgreementCount++;
+      }
     }
   });
-  const avgCoverage = tfCoverages.length > 0 ? (tfCoverages.reduce((s, v) => s + v, 0) / tfCoverages.length) : 50;
-  
-  let alignmentBonus = 10;
-  if (momentumDirection !== "Neutral" && directionAgreement.includes(momentumDirection)) {
-    alignmentBonus += 15;
-  } else if (momentumDirection !== "Neutral" && !directionAgreement.includes(momentumDirection) && directionAgreement !== "Neutral") {
-    alignmentBonus -= 15;
-  }
-  const regimeConfidence = Math.max(10, Math.min(100, Math.round(avgCoverage * 0.8 + alignmentBonus)));
+  const mtfAgreementScore = Math.round((tfAgreementCount / 5) * 100);
+
+  const weightedSum =
+    (avgTfTrendScore * 0.15) +
+    (finalMomentumScore * 0.15) +
+    (momAlignmentScore * 0.15) +
+    (marketStructureScore * 0.15) +
+    (swingConsistencyScore * 0.10) +
+    (atrExpansionScore * 0.10) +
+    (avgTfVolatilityScore * 0.10) +
+    (mtfAgreementScore * 0.10);
+
+  const regimeConfidence = Math.max(0, Math.min(100, Math.round(weightedSum)));
 
   // Trend Quality text
   let trendQuality = "Choppy/Neutral";
@@ -2630,5 +2672,461 @@ function calculateMarketRegimeAndScores(
     volatilityState,
     momentumQuality,
     recommendedEnv
+  };
+}
+
+/**
+ * Detects Fair Value Gaps (FVGs) on a candle set for a timeframe
+ */
+function detectFVGs(candles, currentPrice, timeframeName) {
+  const fvgs = [];
+  if (candles.length < 3) return fvgs;
+
+  for (let i = 2; i < candles.length; i++) {
+    const c1 = candles[i - 2];
+    const c2 = candles[i - 1];
+    const c3 = candles[i];
+
+    // Bullish FVG
+    if (c3.low > c1.high) {
+      const size = c3.low - c1.high;
+      if (size > 0.1) {
+        let filled = false;
+        for (let j = i + 1; j < candles.length; j++) {
+          if (candles[j].low <= c1.high) {
+            filled = true;
+            break;
+          }
+        }
+        
+        const isInside = currentPrice >= c1.high && currentPrice <= c3.low;
+        const distance = currentPrice > c3.low ? currentPrice - c3.low : (currentPrice < c1.high ? c1.high - currentPrice : 0);
+
+        fvgs.push({
+          timeframe: timeframeName,
+          type: "Bullish",
+          top: c3.low,
+          bottom: c1.high,
+          size,
+          filled,
+          isInside,
+          distance,
+          timestamp: c2.timestamp
+        });
+      }
+    }
+
+    // Bearish FVG
+    if (c3.high < c1.low) {
+      const size = c1.low - c3.high;
+      if (size > 0.1) {
+        let filled = false;
+        for (let j = i + 1; j < candles.length; j++) {
+          if (candles[j].high >= c1.low) {
+            filled = true;
+            break;
+          }
+        }
+        
+        const isInside = currentPrice >= c3.high && currentPrice <= c1.low;
+        const distance = currentPrice > c1.low ? currentPrice - c1.low : (currentPrice < c3.high ? c3.high - currentPrice : 0);
+
+        fvgs.push({
+          timeframe: timeframeName,
+          type: "Bearish",
+          top: c1.low,
+          bottom: c3.high,
+          size,
+          filled,
+          isInside,
+          distance,
+          timestamp: c2.timestamp
+        });
+      }
+    }
+  }
+
+  return fvgs;
+}
+
+/**
+ * Detects Order Blocks (OBs) on a candle set for a timeframe
+ */
+function detectOrderBlocks(candles, currentPrice, structure) {
+  const obs = [];
+  if (candles.length < 5) return obs;
+
+  for (let i = 1; i < candles.length - 2; i++) {
+    const c = candles[i];
+    const next1 = candles[i + 1];
+    const next2 = candles[i + 2];
+
+    // Bullish OB
+    if (c.close < c.open) {
+      const isBullishExpansion = next1.close > next1.open && 
+                                 next2.close > next2.open && 
+                                 (next2.close - c.high) > 0.5;
+
+      if (isBullishExpansion) {
+        let mitigated = false;
+        let broken = false;
+        let retests = 0;
+
+        for (let j = i + 3; j < candles.length; j++) {
+          if (candles[j].low <= c.low) {
+            broken = true;
+            break;
+          }
+          if (candles[j].low <= c.high) {
+            mitigated = true;
+            retests++;
+          }
+        }
+
+        if (!broken) {
+          if (currentPrice <= c.low) broken = true;
+          else if (currentPrice <= c.high) mitigated = true;
+        }
+
+        const freshness = candles.length - 1 - i;
+        const disp = next2.close - c.low;
+
+        // Calculate OB Strength Score (0-100)
+        let strength = 30; // base score
+        strength += Math.min(30, Math.round(disp * 10)); // displacement factor
+        
+        if (structure && structure.bos !== "No confirmed BOS" && structure.bos.includes("Bullish")) {
+          strength += 25; // BOS confirmation
+        }
+        if (!mitigated) {
+          strength += 20; // unmitigated bonus
+        } else {
+          strength += 5; // mitigated
+          strength += Math.min(15, retests * 5); // retests bonus
+        }
+        strength += Math.max(0, 10 - Math.floor(freshness / 5)); // freshness age bonus
+
+        obs.push({
+          type: "Bullish",
+          top: c.high,
+          bottom: c.low,
+          mitigated,
+          broken,
+          freshness,
+          strengthScore: Math.min(100, strength),
+          timestamp: c.timestamp
+        });
+      }
+    }
+
+    // Bearish OB
+    if (c.close > c.open) {
+      const isBearishExpansion = next1.close < next1.open && 
+                                 next2.close < next2.open && 
+                                 (c.low - next2.close) > 0.5;
+
+      if (isBearishExpansion) {
+        let mitigated = false;
+        let broken = false;
+        let retests = 0;
+
+        for (let j = i + 3; j < candles.length; j++) {
+          if (candles[j].high >= c.high) {
+            broken = true;
+            break;
+          }
+          if (candles[j].high >= c.low) {
+            mitigated = true;
+            retests++;
+          }
+        }
+
+        if (!broken) {
+          if (currentPrice >= c.high) broken = true;
+          else if (currentPrice >= c.low) mitigated = true;
+        }
+
+        const freshness = candles.length - 1 - i;
+        const disp = c.high - next2.close;
+
+        let strength = 30;
+        strength += Math.min(30, Math.round(disp * 10));
+        
+        if (structure && structure.bos !== "No confirmed BOS" && structure.bos.includes("Bearish")) {
+          strength += 25;
+        }
+        if (!mitigated) {
+          strength += 20;
+        } else {
+          strength += 5;
+          strength += Math.min(15, retests * 5);
+        }
+        strength += Math.max(0, 10 - Math.floor(freshness / 5));
+
+        obs.push({
+          type: "Bearish",
+          top: c.high,
+          bottom: c.low,
+          mitigated,
+          broken,
+          freshness,
+          strengthScore: Math.min(100, strength),
+          timestamp: c.timestamp
+        });
+      }
+    }
+  }
+
+  return obs;
+}
+
+/**
+ * Detects and Prioritizes Liquidity Pools & Sweeps
+ */
+function detectLiquidity(candles, currentPrice) {
+  const swingHighs = [];
+  const swingLows = [];
+  const tolerance = 0.5; // gold tolerance for equal highs/lows
+
+  // 1. Find swings
+  for (let i = 2; i < candles.length - 2; i++) {
+    const p = candles[i];
+    if (p.high > candles[i-1].high && p.high > candles[i-2].high && p.high > candles[i+1].high && p.high > candles[i+2].high) {
+      swingHighs.push({ price: p.high, timestamp: p.timestamp, index: i });
+    }
+    if (p.low < candles[i-1].low && p.low < candles[i-2].low && p.low < candles[i+1].low && p.low < candles[i+2].low) {
+      swingLows.push({ price: p.low, timestamp: p.timestamp, index: i });
+    }
+  }
+
+  // 2. EQH / EQL detection
+  let equalHighs = null;
+  let equalLows = null;
+
+  for (let i = 0; i < swingHighs.length; i++) {
+    for (let j = i + 1; j < swingHighs.length; j++) {
+      if (Math.abs(swingHighs[i].price - swingHighs[j].price) <= tolerance) {
+        equalHighs = { price: (swingHighs[i].price + swingHighs[j].price) / 2, type: "EQH" };
+      }
+    }
+  }
+
+  for (let i = 0; i < swingLows.length; i++) {
+    for (let j = i + 1; j < swingLows.length; j++) {
+      if (Math.abs(swingLows[i].price - swingLows[j].price) <= tolerance) {
+        equalLows = { price: (swingLows[i].price + swingLows[j].price) / 2, type: "EQL" };
+      }
+    }
+  }
+
+  // 3. Score and prioritize liquidity pools
+  const getPoolPriority = (price, isBSL, isEqual) => {
+    let score = 40; // base score
+    if (isEqual) score += 30; // EQH/EQL bonus
+
+    const distance = Math.abs(price - currentPrice);
+    const distanceBonus = Math.max(0, 20 - distance * 2);
+    score += distanceBonus;
+
+    // Recency (check if swing is recent)
+    let age = 50;
+    const matchingSwing = isBSL 
+      ? swingHighs.find(h => Math.abs(h.price - price) <= 0.01)
+      : swingLows.find(l => Math.abs(l.price - price) <= 0.01);
+    
+    if (matchingSwing) {
+      age = candles.length - 1 - matchingSwing.index;
+    }
+    score += Math.max(0, 10 - Math.floor(age / 5));
+
+    return Math.min(100, Math.round(score));
+  };
+
+  const prioritizedBSL = [];
+  const prioritizedSSL = [];
+
+  swingHighs.forEach(h => {
+    prioritizedBSL.push({
+      price: h.price,
+      type: "Buy-side (Swing High)",
+      priority: getPoolPriority(h.price, true, false)
+    });
+  });
+  if (equalHighs) {
+    prioritizedBSL.push({
+      price: equalHighs.price,
+      type: "Buy-side (Equal Highs)",
+      priority: getPoolPriority(equalHighs.price, true, true)
+    });
+  }
+
+  swingLows.forEach(l => {
+    prioritizedSSL.push({
+      price: l.price,
+      type: "Sell-side (Swing Low)",
+      priority: getPoolPriority(l.price, false, false)
+    });
+  });
+  if (equalLows) {
+    prioritizedSSL.push({
+      price: equalLows.price,
+      type: "Sell-side (Equal Lows)",
+      priority: getPoolPriority(equalLows.price, false, true)
+    });
+  }
+
+  // Sort BSL and SSL by priority descending
+  prioritizedBSL.sort((a, b) => b.priority - a.priority);
+  prioritizedSSL.sort((a, b) => b.priority - a.priority);
+
+  const highestPriorityBSL = prioritizedBSL[0] || null;
+  const highestPrioritySSL = prioritizedSSL[0] || null;
+
+  // 4. Sweeps check
+  let lastSweepType = "None";
+  let lastSweepTimestamp = null;
+
+  if (candles.length > 2) {
+    const lastCandle = candles[candles.length - 1];
+    const lookbackHighs = swingHighs.filter(h => h.index < candles.length - 2 && h.index >= candles.length - 12);
+    const lookbackLows = swingLows.filter(l => l.index < candles.length - 2 && l.index >= candles.length - 12);
+
+    lookbackHighs.forEach(h => {
+      if (lastCandle.high > h.price && lastCandle.close < h.price) {
+        lastSweepType = "Bearish Sweep (Buy-side Liquidity Swept)";
+        lastSweepTimestamp = lastCandle.timestamp;
+      }
+    });
+
+    lookbackLows.forEach(l => {
+      if (lastCandle.low < l.price && lastCandle.close > l.price) {
+        lastSweepType = "Bullish Sweep (Sell-side Liquidity Swept)";
+        lastSweepTimestamp = lastCandle.timestamp;
+      }
+    });
+  }
+
+  return {
+    equalHighs: equalHighs ? equalHighs.price : null,
+    equalLows: equalLows ? equalLows.price : null,
+    highestPriorityBSL,
+    highestPrioritySSL,
+    lastSweepType,
+    lastSweepTimestamp
+  };
+}
+
+/**
+ * Main Institutional Order Flow Analysis Orchestrator (Phase 1.7)
+ */
+function calculateOrderFlowIntelligence(priceHistory, currentPrice, structure) {
+  if (!priceHistory || priceHistory.length < 15 || currentPrice === null) {
+    return null;
+  }
+
+  // 1. Reconstruct candles on multiple timeframes: 5-minute, 15-minute, 1-hour
+  const candles5m = buildCandles(priceHistory, 5);
+  const candles15m = buildCandles(priceHistory, 15);
+  const candles1h = buildCandles(priceHistory, 60);
+
+  // Check if we have enough historical candles to run analysis
+  if (candles5m.length < 5) {
+    return null;
+  }
+
+  // 2. Detect FVGs across timeframes
+  const fvgs5m = detectFVGs(candles5m, currentPrice, "5m");
+  const fvgs15m = detectFVGs(candles15m, currentPrice, "15m");
+  const fvgs1h = detectFVGs(candles1h, currentPrice, "1h");
+  
+  const allFvgs = [...fvgs5m, ...fvgs15m, ...fvgs1h];
+
+  // Rank FVGs by relevance: relevance = (timeframeWeight * 10) / (distance + 1.0)
+  const getFvgWeight = (tf) => {
+    if (tf === "1h") return 30;
+    if (tf === "15m") return 20;
+    return 10;
+  };
+
+  const rankedFvgs = allFvgs.map(f => {
+    const tfWeight = getFvgWeight(f.timeframe);
+    const relevance = (tfWeight * 10) / (f.distance + 1.0);
+    return { ...f, relevance };
+  });
+
+  // Nearest Bullish FVG (unfilled, below current price or inside)
+  const unfilledBullish = rankedFvgs.filter(f => f.type === "Bullish" && !f.filled && f.bottom < currentPrice);
+  unfilledBullish.sort((a, b) => b.relevance - a.relevance);
+  const nearestBullishFvg = unfilledBullish[0] || null;
+
+  // Nearest Bearish FVG (unfilled, above current price or inside)
+  const unfilledBearish = rankedFvgs.filter(f => f.type === "Bearish" && !f.filled && f.top > currentPrice);
+  unfilledBearish.sort((a, b) => b.relevance - a.relevance);
+  const nearestBearishFvg = unfilledBearish[0] || null;
+
+  // 3. Order Blocks (use 15m timeframe for OB indicators as a stable baseline)
+  const obs = detectOrderBlocks(candles15m, currentPrice, structure);
+  
+  // Nearest Bullish OB (active/unbroken, below or testing current price)
+  const activeBullishObs = obs.filter(o => o.type === "Bullish" && !o.broken && o.bottom <= currentPrice);
+  activeBullishObs.sort((a, b) => b.top - a.top);
+  const nearestBullishOB = activeBullishObs[0] || null;
+
+  // Nearest Bearish OB (active/unbroken, above or testing current price)
+  const activeBearishObs = obs.filter(o => o.type === "Bearish" && !o.broken && o.top >= currentPrice);
+  activeBearishObs.sort((a, b) => a.bottom - b.bottom);
+  const nearestBearishOB = activeBearishObs[0] || null;
+
+  // 4. Liquidity Pools & Sweeps (using 15m candles)
+  const liquidity = detectLiquidity(candles15m, currentPrice);
+
+  // Highest priority pool
+  let nearestPool = null;
+  if (liquidity.highestPriorityBSL && liquidity.highestPrioritySSL) {
+    nearestPool = liquidity.highestPriorityBSL.priority >= liquidity.highestPrioritySSL.priority
+      ? { price: liquidity.highestPriorityBSL.price, type: "Buy-side", priority: liquidity.highestPriorityBSL.priority }
+      : { price: liquidity.highestPrioritySSL.price, type: "Sell-side", priority: liquidity.highestPrioritySSL.priority };
+  } else if (liquidity.highestPriorityBSL) {
+    nearestPool = { price: liquidity.highestPriorityBSL.price, type: "Buy-side", priority: liquidity.highestPriorityBSL.priority };
+  } else if (liquidity.highestPrioritySSL) {
+    nearestPool = { price: liquidity.highestPrioritySSL.price, type: "Sell-side", priority: liquidity.highestPrioritySSL.priority };
+  }
+
+  // 5. Institutional Bias & Recommended Interpretation
+  let bullishScore = 0;
+  let bearishScore = 0;
+
+  if (nearestBullishOB) bullishScore += 2 * (nearestBullishOB.strengthScore / 100);
+  if (nearestBearishOB) bearishScore += 2 * (nearestBearishOB.strengthScore / 100);
+  if (nearestBullishFvg) bullishScore += 1 * (nearestBullishFvg.relevance / 100);
+  if (nearestBearishFvg) bearishScore += 1 * (nearestBearishFvg.relevance / 100);
+
+  if (liquidity.lastSweepType.includes("Bullish Sweep")) bullishScore += 1.5;
+  if (liquidity.lastSweepType.includes("Bearish Sweep")) bearishScore += 1.5;
+
+  let institutionalBias = "Neutral";
+  if (bullishScore > bearishScore + 0.5) institutionalBias = "Bullish";
+  else if (bearishScore > bullishScore + 0.5) institutionalBias = "Bearish";
+
+  let recommendedInterpretation = "Wait for clear order flow patterns.";
+  if (institutionalBias === "Bullish") {
+    recommendedInterpretation = nearestBullishOB
+      ? `Institutional bias is Bullish. Look for buys near Bullish Order Block at ${nearestBullishOB.top.toFixed(2)} USD (Strength: ${nearestBullishOB.strengthScore}, Freshness: ${nearestBullishOB.freshness} bars).`
+      : "Bullish order flow bias. Watch for long entries on retracements.";
+  } else if (institutionalBias === "Bearish") {
+    recommendedInterpretation = nearestBearishOB
+      ? `Institutional bias is Bearish. Look for sells near Bearish Order Block at ${nearestBearishOB.bottom.toFixed(2)} USD (Strength: ${nearestBearishOB.strengthScore}, Freshness: ${nearestBearishOB.freshness} bars).`
+      : "Bearish order flow bias. Watch for short entries on pullbacks.";
+  }
+
+  return {
+    nearestBullishOB,
+    nearestBearishOB,
+    nearestBullishFvg,
+    nearestBearishFvg,
+    liquidity,
+    nearestPool,
+    institutionalBias,
+    recommendedInterpretation
   };
 }
