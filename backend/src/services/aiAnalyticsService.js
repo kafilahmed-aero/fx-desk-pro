@@ -3,6 +3,8 @@ import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.
 import { localAiRecommendationOutcomes } from "./signalOutcomeStore.js";
 import { logger } from "../utils/logger.js";
 import { formatBlockReason } from "./paperRiskManager.js";
+import { getDashboardAndAnalytics } from "./recommendationAnalyticsService.js";
+
 
 function isMongoConnected() {
   return mongoose.connection.readyState === 1;
@@ -51,7 +53,8 @@ export async function getAiAnalytics() {
       avgTimeToFullTP: null,
       avgTimeToSL: null,
       lastRecommendationTime: null,
-      automationReady: "NO"
+      automationReady: "NO",
+      ...(await getDashboardAndAnalytics())
     };
   }
 
@@ -420,7 +423,8 @@ export async function getAiAnalytics() {
     blockedReasonDistribution,
     avgDailyTrades,
     avgOpenTrades,
-    avgDailyRiskUsed
+    avgDailyRiskUsed,
+    ...(await getDashboardAndAnalytics())
   };
 }
 

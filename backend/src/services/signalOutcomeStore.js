@@ -7,6 +7,8 @@ import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.
 import { config } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 import { getSettingsSync } from "./automationSettingsService.js";
+import { updateSnapshotOutcome } from "./recommendationAnalyticsService.js";
+
 
 // Local in-memory fallback stores
 const localOutcomes = new Map();
@@ -188,6 +190,12 @@ export async function saveOutcome(outcomeData) {
       };
       localAiRecommendationOutcomes.set(aiOutcome.recommendationId, updated);
     }
+
+    const isTerminal = ["FULL_TP", "SL", "SL_HIT", "EXPIRED", "CANCELLED", "SUPERSEDED", "BREAK_EVEN", "BREAK_EVEN_EXIT", "BREAK_EVEN_HIT", "BREAK_EVEN_CLOSE", "BREAK_EVEN_STOP", "BREAKEVEN"].includes(aiOutcome.status);
+    if (isTerminal) {
+      await updateSnapshotOutcome(aiOutcome.recommendationId, aiOutcome);
+    }
+
     return outcomeData;
   }
 

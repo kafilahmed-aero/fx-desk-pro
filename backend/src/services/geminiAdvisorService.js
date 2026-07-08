@@ -8,6 +8,9 @@ import { getXauusdNewsContext } from "./xauusdNewsService.js";
 import { saveNewAiRecommendationOutcome } from "./signalOutcomeStore.js";
 import { getMultiTimeframeContext, buildCandles } from "./multiTimeframeIntelligenceService.js";
 import { logger } from "../utils/logger.js";
+import { captureIntelligenceSnapshot } from "./recommendationAnalyticsService.js";
+import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "./tradingSessionService.js";
+
 
 // Persistent module-level state for market regime stability (Phase 1.6)
 const regimeState = {
@@ -2337,6 +2340,67 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       await saveNewAiRecommendationOutcome(recResult);
     } catch (saveErr) {
       logger.error("gemini_advisor.save_outcome_failed", { error: saveErr.message });
+    }
+
+    // Capture intelligence snapshot for Phase 1.9 (Guaranteed safety via internal try/catch)
+    try {
+      const currentHourUtc = now.getUTCHours();
+      let tradingSession = "Sydney/Asian";
+      if (currentHourUtc >= 8 && currentHourUtc < 13) {
+        tradingSession = "London";
+      } else if (currentHourUtc >= 13 && currentHourUtc < 16) {
+        tradingSession = "London-New York Overlap";
+      } else if (currentHourUtc >= 16 && currentHourUtc < 21) {
+        tradingSession = "New York";
+      } else {
+        tradingSession = "Sydney/Asian";
+      }
+
+      const nearestObStr = orderFlow
+        ? (orderFlow.nearestBullishOB || orderFlow.nearestBearishOB
+          ? `Bullish: ${orderFlow.nearestBullishOB ? orderFlow.nearestBullishOB.high.toFixed(2) + "-" + orderFlow.nearestBullishOB.low.toFixed(2) : "None"} | Bearish: ${orderFlow.nearestBearishOB ? orderFlow.nearestBearishOB.high.toFixed(2) + "-" + orderFlow.nearestBearishOB.low.toFixed(2) : "None"}`
+          : "None")
+        : "None";
+
+      const nearestFvgStr = orderFlow
+        ? (orderFlow.nearestBullishFvg || orderFlow.nearestBearishFvg
+          ? `Bullish: ${orderFlow.nearestBullishFvg ? orderFlow.nearestBullishFvg.gapLow.toFixed(2) + "-" + orderFlow.nearestBullishFvg.gapHigh.toFixed(2) : "None"} | Bearish: ${orderFlow.nearestBearishFvg ? orderFlow.nearestBearishFvg.gapLow.toFixed(2) + "-" + orderFlow.nearestBearishFvg.gapHigh.toFixed(2) : "None"}`
+          : "None")
+        : "None";
+
+      const liqStatusStr = orderFlow && orderFlow.liquidity
+        ? `Equal Highs: ${orderFlow.liquidity.eqHighPrice ? orderFlow.liquidity.eqHighPrice.toFixed(2) : "None"} | Equal Lows: ${orderFlow.liquidity.eqLowPrice ? orderFlow.liquidity.eqLowPrice.toFixed(2) : "None"} | Last Sweep: ${orderFlow.liquidity.lastSweepType || "None"}`
+        : "None";
+
+      const snapshotContext = {
+        telegramQuality: overallTelegramQuality,
+        telegramConsensus: consensusStrength,
+        weightedConsensus: interpretation,
+        channelReliability: trustLevel,
+        marketRegime: regimeState.confirmedRegime,
+        regimeConfidence: regimeData ? regimeData.regimeConfidence : 0,
+        institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+        macroAlignment: macroIntel ? macroIntel.macroAlignment : "Neutral",
+        macroConflictLevel: macroIntel ? macroIntel.macroConflictLevel : "Low",
+        premiumDiscount: premiumDiscount,
+        nearestOrderBlock: nearestObStr,
+        nearestFairValueGap: nearestFvgStr,
+        liquidityStatus: liqStatusStr,
+        dxyDirection: macroIntel && macroIntel.assetResults["DXY"] ? macroIntel.assetResults["DXY"].direction : "Unavailable",
+        us10yDirection: macroIntel && macroIntel.assetResults["US10Y"] ? macroIntel.assetResults["US10Y"].direction : "Unavailable",
+        silverDirection: macroIntel && macroIntel.assetResults["Silver"] ? macroIntel.assetResults["Silver"].direction : "Unavailable",
+        overallConfluenceScore: overallConfluence,
+        tradeFilter: tradeFilter,
+        tradingSession,
+        emergencyMacroOverrideStatus: hasEmergencyMacroEvent(newsContext, now),
+        promptVersion: "1.0",
+        promptHash: crypto.createHash("md5").update(prompt).digest("hex"),
+        geminiModel: "gemini-2.5-flash"
+      };
+
+      await captureIntelligenceSnapshot(recResult, snapshotContext);
+    } catch (analyticsErr) {
+      logger.error("gemini_advisor.capture_snapshot_failed", { error: analyticsErr.message });
     }
 
     return recResult;
