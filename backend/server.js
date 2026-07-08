@@ -53,7 +53,7 @@ async function startServer() {
 
   // Telegram ingestion runs in the backend process, not in the frontend.
   // If no saved session is available yet, the API still runs and logs the setup gap.
-  initializeBackgroundServices().catch((error) => {
+  initializeBackgroundServices(server).catch((error) => {
     logger.error("server.background_services_failed", {
       error: error.message,
     });
@@ -75,13 +75,13 @@ async function startServer() {
   process.on("SIGTERM", shutdown);
 }
 
-async function initializeBackgroundServices() {
+async function initializeBackgroundServices(server) {
   startKeepAlive();
   await connectDatabase();
   await hydratePairStatesFromDb();
   startMarketEngine();
   startPriceMonitoring();
-  startMt5SyncService();
+  startMt5SyncService(server);
   
   // Initial recommendation run after DB connection & price monitoring are established
   generateRecommendationIfNeeded("STARTUP").catch((err) => {

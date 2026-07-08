@@ -7,6 +7,7 @@ import { getCurrentPrice } from "../services/priceIngestionService.js";
 import { classifyMessage } from "../parsers/noiseFilter.js";
 import { isAiTradingSessionActive } from "../services/tradingSessionService.js";
 import { config } from "../config/env.js";
+import { getMt5BridgeStatus } from "../services/mt5SyncService.js";
 
 const SYMBOL_MAP = {
   "XAUUSD": "GC=F",
@@ -98,7 +99,8 @@ export async function getSystemHealthController(req, res) {
         telegramListener: telegramMetrics.listenerRunning,
         keepAliveService: true,
         priceIngestionScheduler: true,
-      }
+      },
+      mt5Bridge: getMt5BridgeStatus()
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

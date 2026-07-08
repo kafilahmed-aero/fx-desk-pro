@@ -7,7 +7,8 @@ import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.
 import { logger } from "../utils/logger.js";
 
 // Global connection registry
-export const connectedClients = new Map(); // key: accountId / accountNumber, value: { ws, broker, server, accountNumber, lastSeen }
+export const connectedClients = new Map(); // key: accountId / accountNumber, value: { ws, broker, server, accountNumber, lastSeen, connectedTime, eaVersion, protocolVersion }
+export const clientStatsRegistry = new Map(); // key: accountId, value: { reconnects, errors }
 
 let wss = null;
 let httpServer = null;
@@ -15,6 +16,8 @@ let changeStream = null;
 let reconciliationInterval = null;
 let pollingInterval = null;
 let heartbeatInterval = null;
+let reconnectsToday = 0;
+const startTimestamp = Date.now();
 
 function getAuthToken() {
   return process.env.MT5_BRIDGE_AUTH_TOKEN || "default-mt5-token-change-me";
@@ -256,88 +259,99 @@ Close reason: ${state.closeReason}
 /**
  * Starts the MT5 Bridge WebSocket Server
  */
-export function startMt5SyncService() {
+export function startMt5SyncService(server = null) {
   if (wss) return;
 
   const port = getPort();
   const authToken = getAuthToken();
 
-  httpServer = http.createServer((req, res) => {
-    const state = {
-      timestamp: new Date().toISOString(),
-      remoteIp: req.socket.remoteAddress,
-      method: req.method,
-      url: req.url,
-      headers: JSON.stringify(req.headers, null, 2),
-      upgradeCallbackReached: "NO",
-      authPassed: "NO",
-      switchingProtocolsSent: "NO",
-      socketClosed: "YES",
-      closeReason: "Non-upgrade HTTP request"
-    };
-    printHandshakeLog(state);
-
-    res.writeHead(426, { "Content-Type": "text/plain" });
-    res.end("Upgrade Required");
-  });
-
-  wss = new WebSocketServer({ server: httpServer });
-  logger.info("mt5_sync.server_started", { port });
-
-  httpServer.prependListener("upgrade", (req, socket, head) => {
-    const originalWrite = socket.write;
-    socket.write = function(chunk, encoding, callback) {
-      let buffer;
-      if (Buffer.isBuffer(chunk)) {
-        buffer = chunk;
-      } else if (typeof chunk === "string") {
-        buffer = Buffer.from(chunk, encoding || "utf8");
-      } else {
-        buffer = Buffer.from(chunk);
+  const attachUpgradeLogger = (targetServer) => {
+    targetServer.prependListener("upgrade", (req, socket, head) => {
+      const parsedUrl = url.parse(req.url, true);
+      if (parsedUrl.pathname !== "/mt5" && parsedUrl.pathname !== "/") {
+        return; // Skip if it's some other endpoint
       }
 
-      const hexStr = buffer.toString("hex").match(/.{1,2}/g)?.join(" ") || "";
-      const asciiStr = buffer.toString("utf8");
+      const originalWrite = socket.write;
+      socket.write = function(chunk, encoding, callback) {
+        let buffer;
+        if (Buffer.isBuffer(chunk)) {
+          buffer = chunk;
+        } else if (typeof chunk === "string") {
+          buffer = Buffer.from(chunk, encoding || "utf8");
+        } else {
+          buffer = Buffer.from(chunk);
+        }
 
-      console.log("========================================");
-      console.log("HANDSHAKE TRANSMISSION");
-      console.log("========================================");
-      console.log("\nTimestamp: " + new Date().toISOString());
-      console.log("\nASCII Payload:\n" + asciiStr);
-      console.log("\nHEX Payload:\n" + hexStr);
+        const hexStr = buffer.toString("hex").match(/.{1,2}/g)?.join(" ") || "";
+        const asciiStr = buffer.toString("utf8");
 
-      socket.once("drain", () => console.log("BACKEND SOCKET EVENT: drain"));
-      socket.once("finish", () => console.log("BACKEND SOCKET EVENT: finish"));
-      socket.once("close", (hadError) => console.log("BACKEND SOCKET EVENT: close (hadError=" + hadError + ")"));
-      socket.once("error", (err) => console.log("BACKEND SOCKET EVENT: error (" + err.message + ")"));
+        console.log("========================================");
+        console.log("HANDSHAKE TRANSMISSION");
+        console.log("========================================");
+        console.log("\nTimestamp: " + new Date().toISOString());
+        console.log("\nASCII Payload:\n" + asciiStr);
+        console.log("\nHEX Payload:\n" + hexStr);
+        console.log("========================================");
 
-      const writeResult = originalWrite.apply(this, arguments);
-      console.log("\nsocket.write() return value: " + writeResult);
-      console.log("\nsocket.bytesWritten: " + socket.bytesWritten);
-      console.log("\nsocket.destroyed: " + socket.destroyed);
-      console.log("\nsocket.writable: " + socket.writable);
-      console.log("\n========================================");
+        return originalWrite.apply(this, arguments);
+      };
+    });
 
-      return writeResult;
-    };
-  });
+    targetServer.on("upgrade", (req, socket, head) => {
+      const parsedUrl = url.parse(req.url, true);
+      if (parsedUrl.pathname !== "/mt5" && parsedUrl.pathname !== "/") {
+        return;
+      }
+      const state = {
+        timestamp: new Date().toISOString(),
+        remoteIp: req.socket.remoteAddress,
+        method: req.method,
+        url: req.url,
+        headers: JSON.stringify(req.headers, null, 2),
+        upgradeCallbackReached: "YES",
+        authPassed: "NO",
+        switchingProtocolsSent: "NO",
+        socketClosed: "NO",
+        closeReason: "N/A"
+      };
+      req._handshakeState = state;
+      printHandshakeLog(state);
+    });
+  };
 
-  httpServer.on("upgrade", (req, socket, head) => {
-    const state = {
-      timestamp: new Date().toISOString(),
-      remoteIp: req.socket.remoteAddress,
-      method: req.method,
-      url: req.url,
-      headers: JSON.stringify(req.headers, null, 2),
-      upgradeCallbackReached: "YES",
-      authPassed: "NO",
-      switchingProtocolsSent: "NO",
-      socketClosed: "NO",
-      closeReason: "N/A"
-    };
-    req._handshakeState = state;
-    printHandshakeLog(state);
-  });
+  if (server) {
+    wss = new WebSocketServer({ server, path: "/mt5" });
+    logger.info("mt5_sync.shared_server_started", { path: "/mt5" });
+    attachUpgradeLogger(server);
+  } else {
+    httpServer = http.createServer((req, res) => {
+      const state = {
+        timestamp: new Date().toISOString(),
+        remoteIp: req.socket.remoteAddress,
+        method: req.method,
+        url: req.url,
+        headers: JSON.stringify(req.headers, null, 2),
+        upgradeCallbackReached: "NO",
+        authPassed: "NO",
+        switchingProtocolsSent: "NO",
+        socketClosed: "YES",
+        closeReason: "Non-upgrade HTTP request"
+      };
+      printHandshakeLog(state);
+
+      res.writeHead(426, { "Content-Type": "text/plain" });
+      res.end("Upgrade Required");
+    });
+
+    wss = new WebSocketServer({ server: httpServer });
+    attachUpgradeLogger(httpServer);
+
+    httpServer.listen(port, () => {
+      logger.info("mt5_sync.http_server_listening", { port });
+    });
+    logger.info("mt5_sync.server_started", { port });
+  }
 
   wss.on("headers", (headers, req) => {
     if (req._handshakeState) {
@@ -418,11 +432,6 @@ export function startMt5SyncService() {
           return;
         }
 
-        if (eventType === "PONG") {
-          if (clientInfo) clientInfo.lastSeen = Date.now();
-          return;
-        }
-
         // Handle registration / auth message if not already authenticated
         if (eventType === "REGISTER") {
           const clientToken = payload.token;
@@ -435,10 +444,34 @@ export function startMt5SyncService() {
           console.log("\nReceived Length:\n" + (clientToken ? clientToken.length : 0));
           console.log("\nExpected Length:\n" + (authToken ? authToken.length : 0));
           console.log("\nComparison Result:\n" + (clientToken === authToken));
-          console.log("\nCharacter Codes:\nReceived:\n" + JSON.stringify(regReceivedCodes) + "\n\nExpected:\n" + JSON.stringify(regExpectedCodes));
           console.log("-------------------------");
 
           if (clientToken === authToken || isAuthenticated) {
+            const accountId = payload.accountId || `${payload.broker || "broker"}_${payload.accountNumber || "account"}`;
+
+            // Version and Protocol Checks (Improvement 2)
+            const clientVersion = payload.eaVersion || "1.00";
+            const clientProtocol = payload.protocolVersion !== undefined ? Number(payload.protocolVersion) : 1;
+
+            const MIN_CLIENT_VERSION = "1.00";
+            const SUPPORTED_PROTOCOL = 2; // Supported backend protocol version
+
+            const isProduction = process.env.NODE_ENV === "production";
+            // Allow protocol v1 only in local dev if not strictly overridden
+            if (clientProtocol < SUPPORTED_PROTOCOL && isProduction) {
+              logger.warn("mt5_sync.register_failed_protocol_mismatch", { accountId, clientProtocol });
+              ws.send(JSON.stringify({ event: "REGISTER", status: "FAILED", reason: "Protocol Version Mismatch" }));
+              ws.close(4402, "Protocol Version Mismatch");
+              return;
+            }
+
+            if (clientVersion < MIN_CLIENT_VERSION) {
+              logger.warn("mt5_sync.register_failed_version_outdated", { accountId, clientVersion });
+              ws.send(JSON.stringify({ event: "REGISTER", status: "FAILED", reason: "Client Version Outdated" }));
+              ws.close(4403, "Client Version Outdated");
+              return;
+            }
+
             isAuthenticated = true;
             if (ws._handshakeState) {
               ws._handshakeState.authPassed = "YES";
@@ -446,17 +479,23 @@ export function startMt5SyncService() {
             }
             clearTimeout(authTimeout);
 
-            const accountId = payload.accountId || `${payload.broker || "broker"}_${payload.accountNumber || "account"}`;
-            
             clientInfo = {
               ws,
               broker: payload.broker || "Unknown",
               server: payload.server || "Unknown",
               accountNumber: payload.accountNumber || "Unknown",
-              lastSeen: Date.now()
+              lastSeen: Date.now(),
+              connectedTime: Date.now(),
+              eaVersion: clientVersion,
+              protocolVersion: clientProtocol
             };
 
             connectedClients.set(accountId, clientInfo);
+
+            // Record clientStats entry
+            const stats = clientStatsRegistry.get(accountId) || { reconnects: 0, errors: 0 };
+            clientStatsRegistry.set(accountId, stats);
+
             logger.info("mt5_sync.ea_registered", {
               accountId,
               broker: clientInfo.broker,
@@ -469,6 +508,46 @@ export function startMt5SyncService() {
 
             // Trigger positions list request immediately on registration for restart recovery reconciliation
             ws.send(JSON.stringify({ action: "POSITION_LIST" }));
+
+            // Reconnect State Recovery (Improvement 4)
+            let activeOpportunities = [];
+            let currentAiRecommendation = null;
+            try {
+              const activeOutcomes = await AiRecommendationOutcome.find({
+                simulationMode: "DEMO",
+                status: "ACTIVE"
+              }).sort({ createdAt: -1 }).lean();
+              
+              activeOpportunities = activeOutcomes.map(o => ({
+                recommendationId: o.recommendationId,
+                pair: o.pair,
+                direction: o.direction,
+                entryPrice: o.simulatedEntryPrice || o.entryMin,
+                sl: o.sl,
+                tp: o.tp
+              }));
+
+              if (activeOutcomes.length > 0) {
+                currentAiRecommendation = activeOutcomes[0];
+              }
+            } catch (dbErr) {
+              logger.error("mt5_sync.state_recovery_db_failed", { error: dbErr.message });
+            }
+
+            const statePayload = {
+              event: "STATE_SYNC",
+              serverTime: new Date().toISOString(),
+              backendVersion: "2.0.0",
+              protocolVersion: 2,
+              heartbeatIntervalSec: 10,
+              currentAiRecommendation,
+              activeOpportunities,
+              pendingCommands: activeOpportunities
+            };
+
+            ws.send(JSON.stringify(statePayload));
+            logger.info("mt5_sync.state_recovery_sent", { accountId, activeOpportunitiesCount: activeOpportunities.length });
+
           } else {
             console.log("REJECTED BY: `if (clientToken === authToken || isAuthenticated)` else block (Line 447)");
             logger.warn("mt5_sync.auth_failed_token_mismatch", { token: clientToken });
@@ -481,6 +560,7 @@ export function startMt5SyncService() {
           }
           return;
         }
+
 
         // Reject other messages if not authenticated
         if (!isAuthenticated) {
@@ -779,6 +859,14 @@ export function startMt5SyncService() {
         for (const [key, value] of connectedClients.entries()) {
           if (value.ws === ws) {
             connectedClients.delete(key);
+
+            // Record stats registry disconnect entry (Improvement 3)
+            const stats = clientStatsRegistry.get(key) || { reconnects: 0, errors: 0 };
+            stats.reconnects = (stats.reconnects || 0) + 1;
+            stats.lastDisconnectReason = `Code: ${code}, Reason: ${reason.toString() || "None"}`;
+            clientStatsRegistry.set(key, stats);
+            reconnectsToday++;
+
             logger.info("mt5_sync.ea_disconnected", { accountId: key, code, reason: reason.toString() });
             break;
           }
@@ -788,6 +876,16 @@ export function startMt5SyncService() {
 
     ws.on("error", (err) => {
       logger.error("mt5_sync.websocket_client_error", { error: err.message });
+      if (clientInfo) {
+        for (const [key, value] of connectedClients.entries()) {
+          if (value.ws === ws) {
+            const stats = clientStatsRegistry.get(key) || { reconnects: 0, errors: 0 };
+            stats.errors = (stats.errors || 0) + 1;
+            clientStatsRegistry.set(key, stats);
+            break;
+          }
+        }
+      }
       if (ws._handshakeState) {
         ws._handshakeState.socketClosed = "YES";
         ws._handshakeState.closeReason = `Socket Error: ${err.message}`;
@@ -796,25 +894,36 @@ export function startMt5SyncService() {
     });
   });
 
-  httpServer.listen(port, () => {
-    logger.info("mt5_sync.http_server_listening", { port });
-  });
-
   // Start MongoDB Change Stream & fallback polling
   startChangeStreamListener();
 
   // Setup periodic reconciliation loop (every 5 minutes)
   reconciliationInterval = setInterval(runReconciliation, 5 * 60 * 1000);
 
-  // Setup heartbeat ping loop (every 10 seconds)
+  // Setup heartbeat ping loop (every 10 seconds) with timeout checks
   heartbeatInterval = setInterval(() => {
+    const now = Date.now();
     const pingPayload = JSON.stringify({ action: "PING" });
     for (const [accountId, client] of connectedClients.entries()) {
-      if (client.ws.readyState === 1) {
-        try {
-          client.ws.send(pingPayload);
-        } catch (err) {
-          logger.error("mt5_sync.heartbeat_failed", { accountId, error: err.message });
+      const lastSeen = client.lastSeen || now;
+      const inactiveMs = now - lastSeen;
+
+      if (inactiveMs > 60000) {
+        logger.warn("mt5_sync.heartbeat_timeout_disconnecting", { accountId, inactiveMs });
+        // Increment errors for health score tracking
+        const stats = clientStatsRegistry.get(accountId) || { reconnects: 0, errors: 0 };
+        stats.errors = (stats.errors || 0) + 1;
+        clientStatsRegistry.set(accountId, stats);
+
+        client.ws.close(4408, "Heartbeat Timeout");
+        connectedClients.delete(accountId);
+      } else {
+        if (client.ws.readyState === 1) {
+          try {
+            client.ws.send(pingPayload);
+          } catch (err) {
+            logger.error("mt5_sync.heartbeat_failed", { accountId, error: err.message });
+          }
         }
       }
     }
@@ -852,4 +961,66 @@ export function stopMt5SyncService() {
     httpServer = null;
   }
   connectedClients.clear();
+}
+
+export function getMt5BridgeStatus() {
+  const clients = [];
+  const now = Date.now();
+
+  for (const [accountId, client] of connectedClients.entries()) {
+    // Calculate health score (Improvement 3)
+    const stats = clientStatsRegistry.get(accountId) || { reconnects: 0, errors: 0 };
+    const lastSeen = client.lastSeen || now;
+    const delay = Math.max(0, (now - lastSeen) / 1000 - 10); // delay beyond 10s heartbeat
+    
+    // Heartbeat delay deduction
+    let score = 100;
+    if (delay > 20) score -= 40; // STALE (missing 30s)
+    else if (delay > 10) score -= 20;
+
+    // Reconnect deduction
+    score -= Math.min(30, (stats.reconnects || 0) * 5);
+
+    // Errors deduction
+    score -= Math.min(30, (stats.errors || 0) * 10);
+
+    // Duration bonus
+    const durationMin = (now - (client.connectedTime || now)) / 60000;
+    if (durationMin > 360) score += 10;
+    else if (durationMin > 60) score += 5;
+
+    score = Math.max(0, Math.min(100, score));
+
+    let healthRating = "Excellent";
+    if (score < 40) healthRating = "Critical";
+    else if (score < 70) healthRating = "Warning";
+    else if (score < 85) healthRating = "Good";
+
+    // Client status based on heartbeat delay
+    const clientStatus = (now - lastSeen > 30000) ? "STALE" : "CONNECTED";
+
+    clients.push({
+      accountId,
+      broker: client.broker,
+      server: client.server,
+      accountNumber: client.accountNumber,
+      clientVersion: client.eaVersion || "1.00",
+      protocolVersion: client.protocolVersion || 1,
+      lastSeen: new Date(lastSeen).toISOString(),
+      connectionDurationMin: Math.round(durationMin),
+      healthScore: score,
+      healthRating,
+      status: clientStatus,
+      reconnectCount: stats.reconnects || 0,
+      errorCount: stats.errors || 0
+    });
+  }
+
+  return {
+    status: wss ? "ACTIVE" : "INACTIVE",
+    connectedClients: connectedClients.size,
+    reconnectsToday,
+    uptimeSec: Math.round((now - startTimestamp) / 1000),
+    clients
+  };
 }

@@ -76,7 +76,9 @@ async function runEndToEndVerification() {
     broker: "Vantage-Demo",
     server: "Vantage-Demo-Server",
     accountNumber: "998877",
-    token: TEST_TOKEN
+    token: TEST_TOKEN,
+    eaVersion: "2.00",
+    protocolVersion: 2
   }));
   await sleep(200);
 

@@ -338,7 +338,8 @@ void SendRegister() {
                     "\"server\":\"" + server + "\"," +
                     "\"accountNumber\":\"" + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)) + "\"," +
                     "\"terminalBuild\":\"" + build + "\"," +
-                    "\"eaVersion\":\"1.00\"}";
+                    "\"eaVersion\":\"2.00\"," +
+                    "\"protocolVersion\":2}";
    SendEvent(payload);
    Print("MT5 Bridge: REGISTER packet sent for account: ", accountId);
 }
@@ -361,16 +362,36 @@ bool HandleUpgradeHandshake(string httpResponse) {
 void ConnectToBridge() {
    if(g_connected) return;
    
-   // Parse Host & Port from URL: ws://host:port
+   // Parse Host, Port, and Path from URL: ws://host:port/path or wss://host:port/path
    string host = "127.0.0.1";
    ushort port = 8080;
+   string path = "/";
+   bool isSecure = false;
    
    string cleanUrl = InpBridgeUrl;
-   int wsPos = StringFind(cleanUrl, "ws://");
-   if(wsPos >= 0) {
-      cleanUrl = StringSubstr(cleanUrl, wsPos + 5);
+   
+   // Check for secure scheme
+   int wssPos = StringFind(cleanUrl, "wss://");
+   if(wssPos >= 0) {
+      isSecure = true;
+      cleanUrl = StringSubstr(cleanUrl, wssPos + 6);
+      port = 443;
+   } else {
+      int wsPos = StringFind(cleanUrl, "ws://");
+      if(wsPos >= 0) {
+         cleanUrl = StringSubstr(cleanUrl, wsPos + 5);
+         port = 80;
+      }
    }
    
+   // Parse path if present
+   int slashPos = StringFind(cleanUrl, "/");
+   if(slashPos >= 0) {
+      path = StringSubstr(cleanUrl, slashPos);
+      cleanUrl = StringSubstr(cleanUrl, 0, slashPos);
+   }
+   
+   // Parse host and port
    int colonPos = StringFind(cleanUrl, ":");
    if(colonPos >= 0) {
       host = StringSubstr(cleanUrl, 0, colonPos);
@@ -380,11 +401,12 @@ void ConnectToBridge() {
    }
    
    Print("MT5 Bridge: DIAGNOSTIC - Attempting connection to ", InpBridgeUrl, " (Retry delay: ", g_current_reconnect_delay, "s)");
-   Print("MT5 Bridge: DIAGNOSTIC - Host parsed: '", host, "', Port parsed: ", port);
+   Print("MT5 Bridge: DIAGNOSTIC - Host parsed: '", host, "', Port parsed: ", port, ", Path parsed: '", path, "', Secure: ", isSecure);
    g_last_reconnect_attempt = TimeCurrent();
    
    ResetLastError();
-   g_socket = SocketCreate();
+   uint socketFlags = isSecure ? 1 : 0; // 1 = SOCKET_SECURE
+   g_socket = SocketCreate(socketFlags);
    int createErr = GetLastError();
    Print("MT5 Bridge: DIAGNOSTIC - SocketCreate() handle value: ", g_socket, ", GetLastError() immediately after: ", createErr);
    
@@ -416,7 +438,7 @@ void ConnectToBridge() {
    Print("MT5 Bridge: DIAGNOSTIC - SocketIsReadable() returned bytes: ", isReadable, ", SocketIsWritable() returned: ", isWritable);
    
    // Send WebSocket Upgrade request
-   string upgradeRequest = "GET /?token=" + InpAuthToken + " HTTP/1.1\r\n" +
+   string upgradeRequest = "GET " + path + "?token=" + InpAuthToken + " HTTP/1.1\r\n" +
                            "Host: " + host + ":" + IntegerToString(port) + "\r\n" +
                            "Upgrade: websocket\r\n" +
                            "Connection: Upgrade\r\n" +

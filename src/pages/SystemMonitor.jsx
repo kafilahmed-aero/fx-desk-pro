@@ -167,6 +167,79 @@ function SystemMonitor() {
               </div>
             </div>
           </div>
+
+          {/* MT5 Bridge Connector Panel */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04] lg:col-span-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 dark:border-white/5">
+              <h3 className="flex items-center gap-2.5 text-lg font-bold text-slate-900 dark:text-white">
+                <RefreshCw className={`text-blue-500 ${health.mt5Bridge?.status === "ACTIVE" ? "animate-spin" : ""}`} style={{ animationDuration: "3s" }} size={20} />
+                MT5 Bridge Sync Gateway
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  health.mt5Bridge?.status === "ACTIVE"
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : "bg-rose-500/10 text-rose-500"
+                }`}>
+                  Gateway: {health.mt5Bridge?.status || "INACTIVE"}
+                </span>
+                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 dark:bg-white/5 dark:text-slate-400">
+                  Uptime: {formatUptime(health.mt5Bridge?.uptimeSec || 0)}
+                </span>
+                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 dark:bg-white/5 dark:text-slate-400">
+                  Reconnects Today: {health.mt5Bridge?.reconnectsToday || 0}
+                </span>
+              </div>
+            </div>
+
+            {health.mt5Bridge?.clients && health.mt5Bridge.clients.length > 0 ? (
+              <div className="mt-4 divide-y divide-slate-100 dark:divide-white/5">
+                {health.mt5Bridge.clients.map((client, idx) => {
+                  let badgeColor = "bg-rose-500/10 text-rose-500";
+                  if (client.healthRating === "Excellent") badgeColor = "bg-emerald-500/10 text-emerald-500";
+                  else if (client.healthRating === "Good") badgeColor = "bg-teal-500/10 text-teal-500";
+                  else if (client.healthRating === "Warning") badgeColor = "bg-amber-500/10 text-amber-500";
+
+                  return (
+                    <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
+                      <div className="space-y-1">
+                        <p className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                          {client.broker} — Account {client.accountNumber}
+                          <span className={`inline-block w-2.5 h-2.5 rounded-full ${client.status === "CONNECTED" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}></span>
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                          Server: <span className="font-semibold text-slate-500 dark:text-slate-400">{client.server}</span> | 
+                          Client v{client.clientVersion} | Protocol v{client.protocolVersion}
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                          Last ping: <span className="font-semibold text-slate-500 dark:text-slate-400">{new Date(client.lastSeen).toLocaleTimeString()}</span> | 
+                          Connected: <span className="font-semibold text-slate-500 dark:text-slate-400">{client.connectionDurationMin} min</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4 text-right">
+                        <div className="space-y-1">
+                          <p className="text-xs text-slate-400">Connection Health</p>
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${badgeColor}`}>
+                            {client.healthRating} ({client.healthScore}/100)
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-slate-400">Errors / Reconnects</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {client.errorCount} err / {client.reconnectCount} rec
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mt-6 text-center py-6 text-slate-400 dark:text-slate-500 text-sm">
+                No Expert Advisors currently connected to the cloud bridge.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -235,10 +308,16 @@ function SystemMonitor() {
               <div className="flex items-center justify-between py-3">
                 <div>
                   <span className="font-bold text-slate-800 dark:text-white block">MT5 Bridge Sync Gateway</span>
-                  <span className="text-xs text-slate-400">Port 5001 local WebSocket bridge server</span>
+                  <span className="text-xs text-slate-400">
+                    {health.mt5Bridge?.connectedClients || 0} clients connected to cloud /mt5
+                  </span>
                 </div>
-                <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500">
-                  ACTIVE
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  health.mt5Bridge?.status === "ACTIVE"
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : "bg-slate-500/10 text-slate-500"
+                }`}>
+                  {health.mt5Bridge?.status || "INACTIVE"}
                 </span>
               </div>
               <div className="flex items-center justify-between py-3">
