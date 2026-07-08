@@ -39,7 +39,7 @@ export function loginController(request, response) {
   const session = createSessionToken(user, Boolean(remember));
   setSessionCookie(response, session.token, session.maxAgeSeconds);
 
-  return response.json({ user });
+  return response.json({ user, token: session.token });
 }
 
 export function logoutController(_request, response) {

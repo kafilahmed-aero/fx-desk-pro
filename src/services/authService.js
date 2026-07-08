@@ -20,19 +20,46 @@ export async function login({ email, password, remember = true }) {
   });
   const payload = await parseJsonResponse(response);
 
+  if (payload.token) {
+    try {
+      if (remember) {
+        localStorage.setItem("fx_desk_token", payload.token);
+        sessionStorage.removeItem("fx_desk_token");
+      } else {
+        sessionStorage.setItem("fx_desk_token", payload.token);
+        localStorage.removeItem("fx_desk_token");
+      }
+    } catch (err) {
+      console.warn("Storage access failed:", err);
+    }
+  }
+
   return payload.user;
 }
 
 export async function logout() {
   await fetchWithCredentials("/auth/logout", {
     method: "POST",
-  });
+  }).catch(() => {});
+  
+  try {
+    localStorage.removeItem("fx_desk_token");
+    sessionStorage.removeItem("fx_desk_token");
+  } catch (err) {
+    console.warn("Storage clear failed:", err);
+  }
 }
 
 export async function getCurrentUser() {
   const response = await fetchWithCredentials("/auth/me");
 
   if (response.status === 401) {
+    try {
+      localStorage.removeItem("fx_desk_token");
+      sessionStorage.removeItem("fx_desk_token");
+    } catch (err) {
+      console.warn("Storage clear failed:", err);
+    }
     return null;
   }
 
