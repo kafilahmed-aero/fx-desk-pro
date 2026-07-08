@@ -68,12 +68,39 @@ string GetJsonValue(string json, string key) {
 }
 
 //--- WebSocket framing and parsing helper
-string SocketReadData() {
-   if(g_socket == INVALID_HANDLE || !g_connected) return "";
+string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
+   if(g_socket == INVALID_HANDLE) return "";
+   if(checkConnected && !g_connected) return "";
    
    uchar buf[];
-   // Set timeout to 1 millisecond to prevent UI freeze (acting as non-blocking read)
-   int res = SocketRead(g_socket, buf, 4096, 1);
+   ArrayResize(buf, 4096);
+   // Set timeout to prevent UI freeze (acting as non-blocking read)
+   ResetLastError();
+   int res = SocketRead(g_socket, buf, 4096, timeout_ms);
+   int err = GetLastError();
+   
+   if(!checkConnected) {
+      Print("MT5 Bridge: DIAGNOSTIC - Handshake SocketRead returned: ", res, ", GetLastError(): ", err);
+      if(res > 0) {
+         string hexStr = "";
+         for(int i = 0; i < res; i++) {
+            hexStr += StringFormat("0x%02X ", buf[i]);
+         }
+         Print("MT5 Bridge: DIAGNOSTIC - Hex bytes: ", hexStr);
+         
+         string asciiStr = CharArrayToString(buf, 0, res);
+         Print("MT5 Bridge: DIAGNOSTIC - ASCII text: \n", asciiStr);
+         
+         if(StringFind(asciiStr, "HTTP/1.1 101") == 0) {
+            Print("MT5 Bridge: DIAGNOSTIC - Starts with HTTP/1.1 101: YES");
+         } else if(buf[0] == 0x81) {
+            Print("MT5 Bridge: DIAGNOSTIC - Starts with 0x81: YES");
+         } else {
+            Print("MT5 Bridge: DIAGNOSTIC - Starts with something else (First byte: ", StringFormat("0x%02X", buf[0]), ")");
+         }
+      }
+   }
+   
    if(res <= 0) return "";
    
    // Data successfully read, update last received timestamp
@@ -204,9 +231,6 @@ bool HandleUpgradeHandshake(string httpResponse) {
 void ConnectToBridge() {
    if(g_connected) return;
    
-   Print("MT5 Bridge: Attempting connection to ", InpBridgeUrl, " (Retry delay: ", g_current_reconnect_delay, "s)");
-   g_last_reconnect_attempt = TimeCurrent();
-   
    // Parse Host & Port from URL: ws://host:port
    string host = "127.0.0.1";
    ushort port = 8080;
@@ -225,15 +249,28 @@ void ConnectToBridge() {
       host = cleanUrl;
    }
    
+   Print("MT5 Bridge: DIAGNOSTIC - Attempting connection to ", InpBridgeUrl, " (Retry delay: ", g_current_reconnect_delay, "s)");
+   Print("MT5 Bridge: DIAGNOSTIC - Host parsed: '", host, "', Port parsed: ", port);
+   g_last_reconnect_attempt = TimeCurrent();
+   
+   ResetLastError();
    g_socket = SocketCreate();
+   int createErr = GetLastError();
+   Print("MT5 Bridge: DIAGNOSTIC - SocketCreate() handle value: ", g_socket, ", GetLastError() immediately after: ", createErr);
+   
    if(g_socket == INVALID_HANDLE) {
-      Print("MT5 Bridge: Native socket creation failed.");
+      Print("MT5 Bridge: DIAGNOSTIC - Native socket creation failed.");
       return;
    }
    
    // Connect socket with 5 seconds timeout
-   if(!SocketConnect(g_socket, host, port, 5000)) {
-      Print("MT5 Bridge: Connection failed. Socket Error Code: ", GetLastError());
+   ResetLastError();
+   bool connectRes = SocketConnect(g_socket, host, port, 5000);
+   int connectErr = GetLastError();
+   Print("MT5 Bridge: DIAGNOSTIC - SocketConnect() result: ", connectRes, ", GetLastError() immediately after: ", connectErr);
+   
+   if(!connectRes) {
+      Print("MT5 Bridge: Connection failed. Socket Error Code: ", connectErr);
       SocketClose(g_socket);
       g_socket = INVALID_HANDLE;
       
@@ -242,6 +279,11 @@ void ConnectToBridge() {
       if(g_current_reconnect_delay > 60) g_current_reconnect_delay = 60;
       return;
    }
+   
+   // Log readability and writability immediately after connection
+   uint isReadable = SocketIsReadable(g_socket);
+   bool isWritable = SocketIsWritable(g_socket);
+   Print("MT5 Bridge: DIAGNOSTIC - SocketIsReadable() returned bytes: ", isReadable, ", SocketIsWritable() returned: ", isWritable);
    
    // Send WebSocket Upgrade request
    string upgradeRequest = "GET /?token=" + InpAuthToken + " HTTP/1.1\r\n" +
@@ -256,9 +298,45 @@ void ConnectToBridge() {
    // Exclude the trailing null byte when sending raw characters
    SocketSend(g_socket, requestBytes, StringLen(upgradeRequest));
    
-   // Wait briefly for handshake response (up to 1.5 seconds)
-   Sleep(1500);
-   string handshakeResponse = SocketReadData();
+   // Handshake read polling logic
+   uint start_time = GetTickCount();
+   uint timeout_limit = 5000;
+   uint elapsed = 0;
+   uint bytes_avail = 0;
+   bool data_ready = false;
+   
+   while(elapsed < timeout_limit) {
+      ResetLastError();
+      bytes_avail = SocketIsReadable(g_socket);
+      if(bytes_avail > 0) {
+         data_ready = true;
+         break;
+      }
+      Sleep(50);
+      elapsed = GetTickCount() - start_time;
+   }
+   
+   string handshakeResponse = "";
+   if(data_ready) {
+      uchar buf[];
+      ArrayResize(buf, 4096);
+      ResetLastError();
+      int res = SocketRead(g_socket, buf, 4096, 5000);
+      int err = GetLastError();
+      
+      if(res > 0) {
+         handshakeResponse = CharArrayToString(buf, 0, res);
+      }
+      
+      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - Elapsed wait time: ", elapsed, " ms");
+      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - Bytes reported by SocketIsReadable(): ", bytes_avail);
+      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - SocketRead() return value: ", res);
+      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - GetLastError(): ", err);
+      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - First 200 characters: ", StringSubstr(handshakeResponse, 0, 200));
+   } else {
+      Print("Handshake timeout: no readable data.");
+   }
+   
    if(handshakeResponse != "") {
       HandleUpgradeHandshake(handshakeResponse);
    } else {

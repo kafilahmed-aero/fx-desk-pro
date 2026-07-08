@@ -2,6 +2,7 @@ import { WebSocketServer } from "ws";
 import url from "url";
 import crypto from "crypto";
 import mongoose from "mongoose";
+import http from "http";
 import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.js";
 import { logger } from "../utils/logger.js";
 
@@ -9,6 +10,7 @@ import { logger } from "../utils/logger.js";
 export const connectedClients = new Map(); // key: accountId / accountNumber, value: { ws, broker, server, accountNumber, lastSeen }
 
 let wss = null;
+let httpServer = null;
 let changeStream = null;
 let reconciliationInterval = null;
 let pollingInterval = null;
@@ -236,6 +238,21 @@ export async function runReconciliation() {
   }
 }
 
+function printHandshakeLog(state) {
+  console.log(`===== MT5 HANDSHAKE =====
+Timestamp: ${state.timestamp}
+Remote IP: ${state.remoteIp}
+HTTP Method: ${state.method}
+HTTP URL: ${state.url}
+All Request Headers: ${state.headers}
+Upgrade callback reached: ${state.upgradeCallbackReached}
+Authentication passed: ${state.authPassed}
+101 Switching Protocols sent: ${state.switchingProtocolsSent}
+Socket closed: ${state.socketClosed}
+Close reason: ${state.closeReason}
+=========================`);
+}
+
 /**
  * Starts the MT5 Bridge WebSocket Server
  */
@@ -245,22 +262,124 @@ export function startMt5SyncService() {
   const port = getPort();
   const authToken = getAuthToken();
 
-  wss = new WebSocketServer({ port });
+  httpServer = http.createServer((req, res) => {
+    const state = {
+      timestamp: new Date().toISOString(),
+      remoteIp: req.socket.remoteAddress,
+      method: req.method,
+      url: req.url,
+      headers: JSON.stringify(req.headers, null, 2),
+      upgradeCallbackReached: "NO",
+      authPassed: "NO",
+      switchingProtocolsSent: "NO",
+      socketClosed: "YES",
+      closeReason: "Non-upgrade HTTP request"
+    };
+    printHandshakeLog(state);
+
+    res.writeHead(426, { "Content-Type": "text/plain" });
+    res.end("Upgrade Required");
+  });
+
+  wss = new WebSocketServer({ server: httpServer });
   logger.info("mt5_sync.server_started", { port });
+
+  httpServer.prependListener("upgrade", (req, socket, head) => {
+    const originalWrite = socket.write;
+    socket.write = function(chunk, encoding, callback) {
+      let buffer;
+      if (Buffer.isBuffer(chunk)) {
+        buffer = chunk;
+      } else if (typeof chunk === "string") {
+        buffer = Buffer.from(chunk, encoding || "utf8");
+      } else {
+        buffer = Buffer.from(chunk);
+      }
+
+      const hexStr = buffer.toString("hex").match(/.{1,2}/g)?.join(" ") || "";
+      const asciiStr = buffer.toString("utf8");
+
+      console.log("========================================");
+      console.log("BACKEND TRANSPORT DIAGNOSTICS");
+      console.log("Timestamp:", new Date().toISOString());
+      console.log("HEX Content:\n" + hexStr);
+      console.log("ASCII Content:\n" + asciiStr);
+
+      socket.once("drain", () => console.log("BACKEND SOCKET EVENT: drain"));
+      socket.once("finish", () => console.log("BACKEND SOCKET EVENT: finish"));
+      socket.once("close", (hadError) => console.log("BACKEND SOCKET EVENT: close (hadError=" + hadError + ")"));
+      socket.once("error", (err) => console.log("BACKEND SOCKET EVENT: error (" + err.message + ")"));
+
+      const writeResult = originalWrite.apply(this, arguments);
+      console.log("socket.write() returned:", writeResult);
+      console.log("socket.bytesWritten immediately after write:", socket.bytesWritten);
+      console.log("socket.destroyed is false after write:", socket.destroyed === false);
+      console.log("========================================");
+
+      return writeResult;
+    };
+  });
+
+  httpServer.on("upgrade", (req, socket, head) => {
+    const state = {
+      timestamp: new Date().toISOString(),
+      remoteIp: req.socket.remoteAddress,
+      method: req.method,
+      url: req.url,
+      headers: JSON.stringify(req.headers, null, 2),
+      upgradeCallbackReached: "YES",
+      authPassed: "NO",
+      switchingProtocolsSent: "NO",
+      socketClosed: "NO",
+      closeReason: "N/A"
+    };
+    req._handshakeState = state;
+    printHandshakeLog(state);
+  });
+
+  wss.on("headers", (headers, req) => {
+    if (req._handshakeState) {
+      req._handshakeState.switchingProtocolsSent = "YES";
+      printHandshakeLog(req._handshakeState);
+    }
+  });
 
   wss.on("connection", (ws, req) => {
     let clientInfo = null;
     let isAuthenticated = false;
+
+    ws._handshakeState = req._handshakeState;
 
     // Parse token from query parameter: ?token=TOKEN
     const parameters = url.parse(req.url, true).query;
     const token = parameters.token;
 
     if (token) {
+      const receivedCodes = token ? Array.from(token).map(c => c.charCodeAt(0)) : [];
+      const expectedCodes = authToken ? Array.from(authToken).map(c => c.charCodeAt(0)) : [];
+      console.log("-------------------------");
+      console.log("Received Query Token:\n" + token);
+      console.log("\nExpected Token:\n" + authToken);
+      console.log("\nReceived Length:\n" + (token ? token.length : 0));
+      console.log("\nExpected Length:\n" + (authToken ? authToken.length : 0));
+      console.log("\nComparison Result:\n" + (token === authToken));
+      console.log("\nCharacter Codes:\nReceived:\n" + JSON.stringify(receivedCodes) + "\n\nExpected:\n" + JSON.stringify(expectedCodes));
+      console.log("-------------------------");
+
       if (token === authToken) {
         isAuthenticated = true;
+        if (ws._handshakeState) {
+          ws._handshakeState.authPassed = "YES";
+          printHandshakeLog(ws._handshakeState);
+        }
       } else {
+        console.log("REJECTED BY: `if (token === authToken)` else block (Line 342)");
         logger.warn("mt5_sync.auth_failed_invalid_query_token", { ip: req.socket.remoteAddress });
+        if (ws._handshakeState) {
+          ws._handshakeState.socketClosed = "YES";
+          ws._handshakeState.closeReason = "Invalid Authentication Token";
+          printHandshakeLog(ws._handshakeState);
+        }
         ws.close(4401, "Invalid Authentication Token");
         return;
       }
@@ -269,7 +388,13 @@ export function startMt5SyncService() {
     // Set connection close timeout if registration fails
     const authTimeout = setTimeout(() => {
       if (!isAuthenticated) {
+        console.log("REJECTED BY: `authTimeout` timeout block (Line 358)");
         logger.warn("mt5_sync.auth_failed_timeout", { ip: req.socket.remoteAddress });
+        if (ws._handshakeState) {
+          ws._handshakeState.socketClosed = "YES";
+          ws._handshakeState.closeReason = "Authentication Timeout";
+          printHandshakeLog(ws._handshakeState);
+        }
         ws.close(4401, "Authentication Timeout");
       }
     }, 5000);
@@ -299,8 +424,24 @@ export function startMt5SyncService() {
         // Handle registration / auth message if not already authenticated
         if (eventType === "REGISTER") {
           const clientToken = payload.token;
+
+          const regReceivedCodes = clientToken ? Array.from(clientToken).map(c => c.charCodeAt(0)) : [];
+          const regExpectedCodes = authToken ? Array.from(authToken).map(c => c.charCodeAt(0)) : [];
+          console.log("-------------------------");
+          console.log("Received Register Token:\n" + clientToken);
+          console.log("\nExpected Token:\n" + authToken);
+          console.log("\nReceived Length:\n" + (clientToken ? clientToken.length : 0));
+          console.log("\nExpected Length:\n" + (authToken ? authToken.length : 0));
+          console.log("\nComparison Result:\n" + (clientToken === authToken));
+          console.log("\nCharacter Codes:\nReceived:\n" + JSON.stringify(regReceivedCodes) + "\n\nExpected:\n" + JSON.stringify(regExpectedCodes));
+          console.log("-------------------------");
+
           if (clientToken === authToken || isAuthenticated) {
             isAuthenticated = true;
+            if (ws._handshakeState) {
+              ws._handshakeState.authPassed = "YES";
+              printHandshakeLog(ws._handshakeState);
+            }
             clearTimeout(authTimeout);
 
             const accountId = payload.accountId || `${payload.broker || "broker"}_${payload.accountNumber || "account"}`;
@@ -327,7 +468,13 @@ export function startMt5SyncService() {
             // Trigger positions list request immediately on registration for restart recovery reconciliation
             ws.send(JSON.stringify({ action: "POSITION_LIST" }));
           } else {
+            console.log("REJECTED BY: `if (clientToken === authToken || isAuthenticated)` else block (Line 447)");
             logger.warn("mt5_sync.auth_failed_token_mismatch", { token: clientToken });
+            if (ws._handshakeState) {
+              ws._handshakeState.socketClosed = "YES";
+              ws._handshakeState.closeReason = "Invalid Authentication Token (REGISTER mismatch)";
+              printHandshakeLog(ws._handshakeState);
+            }
             ws.close(4401, "Invalid Authentication Token");
           }
           return;
@@ -620,6 +767,11 @@ export function startMt5SyncService() {
 
     ws.on("close", (code, reason) => {
       clearTimeout(authTimeout);
+      if (ws._handshakeState) {
+        ws._handshakeState.socketClosed = "YES";
+        ws._handshakeState.closeReason = `Code: ${code}, Reason: ${reason.toString() || "None"}`;
+        printHandshakeLog(ws._handshakeState);
+      }
       if (clientInfo) {
         // Clean up from registry
         for (const [key, value] of connectedClients.entries()) {
@@ -634,7 +786,16 @@ export function startMt5SyncService() {
 
     ws.on("error", (err) => {
       logger.error("mt5_sync.websocket_client_error", { error: err.message });
+      if (ws._handshakeState) {
+        ws._handshakeState.socketClosed = "YES";
+        ws._handshakeState.closeReason = `Socket Error: ${err.message}`;
+        printHandshakeLog(ws._handshakeState);
+      }
     });
+  });
+
+  httpServer.listen(port, () => {
+    logger.info("mt5_sync.http_server_listening", { port });
   });
 
   // Start MongoDB Change Stream & fallback polling
@@ -683,6 +844,10 @@ export function stopMt5SyncService() {
       logger.info("mt5_sync.server_stopped");
     });
     wss = null;
+  }
+  if (httpServer) {
+    httpServer.close();
+    httpServer = null;
   }
   connectedClients.clear();
 }
