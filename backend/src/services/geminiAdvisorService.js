@@ -1752,6 +1752,9 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     // Call Phase 1.7 Institutional Order Flow Intelligence
     const orderFlow = calculateOrderFlowIntelligence(priceHistory, currentPrice, structure);
 
+    // Call Phase 1.8 Multi-Asset Macro Intelligence
+    const macroIntel = await calculateMacroIntelligence(priceHistory, currentPrice);
+
     // 4. Build prompt incorporating structured indicator blocks in the approved sequence
     const prompt = `You are a professional financial trading advisor specializing in Gold (XAUUSD).
 Analyze the market intelligence indicators, price clusters, active signals, recent high-impact macroeconomic events, gold market news, and multi-timeframe context to make a trading decision.
@@ -2009,12 +2012,24 @@ INSTITUTIONAL ORDER FLOW
 ====================================
 ${orderFlow !== null ? `Nearest Bullish Order Block: ${orderFlow.nearestBullishOB ? `${orderFlow.nearestBullishOB.top.toFixed(2)} - ${orderFlow.nearestBullishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBullishOB.strengthScore}, Freshness: ${orderFlow.nearestBullishOB.freshness} bars, Mitigated: ${orderFlow.nearestBullishOB.mitigated})` : "None"}
 Nearest Bearish Order Block: ${orderFlow.nearestBearishOB ? `${orderFlow.nearestBearishOB.top.toFixed(2)} - ${orderFlow.nearestBearishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBearishOB.strengthScore}, Freshness: ${orderFlow.nearestBearishOB.freshness} bars, Mitigated: ${orderFlow.nearestBearishOB.mitigated})` : "None"}
-Nearest Bullish FVG: ${orderFlow.nearestBullishFvg ? `Gap from ${orderFlow.nearestBullishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBullishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBullishFvg.timeframe}, Size: ${orderFlow.nearestBullishFvg.size.toFixed(2)})` : "None"}
-Nearest Bearish FVG: ${orderFlow.nearestBearishFvg ? `Gap from ${orderFlow.nearestBearishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBearishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBearishFvg.timeframe}, Size: ${orderFlow.nearestBearishFvg.size.toFixed(2)})` : "None"}
+Nearest Bullish FVG: ${orderFlow.nearestBullishFvg ? `Gap from ${orderFlow.nearestBullishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBullishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBullishFvg.timeframe}, Size: ${orderFlow.nearestBullishFvg.size.toFixed(2)}, Quality: ${orderFlow.nearestBullishFvg.qualityScore})` : "None"}
+Nearest Bearish FVG: ${orderFlow.nearestBearishFvg ? `Gap from ${orderFlow.nearestBearishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBearishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBearishFvg.timeframe}, Size: ${orderFlow.nearestBearishFvg.size.toFixed(2)}, Quality: ${orderFlow.nearestBearishFvg.qualityScore})` : "None"}
 Nearest Liquidity Pool: ${orderFlow.nearestPool ? `${orderFlow.nearestPool.price.toFixed(2)} (${orderFlow.nearestPool.type}, Priority: ${orderFlow.nearestPool.priority})` : "None"}
 Liquidity Status: Equal Highs: ${orderFlow.liquidity.equalHighs ? orderFlow.liquidity.equalHighs.toFixed(2) : "None"} | Equal Lows: ${orderFlow.liquidity.equalLows ? orderFlow.liquidity.equalLows.toFixed(2) : "None"} | Last Sweep: ${orderFlow.liquidity.lastSweepType}
 Institutional Bias: ${orderFlow.institutionalBias}
 Recommended Interpretation: ${orderFlow.recommendedInterpretation}` : `- Institutional Structure: Institutional Structure Unavailable`}
+
+====================================
+MULTI-ASSET MACRO INTELLIGENCE
+====================================
+${macroIntel !== null ? `Macro Alignment Score: ${macroIntel.macroAlignment} (Bullish: ${macroIntel.bullishPct}%, Bearish: ${macroIntel.bearishPct}%)
+Gold Macro Bias: ${macroIntel.goldMacroBias}
+Correlation Confidence: ${macroIntel.correlationConfidence}
+Macro Conflict Level: ${macroIntel.macroConflictLevel}
+Highest Conviction Drivers: ${macroIntel.highestConvictionDrivers}
+Weakest Drivers: ${macroIntel.weakestDrivers}
+Primary Macro Reason: ${macroIntel.primaryMacroReason}
+Recommended Interpretation: ${macroIntel.recommendedInterpretation}` : `- Macro Status: Macro Intelligence Unavailable`}
 
 =========================================
 SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
@@ -2678,7 +2693,10 @@ function calculateMarketRegimeAndScores(
 /**
  * Detects Fair Value Gaps (FVGs) on a candle set for a timeframe
  */
-function detectFVGs(candles, currentPrice, timeframeName) {
+/**
+ * Detects Fair Value Gaps (FVGs) on a candle set for a timeframe
+ */
+function detectFVGs(candles, currentPrice, timeframeName, structure) {
   const fvgs = [];
   if (candles.length < 3) return fvgs;
 
@@ -2702,6 +2720,16 @@ function detectFVGs(candles, currentPrice, timeframeName) {
         const isInside = currentPrice >= c1.high && currentPrice <= c3.low;
         const distance = currentPrice > c3.low ? currentPrice - c3.low : (currentPrice < c1.high ? c1.high - currentPrice : 0);
 
+        // Calculate FVG Quality Score (0-100)
+        let qualityScore = 20; // base score
+        if (structure && structure.bos !== "No confirmed BOS" && structure.bos.includes("Bullish")) {
+          qualityScore += 25; // BOS confirmation
+        }
+        qualityScore += Math.min(25, Math.round(size * 10)); // displacement factor
+        if (!filled) qualityScore += 30; // unfilled bonus
+        const age = candles.length - 1 - (i - 1);
+        qualityScore += Math.max(0, 20 - Math.floor(age / 2)); // freshness bonus
+
         fvgs.push({
           timeframe: timeframeName,
           type: "Bullish",
@@ -2711,6 +2739,7 @@ function detectFVGs(candles, currentPrice, timeframeName) {
           filled,
           isInside,
           distance,
+          qualityScore: Math.min(100, qualityScore),
           timestamp: c2.timestamp
         });
       }
@@ -2731,6 +2760,16 @@ function detectFVGs(candles, currentPrice, timeframeName) {
         const isInside = currentPrice >= c3.high && currentPrice <= c1.low;
         const distance = currentPrice > c1.low ? currentPrice - c1.low : (currentPrice < c3.high ? c3.high - currentPrice : 0);
 
+        // Calculate FVG Quality Score (0-100)
+        let qualityScore = 20; // base score
+        if (structure && structure.bos !== "No confirmed BOS" && structure.bos.includes("Bearish")) {
+          qualityScore += 25;
+        }
+        qualityScore += Math.min(25, Math.round(size * 10));
+        if (!filled) qualityScore += 30;
+        const age = candles.length - 1 - (i - 1);
+        qualityScore += Math.max(0, 20 - Math.floor(age / 2));
+
         fvgs.push({
           timeframe: timeframeName,
           type: "Bearish",
@@ -2740,6 +2779,7 @@ function detectFVGs(candles, currentPrice, timeframeName) {
           filled,
           isInside,
           distance,
+          qualityScore: Math.min(100, qualityScore),
           timestamp: c2.timestamp
         });
       }
@@ -2752,9 +2792,18 @@ function detectFVGs(candles, currentPrice, timeframeName) {
 /**
  * Detects Order Blocks (OBs) on a candle set for a timeframe
  */
-function detectOrderBlocks(candles, currentPrice, structure) {
+/**
+ * Detects Order Blocks (OBs) on a candle set for a timeframe
+ */
+function detectOrderBlocks(candles, currentPrice, structure, timeframeName) {
   const obs = [];
   if (candles.length < 5) return obs;
+
+  const getTfMultiplier = (tf) => {
+    if (tf === "1h") return 1.5;
+    if (tf === "15m") return 1.2;
+    return 1.0;
+  };
 
   for (let i = 1; i < candles.length - 2; i++) {
     const c = candles[i];
@@ -2806,14 +2855,17 @@ function detectOrderBlocks(candles, currentPrice, structure) {
         }
         strength += Math.max(0, 10 - Math.floor(freshness / 5)); // freshness age bonus
 
+        const finalScore = Math.min(100, Math.round(strength * getTfMultiplier(timeframeName)));
+
         obs.push({
+          timeframe: timeframeName,
           type: "Bullish",
           top: c.high,
           bottom: c.low,
           mitigated,
           broken,
           freshness,
-          strengthScore: Math.min(100, strength),
+          strengthScore: finalScore,
           timestamp: c.timestamp
         });
       }
@@ -2863,14 +2915,17 @@ function detectOrderBlocks(candles, currentPrice, structure) {
         }
         strength += Math.max(0, 10 - Math.floor(freshness / 5));
 
+        const finalScore = Math.min(100, Math.round(strength * getTfMultiplier(timeframeName)));
+
         obs.push({
+          timeframe: timeframeName,
           type: "Bearish",
           top: c.high,
           bottom: c.low,
           mitigated,
           broken,
           freshness,
-          strengthScore: Math.min(100, strength),
+          strengthScore: finalScore,
           timestamp: c.timestamp
         });
       }
@@ -3035,9 +3090,9 @@ function calculateOrderFlowIntelligence(priceHistory, currentPrice, structure) {
   }
 
   // 2. Detect FVGs across timeframes
-  const fvgs5m = detectFVGs(candles5m, currentPrice, "5m");
-  const fvgs15m = detectFVGs(candles15m, currentPrice, "15m");
-  const fvgs1h = detectFVGs(candles1h, currentPrice, "1h");
+  const fvgs5m = detectFVGs(candles5m, currentPrice, "5m", structure);
+  const fvgs15m = detectFVGs(candles15m, currentPrice, "15m", structure);
+  const fvgs1h = detectFVGs(candles1h, currentPrice, "1h", structure);
   
   const allFvgs = [...fvgs5m, ...fvgs15m, ...fvgs1h];
 
@@ -3054,18 +3109,21 @@ function calculateOrderFlowIntelligence(priceHistory, currentPrice, structure) {
     return { ...f, relevance };
   });
 
-  // Nearest Bullish FVG (unfilled, below current price or inside)
+  // Highest Quality Bullish FVG (unfilled, below current price or inside)
   const unfilledBullish = rankedFvgs.filter(f => f.type === "Bullish" && !f.filled && f.bottom < currentPrice);
-  unfilledBullish.sort((a, b) => b.relevance - a.relevance);
+  unfilledBullish.sort((a, b) => b.qualityScore - a.qualityScore || b.relevance - a.relevance);
   const nearestBullishFvg = unfilledBullish[0] || null;
 
-  // Nearest Bearish FVG (unfilled, above current price or inside)
+  // Highest Quality Bearish FVG (unfilled, above current price or inside)
   const unfilledBearish = rankedFvgs.filter(f => f.type === "Bearish" && !f.filled && f.top > currentPrice);
-  unfilledBearish.sort((a, b) => b.relevance - a.relevance);
+  unfilledBearish.sort((a, b) => b.qualityScore - a.qualityScore || b.relevance - a.relevance);
   const nearestBearishFvg = unfilledBearish[0] || null;
 
-  // 3. Order Blocks (use 15m timeframe for OB indicators as a stable baseline)
-  const obs = detectOrderBlocks(candles15m, currentPrice, structure);
+  // 3. Order Blocks (merged across 5m, 15m, 1h)
+  const obs5m = detectOrderBlocks(candles5m, currentPrice, structure, "5m");
+  const obs15m = detectOrderBlocks(candles15m, currentPrice, structure, "15m");
+  const obs1h = detectOrderBlocks(candles1h, currentPrice, structure, "1h");
+  const obs = [...obs5m, ...obs15m, ...obs1h];
   
   // Nearest Bullish OB (active/unbroken, below or testing current price)
   const activeBullishObs = obs.filter(o => o.type === "Bullish" && !o.broken && o.bottom <= currentPrice);
@@ -3098,8 +3156,8 @@ function calculateOrderFlowIntelligence(priceHistory, currentPrice, structure) {
 
   if (nearestBullishOB) bullishScore += 2 * (nearestBullishOB.strengthScore / 100);
   if (nearestBearishOB) bearishScore += 2 * (nearestBearishOB.strengthScore / 100);
-  if (nearestBullishFvg) bullishScore += 1 * (nearestBullishFvg.relevance / 100);
-  if (nearestBearishFvg) bearishScore += 1 * (nearestBearishFvg.relevance / 100);
+  if (nearestBullishFvg) bullishScore += 1 * (nearestBullishFvg.qualityScore / 100);
+  if (nearestBearishFvg) bearishScore += 1 * (nearestBearishFvg.qualityScore / 100);
 
   if (liquidity.lastSweepType.includes("Bullish Sweep")) bullishScore += 1.5;
   if (liquidity.lastSweepType.includes("Bearish Sweep")) bearishScore += 1.5;
@@ -3129,4 +3187,294 @@ function calculateOrderFlowIntelligence(priceHistory, currentPrice, structure) {
     institutionalBias,
     recommendedInterpretation
   };
+}
+
+/**
+ * Calculates Multi-Asset Macro Intelligence (Phase 1.8)
+ */
+async function calculateMacroIntelligence(priceHistory, currentPrice) {
+  if (!priceHistory || priceHistory.length === 0) {
+    return null;
+  }
+
+  // 1. Build Gold 15m candles
+  const candlesGold = buildCandles(priceHistory, 15);
+
+  const assets = [
+    { name: "DXY", queryKey: "DXY", correlation: "negative", tier: 1, weight: 3.0 },
+    { name: "US10Y", queryKey: "US10Y", correlation: "negative", tier: 1, weight: 3.0 },
+    { name: "VIX", queryKey: "^VIX", correlation: "positive", tier: 2, weight: 2.0 },
+    { name: "Silver", queryKey: "XAGUSD", correlation: "positive", tier: 2, weight: 2.0 },
+    { name: "EURUSD", queryKey: "EURUSD", correlation: "positive", tier: 3, weight: 1.0 },
+    { name: "USDJPY", queryKey: "USDJPY", correlation: "negative", tier: 3, weight: 1.0 },
+    { name: "S&P 500", queryKey: "SPX500", correlation: "neutral", tier: 3, weight: 1.0 },
+    { name: "BTCUSD", queryKey: "BTCUSD", correlation: "neutral", tier: 3, weight: 1.0 }
+  ];
+
+  const assetResults = {};
+
+  for (const asset of assets) {
+    let priceInfo = null;
+    try {
+      priceInfo = await getCurrentPrice(asset.queryKey);
+    } catch (e) {
+      // ignore
+    }
+
+    const hist = getPriceHistory(asset.queryKey);
+    if (!priceInfo && hist.length === 0) {
+      assetResults[asset.name] = { status: "Unavailable" };
+      continue;
+    }
+
+    const currentAssetPrice = priceInfo ? priceInfo.price : (hist.length > 0 ? hist[hist.length - 1].price : null);
+
+    let trend = "Neutral";
+    let momentum = "Neutral";
+    let direction = "SIDEWAYS";
+    let r = null;
+    let correlationText = "Correlation Unavailable";
+    let confidence = "Correlation Unavailable";
+    let influence = "Neutral";
+
+    if (hist.length >= 3) {
+      const prices = hist.map(h => h.price);
+      const first = prices[0];
+      const last = prices[prices.length - 1];
+      const change = last - first;
+
+      direction = change > 0.0001 ? "UP" : (change < -0.0001 ? "DOWN" : "SIDEWAYS");
+      trend = change > 0.0001 ? "Bullish" : (change < -0.0001 ? "Bearish" : "Neutral");
+
+      const half = Math.floor(prices.length / 2);
+      const recentPrices = prices.slice(half);
+      const recentChange = recentPrices[recentPrices.length - 1] - recentPrices[0];
+      momentum = recentChange > 0.0001 ? "Bullish" : (recentChange < -0.0001 ? "Bearish" : "Neutral");
+
+      // Calculate Pearson correlation dynamically using 15m candles
+      const candlesAsset = buildCandles(hist, 15);
+      r = alignCandlesAndCalculateCorrelation(candlesGold, candlesAsset);
+
+      if (r !== null) {
+        const absR = Math.abs(r);
+        const signText = r >= 0 ? "Positive" : "Negative";
+        const strengthText = absR >= 0.7 ? "Strong" : (absR >= 0.4 ? "Moderate" : "Weak");
+        correlationText = `${strengthText} ${signText} (r: ${r.toFixed(2)})`;
+
+        // Confidence
+        const overlapCount = candlesGold.filter(cg => candlesAsset.some(ca => ca.timestamp === cg.timestamp)).length;
+        if (overlapCount >= 15) confidence = "High";
+        else if (overlapCount >= 10) confidence = "Medium";
+        else if (overlapCount >= 5) confidence = "Low";
+        else confidence = "Correlation Unavailable";
+
+        // Determine influence dynamically based on correlation and price direction
+        if (absR >= 0.3 && direction !== "SIDEWAYS") {
+          if (r > 0) {
+            influence = direction === "UP" ? "Bullish" : "Bearish";
+          } else {
+            influence = direction === "UP" ? "Bearish" : "Bullish";
+          }
+        }
+      }
+    } else if (currentAssetPrice !== null) {
+      trend = "Neutral/Mixed";
+      momentum = "Neutral/Mixed";
+      direction = "SIDEWAYS";
+    }
+
+    assetResults[asset.name] = {
+      status: "Available",
+      price: currentAssetPrice,
+      trend,
+      momentum,
+      direction,
+      r,
+      correlationText,
+      confidence,
+      influence,
+      weight: asset.weight
+    };
+  }
+
+  // 2. Weighted macro alignment calculations
+  let totalBullishWeight = 0;
+  let totalBearishWeight = 0;
+  let totalTrackedWeight = 0;
+
+  Object.values(assetResults).forEach(asset => {
+    if (asset.status === "Available") {
+      totalTrackedWeight += asset.weight;
+      if (asset.influence === "Bullish") {
+        totalBullishWeight += asset.weight;
+      } else if (asset.influence === "Bearish") {
+        totalBearishWeight += asset.weight;
+      }
+    }
+  });
+
+  let macroAlignment = "Mixed";
+  let bullishPct = 0;
+  let bearishPct = 0;
+
+  if (totalTrackedWeight > 0) {
+    bullishPct = Math.round((totalBullishWeight / totalTrackedWeight) * 100);
+    bearishPct = Math.round((totalBearishWeight / totalTrackedWeight) * 100);
+
+    if (bullishPct >= 90 && totalBullishWeight >= 5.0) {
+      macroAlignment = "Perfect Bullish Alignment";
+    } else if (bullishPct >= 70) {
+      macroAlignment = "Strong Bullish Alignment";
+    } else if (bearishPct >= 90 && totalBearishWeight >= 5.0) {
+      macroAlignment = "Perfect Bearish Alignment";
+    } else if (bearishPct >= 70) {
+      macroAlignment = "Strong Bearish Alignment";
+    }
+  }
+
+  const goldMacroBias = bullishPct > bearishPct ? "Bullish" : (bearishPct > bullishPct ? "Bearish" : "Neutral");
+
+  // 3. Conflict Detection
+  let conflictPoints = 0;
+  
+  // DXY vs US10Y (Tier 1 drivers) opposing
+  if (assetResults["DXY"]?.status === "Available" && assetResults["US10Y"]?.status === "Available") {
+    if (assetResults["DXY"].influence !== "Neutral" && assetResults["US10Y"].influence !== "Neutral" &&
+        assetResults["DXY"].influence !== assetResults["US10Y"].influence) {
+      conflictPoints += 40;
+    }
+  }
+
+  // DXY vs Silver opposing
+  if (assetResults["DXY"]?.status === "Available" && assetResults["Silver"]?.status === "Available") {
+    if (assetResults["DXY"].influence !== "Neutral" && assetResults["Silver"].influence !== "Neutral" &&
+        assetResults["DXY"].influence !== assetResults["Silver"].influence) {
+      conflictPoints += 40;
+    }
+  }
+
+  // VIX vs S&P 500: VIX bullish (risk off) but S&P 500 also bullish/up (risk on)
+  if (assetResults["VIX"]?.status === "Available" && assetResults["S&P 500"]?.status === "Available") {
+    if (assetResults["VIX"].influence !== "Neutral" && assetResults["S&P 500"].influence !== "Neutral" &&
+        assetResults["VIX"].influence === assetResults["S&P 500"].influence) {
+      conflictPoints += 20;
+    }
+  }
+
+  const macroConflictLevel = conflictPoints >= 60 ? "High" : (conflictPoints >= 30 ? "Moderate" : "Low");
+
+  // 4. Drivers ranking
+  const convictionDrivers = [];
+  const weakestDrivers = [];
+
+  Object.keys(assetResults).forEach(name => {
+    const asset = assetResults[name];
+    if (asset.status === "Available") {
+      const absR = asset.r !== null ? Math.abs(asset.r) : 0;
+      if (asset.r !== null && absR >= 0.5) {
+        convictionDrivers.push(`${name} (r: ${asset.r.toFixed(2)}, ${asset.confidence} Conf)`);
+      } else {
+        weakestDrivers.push(`${name} (r: ${asset.r !== null ? asset.r.toFixed(2) : "N/A"}, ${asset.confidence})`);
+      }
+    } else {
+      weakestDrivers.push(`${name} (Unavailable)`);
+    }
+  });
+
+  const highestConvictionDrivers = convictionDrivers.length > 0 ? convictionDrivers.join(", ") : "None";
+  const finalWeakestDrivers = weakestDrivers.join(", ");
+
+  // 5. Correlation confidence based on driver confidence
+  let overallConf = "Low";
+  let highConfCount = 0;
+  Object.values(assetResults).forEach(asset => {
+    if (asset.status === "Available" && asset.influence === goldMacroBias && asset.confidence === "High") {
+      highConfCount++;
+    }
+  });
+  if (highConfCount >= 2) overallConf = "High";
+  else if (highConfCount >= 1) overallConf = "Medium";
+  else if (goldMacroBias !== "Neutral") overallConf = "Low";
+  else overallConf = "N/A (Bias Neutral)";
+
+  // Primary Macro Reason dynamic text
+  let primaryMacroReason = "No significant macro bias identified.";
+  if (goldMacroBias === "Bullish") {
+    primaryMacroReason = `Macro alignment is Bullish (${bullishPct}%) driven by supportive moves in ${highestConvictionDrivers !== "None" ? highestConvictionDrivers.split(",")[0] : "uncorrelated assets"}.`;
+  } else if (goldMacroBias === "Bearish") {
+    primaryMacroReason = `Macro alignment is Bearish (${bearishPct}%) driven by pressure in ${highestConvictionDrivers !== "None" ? highestConvictionDrivers.split(",")[0] : "uncorrelated assets"}.`;
+  }
+
+  // Recommended Interpretation
+  let recommendedInterpretation = "Wait for macro alignment.";
+  if (goldMacroBias === "Bullish" && macroConflictLevel !== "High") {
+    recommendedInterpretation = "Macro environment is highly supportive of longs. Focus on buying retracements near key support levels.";
+  } else if (goldMacroBias === "Bearish" && macroConflictLevel !== "High") {
+    recommendedInterpretation = "Macro environment is highly supportive of shorts. Focus on selling pullbacks near key resistance levels.";
+  } else if (macroConflictLevel === "High") {
+    recommendedInterpretation = "High macro conflicts present. Exercise extreme caution; consider standing aside or lowering risk parameters.";
+  }
+
+  return {
+    assetResults,
+    macroAlignment,
+    bullishPct,
+    bearishPct,
+    goldMacroBias,
+    correlationConfidence: overallConf,
+    macroConflictLevel,
+    highestConvictionDrivers,
+    weakestDrivers: finalWeakestDrivers,
+    primaryMacroReason,
+    recommendedInterpretation
+  };
+}
+
+/**
+ * Aligns two candle sets and calculates Pearson correlation
+ */
+function alignCandlesAndCalculateCorrelation(candlesXau, candlesAsset) {
+  const mapAsset = new Map();
+  candlesAsset.forEach(c => {
+    mapAsset.set(c.timestamp, c.close);
+  });
+
+  const alignedX = [];
+  const alignedY = [];
+
+  candlesXau.forEach(c => {
+    if (mapAsset.has(c.timestamp)) {
+      alignedX.push(c.close);
+      alignedY.push(mapAsset.get(c.timestamp));
+    }
+  });
+
+  if (alignedX.length < 5) return null;
+  return calculateCorrelation(alignedX, alignedY);
+}
+
+/**
+ * Calculates Pearson Correlation Coefficient
+ */
+function calculateCorrelation(x, y) {
+  const n = x.length;
+  if (n < 5 || n !== y.length) return null;
+
+  const meanX = x.reduce((a, b) => a + b, 0) / n;
+  const meanY = y.reduce((a, b) => a + b, 0) / n;
+
+  let num = 0;
+  let denX = 0;
+  let denY = 0;
+
+  for (let i = 0; i < n; i++) {
+    const diffX = x[i] - meanX;
+    const diffY = y[i] - meanY;
+    num += diffX * diffY;
+    denX += diffX * diffX;
+    denY += diffY * diffY;
+  }
+
+  if (denX === 0 || denY === 0) return 0;
+  return num / Math.sqrt(denX * denY);
 }
