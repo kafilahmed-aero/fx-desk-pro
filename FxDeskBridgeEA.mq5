@@ -85,28 +85,82 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
    Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC - bytesAvailable: ", bytesAvailable, ", requestedLength: ", bytesAvailable, ", SocketRead return: ", res, ", GetLastError(): ", err);
    
    if(checkConnected && res > 0) {
+      Print("MT5 Bridge: SOCKET_READ_DATA DIAGNOSTICS");
+      Print("Total bytes read: ", res);
+      
       string hexStr = "";
       for(int i = 0; i < res; i++) {
+         Print("index: ", i, ", ArraySize(): ", ArraySize(buf));
+         if(i >= ArraySize(buf)) {
+            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
+            break;
+         }
          hexStr += StringFormat("0x%02X ", buf[i]);
       }
-      string asciiStr = CharArrayToString(buf, 0, res);
+      Print("Complete hex dump: ", hexStr);
       
-      Print("========================================");
-      Print("SOCKET_READ_DATA DIAGNOSTICS");
-      Print("Total Bytes Received: ", res);
-      Print("Hex Dump: ", hexStr);
-      Print("ASCII Dump: ", asciiStr);
-      Print("========================================");
-
+      string asciiStr = CharArrayToString(buf, 0, res);
+      Print("Complete ASCII dump:\n", asciiStr);
+      
       int currentOffset = 0;
-      int frameIndex = 1;
+      int frameCount = 0;
       int bufSize = ArraySize(buf);
       
       while(currentOffset < bufSize) {
-         Print("Frame #", frameIndex);
+         Print("index: ", currentOffset, ", ArraySize(): ", bufSize);
+         if(currentOffset >= bufSize) {
+            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
+            break;
+         }
          
          if(currentOffset + 2 > bufSize) {
-            Print("BUFFER OVERFLOW WOULD OCCUR - Frame header incomplete at offset ", currentOffset);
+            break;
+         }
+         
+         Print("index: ", currentOffset + 1, ", ArraySize(): ", bufSize);
+         if(currentOffset + 1 >= bufSize) {
+            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
+            break;
+         }
+         
+         int payloadLen = buf[currentOffset + 1] & 0x7F;
+         int offset = currentOffset + 2;
+         if(payloadLen == 126) {
+            offset = currentOffset + 4;
+         } else if(payloadLen == 127) {
+            offset = currentOffset + 10;
+         }
+         
+         bool masked = (buf[currentOffset + 1] & 0x80) != 0;
+         if(masked) {
+            offset += 4;
+         }
+         
+         currentOffset = offset + payloadLen;
+         frameCount++;
+      }
+      Print("Number of WebSocket frames detected inside the buffer: ", frameCount);
+      
+      currentOffset = 0;
+      int frameIndex = 1;
+      while(currentOffset < bufSize) {
+         Print("Frame #", frameIndex);
+         Print("Start Offset: ", currentOffset);
+         
+         Print("index: ", currentOffset, ", ArraySize(): ", bufSize);
+         if(currentOffset >= bufSize) {
+            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
+            break;
+         }
+         
+         if(currentOffset + 2 > bufSize) {
+            Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
+            break;
+         }
+         
+         Print("index: ", currentOffset + 1, ", ArraySize(): ", bufSize);
+         if(currentOffset + 1 >= bufSize) {
+            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
             break;
          }
          
@@ -120,16 +174,19 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
          
          if(payloadLength == 126) {
             if(currentOffset + 4 > bufSize) {
-               Print("BUFFER OVERFLOW WOULD OCCUR - Payload 126 header incomplete at offset ", currentOffset);
+               Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
                break;
             }
+            Print("index: ", currentOffset + 2, ", ArraySize(): ", bufSize);
+            Print("index: ", currentOffset + 3, ", ArraySize(): ", bufSize);
             payloadLength = (buf[currentOffset + 2] << 8) | buf[currentOffset + 3];
             data_offset = currentOffset + 4;
          } else if(payloadLength == 127) {
             if(currentOffset + 10 > bufSize) {
-               Print("BUFFER OVERFLOW WOULD OCCUR - Payload 127 header incomplete at offset ", currentOffset);
+               Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
                break;
             }
+            Print("index: ", currentOffset + 9, ", ArraySize(): ", bufSize);
             payloadLength = (int)buf[currentOffset + 9];
             data_offset = currentOffset + 10;
          }
@@ -137,34 +194,43 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
          bool masked = (header2 & 0x80) != 0;
          if(masked) {
             if(data_offset + 4 > bufSize) {
-               Print("BUFFER OVERFLOW WOULD OCCUR - Masking key incomplete at offset ", data_offset);
+               Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
                break;
             }
             data_offset += 4;
          }
          
-         Print("currentOffset: ", currentOffset);
-         Print("payloadLength: ", payloadLength);
-         Print("bufferSize: ", bufSize);
-         Print("FIN bit: ", fin);
-         Print("opcode: ", opcode);
-         Print("frame offset: ", data_offset);
+         Print("FIN: ", fin);
+         Print("Opcode: ", opcode);
+         Print("Payload Length: ", payloadLength);
          
          if(data_offset + payloadLength > bufSize) {
-            Print("BUFFER OVERFLOW WOULD OCCUR");
-         } else {
-            string frameText = "";
-            uchar frameBuf[];
-            ArrayResize(frameBuf, payloadLength);
-            for(int i = 0; i < payloadLength; i++) {
-               frameBuf[i] = buf[data_offset + i];
-            }
-            frameText = CharArrayToString(frameBuf, 0, payloadLength);
-            Print("Decoded Frame text: ", frameText);
+            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
+            Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
+            break;
          }
          
+         string frameText = "";
+         uchar frameBuf[];
+         ArrayResize(frameBuf, payloadLength);
+         for(int i = 0; i < payloadLength; i++) {
+            Print("index: ", data_offset + i, ", ArraySize(): ", bufSize);
+            frameBuf[i] = buf[data_offset + i];
+         }
+         frameText = CharArrayToString(frameBuf, 0, payloadLength);
+         Print("Payload JSON: ", frameText);
+         
          currentOffset = data_offset + payloadLength;
+         
+         if(frameIndex == 1 && currentOffset < bufSize) {
+            Print("SECOND FRAME DETECTED");
+         }
+         
          frameIndex++;
+      }
+      
+      if(currentOffset < bufSize) {
+         Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
       }
       Print("========================================");
    }
