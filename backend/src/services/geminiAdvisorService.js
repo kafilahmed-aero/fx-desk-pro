@@ -9,7 +9,7 @@ import { saveNewAiRecommendationOutcome } from "./signalOutcomeStore.js";
 import { getMultiTimeframeContext, buildCandles } from "./multiTimeframeIntelligenceService.js";
 import { logger } from "../utils/logger.js";
 import { captureIntelligenceSnapshot } from "./recommendationAnalyticsService.js";
-import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "./tradingSessionService.js";
+import { hasEmergencyMacroEvent } from "./tradingSessionService.js";
 
 
 // Persistent module-level state for market regime stability (Phase 1.6)

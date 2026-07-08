@@ -276,7 +276,7 @@ async function run() {
     });
   }
   const startT = performance.now();
-  const perfReport = await getDashboardAndAnalytics();
+  await getDashboardAndAnalytics();
   const durationMs = performance.now() - startT;
 
   console.log(`Computed load dashboard over ${localSnapshots.size} items in ${durationMs.toFixed(3)}ms`);
@@ -287,18 +287,6 @@ async function run() {
   }
 
   console.log("\n[Test 6] Testing Express Controller Route Integration...");
-  // Mock request and response to verify getAiAnalyticsController integration
-  const mockReq = {};
-  const mockRes = {
-    status: function(code) {
-      this.statusCode = code;
-      return this;
-    },
-    json: function(data) {
-      this.payload = data;
-      return this;
-    }
-  };
 
   await getAiAnalytics().then(analytics => {
     if (!analytics.performanceDashboard || analytics.performanceDashboard.overallWinRate === undefined) {
