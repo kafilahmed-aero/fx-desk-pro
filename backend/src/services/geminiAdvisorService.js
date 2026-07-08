@@ -164,7 +164,7 @@ function calculateCrossMarketMetrics(pair, currentPrice, priceHistory) {
 /**
  * Calculates true swing pivot structures and confirms BOS/CHoCH conditions.
  */
-function calculateMarketStructure(priceHistory, currentPrice) {
+function calculateMarketStructure(priceHistory, currentPrice, atr) {
   if (!priceHistory || priceHistory.length < 5 || currentPrice === null) {
     return null;
   }
@@ -211,16 +211,21 @@ function calculateMarketStructure(priceHistory, currentPrice) {
     currentStructure = "Transition";
   }
 
+  // Refined BOS/CHoCH with ATR threshold and candle close confirmation
+  const atrVal = typeof atr === "number" ? atr : 2.0;
+  const minBreakout = Math.max(0.10 * atrVal, 0.20);
+  const lastClose = points[points.length - 1];
+
   let bos = "No confirmed BOS";
   let choch = "No CHoCH";
 
-  if (currentPrice > latestHigh) {
+  if (lastClose > latestHigh + minBreakout) {
     if (currentStructure === "Bullish Structure") {
       bos = "Bullish Break of Structure (BOS)";
     } else if (currentStructure === "Bearish Structure") {
       choch = "Bullish CHoCH";
     }
-  } else if (currentPrice < latestLow) {
+  } else if (lastClose < latestLow - minBreakout) {
     if (currentStructure === "Bearish Structure") {
       bos = "Bearish Break of Structure (BOS)";
     } else if (currentStructure === "Bullish Structure") {
@@ -470,6 +475,98 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
 
       consensusStrength = Math.round((agreementFactor * 0.5) + (freshnessFactor * 0.25) + (countFactor * 0.25));
     }
+
+    // ==================================================
+    // TELEGRAM INTELLIGENCE CALCULATIONS (Phase 1.4)
+    // ==================================================
+    const buyChannelsCount = new Set(signals.filter(s => s.action === "BUY").map(s => s.channel || s.channelName || "Unknown")).size;
+    const sellChannelsCount = new Set(signals.filter(s => s.action === "SELL").map(s => s.channel || s.channelName || "Unknown")).size;
+    const uniqueChannelsCount = new Set(signals.map(s => s.channel || s.channelName || "Unknown")).size;
+
+    const signalAgesMin = signalAgesMs.map(a => a / 60000);
+    const sortedAges = [...signalAgesMin].sort((a, b) => a - b);
+    let medianSignalAgeMin = 0;
+    if (sortedAges.length > 0) {
+      const mid = Math.floor(sortedAges.length / 2);
+      medianSignalAgeMin = sortedAges.length % 2 !== 0 ? sortedAges[mid] : (sortedAges[mid - 1] + sortedAges[mid]) / 2;
+    }
+
+    const signalsLastHour = signals.filter(s => {
+      const age = (now - new Date(s.timestamp || s.createdAt || now)) / 60000;
+      return age >= 0 && age <= 60;
+    });
+    const signalArrivalRate = Number((signalsLastHour.length / 60).toFixed(3));
+
+    const recentSigs = signals.filter(s => {
+      const age = (now - new Date(s.timestamp || s.createdAt || now)) / 60000;
+      return age >= 0 && age <= 15;
+    });
+    const olderSigs = signals.filter(s => {
+      const age = (now - new Date(s.timestamp || s.createdAt || now)) / 60000;
+      return age > 15 && age <= 60;
+    });
+
+    const getConsensus = (sigs) => {
+      if (sigs.length === 0) return 0;
+      const buys = sigs.filter(s => s.action === "BUY").length;
+      const sells = sigs.filter(s => s.action === "SELL").length;
+      return Math.abs(buys - sells) / sigs.length;
+    };
+
+    const recentCons = getConsensus(recentSigs);
+    const olderCons = getConsensus(olderSigs);
+
+    let consensusAcceleration = "Stable";
+    if (recentCons > olderCons) {
+      consensusAcceleration = "Increasing";
+    } else if (recentCons < olderCons) {
+      consensusAcceleration = "Decreasing";
+    }
+
+    const getTightness = (clusters) => {
+      if (!clusters || clusters.length === 0) return "Unavailable";
+      const ranges = clusters.map(c => c.max - c.min);
+      const avgRange = ranges.reduce((a, b) => a + b, 0) / ranges.length;
+      if (avgRange < 1.5) return "Very Tight";
+      if (avgRange < 4.0) return "Moderate";
+      return "Loose";
+    };
+    const entryClusterTightness = getTightness(entryClusters);
+    const slClusterTightness = getTightness(slClusters);
+    const tpClusterTightness = getTightness(tpClusters);
+
+    const dominantCount = Math.max(buyChannelsCount, sellChannelsCount);
+    const channelAgreementPct = uniqueChannelsCount > 0 ? Math.round((dominantCount / uniqueChannelsCount) * 100) : 100;
+    const channelDisagreementPct = 100 - channelAgreementPct;
+
+    const conflictingSignalsCount = Math.min(buyCount, sellCount);
+
+    let duplicateSignalsCount = 0;
+    const seenSignals = new Set();
+    signals.forEach(s => {
+      const key = `${s.action}-${s.entry}-${s.stopLoss}-${(s.targets || []).map(t => t.target).join(",")}-${s.channel || s.channelName}`;
+      if (seenSignals.has(key)) {
+        duplicateSignalsCount++;
+      } else {
+        seenSignals.add(key);
+      }
+    });
+
+    let telegramSignalQuality = "Moderate";
+    if (buyPercentage > 80 || sellPercentage > 80) {
+      telegramSignalQuality = averageSignalAgeMin < 15 ? "High" : "Moderate";
+    } else if (buyPercentage > 40 && buyPercentage < 60) {
+      telegramSignalQuality = "Low";
+    }
+
+    let telegramConflictLevel = "Low";
+    if (conflictingSignalsCount > 3) telegramConflictLevel = "High";
+    else if (conflictingSignalsCount > 0) telegramConflictLevel = "Medium";
+
+    let overallTelegramQuality = "Fair";
+    if (telegramSignalQuality === "High" && telegramConflictLevel === "Low") overallTelegramQuality = "Excellent";
+    else if (telegramSignalQuality === "High" || telegramConflictLevel === "Low") overallTelegramQuality = "Good";
+    else if (telegramConflictLevel === "High") overallTelegramQuality = "Poor";
 
     // Signal Quality Summary (High, Medium, Low)
     let signalQualitySummary = "Low";
@@ -975,7 +1072,7 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     // ==================================================
     // MARKET STRUCTURE CALCULATIONS (Phase 1.3)
     // ==================================================
-    const structure = calculateMarketStructure(priceHistory, currentPrice);
+    const structure = calculateMarketStructure(priceHistory, currentPrice, atr);
 
     // Support and Resistance: recent swing highs, recent swing lows, and existing price clusters.
     const levels = [];
@@ -1623,6 +1720,28 @@ ${formattedNews}
 SECTION 9: RAW ACTIVE SIGNAL PARAMETERS
 =========================================
 ${formattedSignals || "No active signals."}
+
+=========================================
+SECTION 9.5: TELEGRAM INTELLIGENCE
+=========================================
+- BUY Channels: ${buyChannelsCount}
+- SELL Channels: ${sellChannelsCount}
+- Unique Channels Count: ${uniqueChannelsCount}
+- Consensus: ${channelAgreementPct}%
+- Consensus Acceleration: ${consensusAcceleration}
+- Signal Quality: ${telegramSignalQuality}
+- Entry Cluster: ${entryClusterTightness}
+- SL Cluster: ${slClusterTightness}
+- TP Cluster: ${tpClusterTightness}
+- Conflict Level: ${telegramConflictLevel}
+- Duplicate Signals: ${duplicateSignalsCount}
+- Conflicting Signals: ${conflictingSignalsCount}
+- Average Signal Age: ${averageSignalAgeMin.toFixed(1)} mins
+- Median Signal Age: ${medianSignalAgeMin.toFixed(1)} mins
+- Newest Signal Age: ${newestSignalAgeMin.toFixed(1)} mins
+- Oldest Signal Age: ${oldestSignalAgeMin.toFixed(1)} mins
+- Signal Arrival Rate: ${signalArrivalRate} signals/min over the last hour
+- Overall Telegram Quality: ${overallTelegramQuality}
 
 =========================================
 SECTION 10: TRADING DECISION OUTPUT
