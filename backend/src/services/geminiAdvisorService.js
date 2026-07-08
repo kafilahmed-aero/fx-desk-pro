@@ -1071,6 +1071,15 @@ CRITICAL CONFLUENCE & TRADE FILTERING RULES:
 - Higher Overall Confluence Scores should increase your output confidence rating.
 - Lower Overall Confluence Scores should reduce your output confidence rating.
 
+CRITICAL AUTO-EXECUTION & DECISION QUALITY RULES:
+- Your recommendations are automatically executed on a MetaTrader 5 DEMO account without manual confirmation.
+- Every BUY or SELL recommendation should represent a trade you would personally be comfortable executing based on the available evidence.
+- Produce BUY or SELL only when the overall market evidence, multi-timeframe structure, Telegram consensus, macro context, and risk-reward profile collectively support the trade.
+- If the evidence is mixed, conflicting, or insufficient, return HOLD rather than forcing a trade.
+- Prioritize recommendation quality, consistency, and disciplined risk management over recommendation frequency.
+- Do not avoid good opportunities simply because execution is automatic. High-confidence, high-quality setups should still be recommended.
+- Explain clearly in the reasoning why a BUY, SELL, or HOLD decision was reached.
+
 CURRENT GOLD PRICE: ${currentPrice !== null ? currentPrice : "Unavailable"}
 
 =========================================
