@@ -428,6 +428,7 @@ void ConnectToBridge() {
 
 //--- Send periodic account metrics
 void SendAccountSummary() {
+   Print("TRACE: Enter SendAccountSummary");
    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
    double margin = AccountInfoDouble(ACCOUNT_MARGIN);
@@ -450,10 +451,12 @@ void SendAccountSummary() {
                     "\"profit\":" + DoubleToString(profit, 2) + "," +
                     "\"leverage\":" + IntegerToString(leverage) + "}";
    SendEvent(payload);
+   Print("TRACE: Leaving SendAccountSummary");
 }
 
 //--- Send position list to sync reconciliation
 void SendPositionList() {
+   Print("TRACE: Enter SendPositionList");
    string payload = "{\"event\":\"POSITION_LIST\",\"positions\":[";
    int total = PositionsTotal();
    int matched_count = 0;
@@ -476,6 +479,7 @@ void SendPositionList() {
    payload += "]}";
    SendEvent(payload);
    Print("MT5 Bridge: Send active positions count: ", matched_count);
+   Print("TRACE: Leaving SendPositionList");
 }
 
 //--- Send execution failures with descriptions and broker error return codes
@@ -510,6 +514,7 @@ string GetRetcodeDescription(uint retcode) {
 
 //--- Execute Market Order immediately
 void ExecuteOpenOrder(string json) {
+   Print("TRACE: Enter ExecuteOpenOrder");
    string recId = GetJsonValue(json, "recommendationId");
    string symbol = GetJsonValue(json, "symbol");
    string direction = GetJsonValue(json, "direction");
@@ -528,6 +533,7 @@ void ExecuteOpenOrder(string json) {
       if(g_pos_info.SelectByIndex(i)) {
          if(g_pos_info.Magic() == magic || g_pos_info.Comment() == "FX Desk: " + recId) {
             Print("MT5 Bridge: Duplicate order execution prevented for ", recId, " (Magic: ", magic, "). Already active.");
+            Print("TRACE: Leaving ExecuteOpenOrder");
             return;
          }
       }
@@ -575,10 +581,12 @@ void ExecuteOpenOrder(string json) {
       SendTradeFailed(recId, reason, ret);
       Print("MT5 Bridge: Order opening dispatch failed: ", reason);
    }
+   Print("TRACE: Leaving ExecuteOpenOrder");
 }
 
 //--- Locate and close position
 void ExecuteCloseOrder(string json) {
+   Print("TRACE: Enter ExecuteCloseOrder");
    string recId = GetJsonValue(json, "recommendationId");
    ulong magic = StringToInteger(GetJsonValue(json, "magicNumber"));
    ulong ticket = StringToInteger(GetJsonValue(json, "ticket"));
@@ -623,10 +631,12 @@ void ExecuteCloseOrder(string json) {
       Print("MT5 Bridge: Failed to close order ", recId, " (retcode: ", ret, ")");
       SendTradeFailed(recId, "Failed to Close Position", ret);
    }
+   Print("TRACE: Leaving ExecuteCloseOrder");
 }
 
 //--- Modify Stop Loss and Take Profit levels
 void ExecuteModifySLTP(string json) {
+   Print("TRACE: Enter ExecuteModifySLTP");
    string recId = GetJsonValue(json, "recommendationId");
    ulong ticket = StringToInteger(GetJsonValue(json, "ticket"));
    double sl = StringToDouble(GetJsonValue(json, "sl"));
@@ -652,38 +662,79 @@ void ExecuteModifySLTP(string json) {
       Print("MT5 Bridge: Failed to modify ticket ", ticket, " (retcode: ", ret, ")");
       SendTradeFailed(recId, "Failed to Modify stops", ret);
    }
+   Print("TRACE: Leaving ExecuteModifySLTP");
 }
 
 //--- Inbound JSON Dispatcher
 void ProcessInboundMessage(string json) {
-   string action = GetJsonValue(json, "action");
-   if(action == "") return;
+   Print("TRACE 1: Enter ProcessInboundMessage");
+   Print("TRACE 2: JSON received:\n", json);
    
-   if(action == "PING") {
+   string action = GetJsonValue(json, "action");
+   string eventVal = GetJsonValue(json, "event");
+   Print("TRACE 3: Event parsed: action='", action, "', event='", eventVal, "'");
+   
+   if(action == "" && eventVal == "") {
+      Print("TRACE 7: Leaving ProcessInboundMessage (no action or event)");
+      return;
+   }
+   
+   if(action == "PING" || eventVal == "PING") {
+      Print("TRACE 4: Dispatching PING handler");
       string payload = "{\"event\":\"PONG\"}";
       SendEvent(payload);
+      Print("TRACE 5: PING handler finished");
+      Print("TRACE 6: Dispatch finished");
+      Print("TRACE 7: Leaving ProcessInboundMessage");
       return;
    }
    
-   if(action == "OPEN_ORDER") {
+   if(action == "OPEN_ORDER" || eventVal == "OPEN_ORDER") {
+      Print("TRACE 4: Dispatching OPEN_ORDER handler");
       ExecuteOpenOrder(json);
+      Print("TRACE 5: OPEN_ORDER handler finished");
+      Print("TRACE 6: Dispatch finished");
+      Print("TRACE 7: Leaving ProcessInboundMessage");
       return;
    }
    
-   if(action == "CLOSE_ORDER") {
+   if(action == "CLOSE_ORDER" || eventVal == "CLOSE_ORDER") {
+      Print("TRACE 4: Dispatching CLOSE_ORDER handler");
       ExecuteCloseOrder(json);
+      Print("TRACE 5: CLOSE_ORDER handler finished");
+      Print("TRACE 6: Dispatch finished");
+      Print("TRACE 7: Leaving ProcessInboundMessage");
       return;
    }
    
-   if(action == "MODIFY_SLTP") {
+   if(action == "MODIFY_SLTP" || eventVal == "MODIFY_SLTP") {
+      Print("TRACE 4: Dispatching MODIFY_SLTP handler");
       ExecuteModifySLTP(json);
+      Print("TRACE 5: MODIFY_SLTP handler finished");
+      Print("TRACE 6: Dispatch finished");
+      Print("TRACE 7: Leaving ProcessInboundMessage");
       return;
    }
    
-   if(action == "POSITION_LIST") {
+   if(action == "POSITION_LIST" || eventVal == "POSITION_LIST") {
+      Print("TRACE 4: Dispatching POSITION_LIST handler");
       SendPositionList();
+      Print("TRACE 5: POSITION_LIST handler finished");
+      Print("TRACE 6: Dispatch finished");
+      Print("TRACE 7: Leaving ProcessInboundMessage");
       return;
    }
+   
+   if(eventVal == "REGISTER") {
+      Print("TRACE 4: Dispatching REGISTER handler");
+      Print("TRACE 5: REGISTER handler finished");
+      Print("TRACE 6: Dispatch finished");
+      Print("TRACE 7: Leaving ProcessInboundMessage");
+      return;
+   }
+   
+   Print("TRACE 6: Dispatch finished");
+   Print("TRACE 7: Leaving ProcessInboundMessage");
 }
 
 //--- Helper to format deinitialization reasons
