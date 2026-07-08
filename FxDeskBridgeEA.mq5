@@ -85,108 +85,43 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
    Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC - bytesAvailable: ", bytesAvailable, ", requestedLength: ", bytesAvailable, ", SocketRead return: ", res, ", GetLastError(): ", err);
    
    if(checkConnected && res > 0) {
-      Print("MT5 Bridge: SOCKET_READ_DATA DIAGNOSTICS");
-      Print("Total bytes read: ", res);
-      
       string hexStr = "";
       for(int i = 0; i < res; i++) {
-         Print("index: ", i, ", ArraySize(): ", ArraySize(buf));
-         if(i >= ArraySize(buf)) {
-            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
-            break;
-         }
          hexStr += StringFormat("0x%02X ", buf[i]);
       }
-      Print("Complete hex dump: ", hexStr);
-      
       string asciiStr = CharArrayToString(buf, 0, res);
-      Print("Complete ASCII dump:\n", asciiStr);
+      
+      Print("====================");
+      Print("TOTAL BYTES READ: ", res);
+      Print("HEX DUMP: ", hexStr);
+      Print("ASCII DUMP:\n", asciiStr);
+      Print("FRAME SCAN");
       
       int currentOffset = 0;
-      int frameCount = 0;
+      int frameIndex = 1;
       int bufSize = ArraySize(buf);
       
       while(currentOffset < bufSize) {
-         Print("index: ", currentOffset, ", ArraySize(): ", bufSize);
-         if(currentOffset >= bufSize) {
-            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
-            break;
-         }
-         
          if(currentOffset + 2 > bufSize) {
-            break;
-         }
-         
-         Print("index: ", currentOffset + 1, ", ArraySize(): ", bufSize);
-         if(currentOffset + 1 >= bufSize) {
-            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
-            break;
-         }
-         
-         int payloadLen = buf[currentOffset + 1] & 0x7F;
-         int offset = currentOffset + 2;
-         if(payloadLen == 126) {
-            offset = currentOffset + 4;
-         } else if(payloadLen == 127) {
-            offset = currentOffset + 10;
-         }
-         
-         bool masked = (buf[currentOffset + 1] & 0x80) != 0;
-         if(masked) {
-            offset += 4;
-         }
-         
-         currentOffset = offset + payloadLen;
-         frameCount++;
-      }
-      Print("Number of WebSocket frames detected inside the buffer: ", frameCount);
-      
-      currentOffset = 0;
-      int frameIndex = 1;
-      while(currentOffset < bufSize) {
-         Print("Frame #", frameIndex);
-         Print("Start Offset: ", currentOffset);
-         
-         Print("index: ", currentOffset, ", ArraySize(): ", bufSize);
-         if(currentOffset >= bufSize) {
-            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
-            break;
-         }
-         
-         if(currentOffset + 2 > bufSize) {
-            Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
-            break;
-         }
-         
-         Print("index: ", currentOffset + 1, ", ArraySize(): ", bufSize);
-         if(currentOffset + 1 >= bufSize) {
-            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
             break;
          }
          
          uchar header1 = buf[currentOffset];
          uchar header2 = buf[currentOffset + 1];
-         
-         bool fin = (header1 & 0x80) != 0;
          int opcode = header1 & 0x0F;
          int payloadLength = header2 & 0x7F;
          int data_offset = currentOffset + 2;
          
          if(payloadLength == 126) {
             if(currentOffset + 4 > bufSize) {
-               Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
                break;
             }
-            Print("index: ", currentOffset + 2, ", ArraySize(): ", bufSize);
-            Print("index: ", currentOffset + 3, ", ArraySize(): ", bufSize);
             payloadLength = (buf[currentOffset + 2] << 8) | buf[currentOffset + 3];
             data_offset = currentOffset + 4;
          } else if(payloadLength == 127) {
             if(currentOffset + 10 > bufSize) {
-               Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
                break;
             }
-            Print("index: ", currentOffset + 9, ", ArraySize(): ", bufSize);
             payloadLength = (int)buf[currentOffset + 9];
             data_offset = currentOffset + 10;
          }
@@ -194,31 +129,28 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
          bool masked = (header2 & 0x80) != 0;
          if(masked) {
             if(data_offset + 4 > bufSize) {
-               Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
                break;
             }
             data_offset += 4;
          }
          
-         Print("FIN: ", fin);
+         Print("Frame ", frameIndex);
+         Print("Offset: ", currentOffset);
          Print("Opcode: ", opcode);
          Print("Payload Length: ", payloadLength);
          
-         if(data_offset + payloadLength > bufSize) {
-            Print("ARRAY ACCESS WOULD EXCEED BOUNDS");
-            Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
-            break;
+         if(data_offset + payloadLength <= bufSize) {
+            string frameText = "";
+            uchar frameBuf[];
+            ArrayResize(frameBuf, payloadLength);
+            for(int i = 0; i < payloadLength; i++) {
+               frameBuf[i] = buf[data_offset + i];
+            }
+            frameText = CharArrayToString(frameBuf, 0, payloadLength);
+            Print("Payload JSON: ", frameText);
+         } else {
+            Print("Payload JSON: [INCOMPLETE]");
          }
-         
-         string frameText = "";
-         uchar frameBuf[];
-         ArrayResize(frameBuf, payloadLength);
-         for(int i = 0; i < payloadLength; i++) {
-            Print("index: ", data_offset + i, ", ArraySize(): ", bufSize);
-            frameBuf[i] = buf[data_offset + i];
-         }
-         frameText = CharArrayToString(frameBuf, 0, payloadLength);
-         Print("Payload JSON: ", frameText);
          
          currentOffset = data_offset + payloadLength;
          
@@ -229,10 +161,12 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
          frameIndex++;
       }
       
-      if(currentOffset < bufSize) {
-         Print("UNPROCESSED BYTES REMAIN: ", bufSize - currentOffset);
+      if(frameIndex == 2) {
+         Print("ONLY ONE FRAME RECEIVED");
       }
-      Print("========================================");
+      
+      Print("Remaining Bytes: ", bufSize - currentOffset);
+      Print("====================");
    }
    
    if(!checkConnected) {
