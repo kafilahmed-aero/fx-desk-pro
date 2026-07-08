@@ -162,6 +162,107 @@ function calculateCrossMarketMetrics(pair, currentPrice, priceHistory) {
 }
 
 /**
+ * Calculates true swing pivot structures and confirms BOS/CHoCH conditions.
+ */
+function calculateMarketStructure(priceHistory, currentPrice) {
+  if (!priceHistory || priceHistory.length < 5 || currentPrice === null) {
+    return null;
+  }
+
+  const points = priceHistory.map(h => h.price);
+  const swingHighs = [];
+  const swingLows = [];
+
+  for (let i = 2; i < points.length - 2; i++) {
+    const p = points[i];
+    const prev1 = points[i - 1];
+    const prev2 = points[i - 2];
+    const next1 = points[i + 1];
+    const next2 = points[i + 2];
+
+    if (p > prev1 && p > prev2 && p > next1 && p > next2) {
+      swingHighs.push({ price: p, index: i, timestamp: priceHistory[i].timestamp });
+    }
+    if (p < prev1 && p < prev2 && p < next1 && p < next2) {
+      swingLows.push({ price: p, index: i, timestamp: priceHistory[i].timestamp });
+    }
+  }
+
+  if (swingHighs.length < 2 || swingLows.length < 2) {
+    return null;
+  }
+
+  const latestHigh = swingHighs[swingHighs.length - 1].price;
+  const prevHigh = swingHighs[swingHighs.length - 2].price;
+  const latestLow = swingLows[swingLows.length - 1].price;
+  const prevLow = swingLows[swingLows.length - 2].price;
+
+  let currentStructure = "Range";
+  const hh = latestHigh > prevHigh;
+  const hl = latestLow > prevLow;
+  const lh = latestHigh < prevHigh;
+  const ll = latestLow < prevLow;
+
+  if (hh && hl) {
+    currentStructure = "Bullish Structure";
+  } else if (lh && ll) {
+    currentStructure = "Bearish Structure";
+  } else if ((hh && ll) || (lh && hl)) {
+    currentStructure = "Transition";
+  }
+
+  let bos = "No confirmed BOS";
+  let choch = "No CHoCH";
+
+  if (currentPrice > latestHigh) {
+    if (currentStructure === "Bullish Structure") {
+      bos = "Bullish Break of Structure (BOS)";
+    } else if (currentStructure === "Bearish Structure") {
+      choch = "Bullish CHoCH";
+    }
+  } else if (currentPrice < latestLow) {
+    if (currentStructure === "Bearish Structure") {
+      bos = "Bearish Break of Structure (BOS)";
+    } else if (currentStructure === "Bullish Structure") {
+      choch = "Bearish CHoCH";
+    }
+  }
+
+  let strength = "Weak";
+  let trendCount = 0;
+  
+  for (let k = swingHighs.length - 1; k > 0; k--) {
+    if (swingHighs[k].price > swingHighs[k-1].price && swingLows[k] && swingLows[k-1] && swingLows[k].price > swingLows[k-1].price) {
+      trendCount++;
+    } else if (swingHighs[k].price < swingHighs[k-1].price && swingLows[k] && swingLows[k-1] && swingLows[k].price < swingLows[k-1].price) {
+      trendCount++;
+    } else {
+      break;
+    }
+  }
+
+  const priceMove = Math.abs(latestHigh - latestLow);
+  if (trendCount >= 3 && priceMove > 10) {
+    strength = "Strong";
+  } else if (trendCount >= 1 && priceMove > 4) {
+    strength = "Moderate";
+  } else {
+    strength = "Weak";
+  }
+
+  return {
+    latestHigh,
+    latestLow,
+    prevHigh,
+    prevLow,
+    currentStructure,
+    strength,
+    bos,
+    choch
+  };
+}
+
+/**
  * Gets all active XAUUSD parsed signals from the DB or fallback memory store.
  * @returns {Promise<Array>} Array of parsed signals
  */
@@ -871,6 +972,11 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
       }
     }
 
+    // ==================================================
+    // MARKET STRUCTURE CALCULATIONS (Phase 1.3)
+    // ==================================================
+    const structure = calculateMarketStructure(priceHistory, currentPrice);
+
     // Support and Resistance: recent swing highs, recent swing lows, and existing price clusters.
     const levels = [];
     entryClusters.forEach(c => { levels.push(c.min, c.max); });
@@ -1484,6 +1590,19 @@ SECTION 7.6: CROSS MARKET INTELLIGENCE
   - Gold vs DXY: ${dxyCorrelation}
   - Gold vs US10Y: ${yieldAlignment}
   - Overall Macro Alignment: ${macroAlignment}
+
+=========================================
+SECTION 7.7: MARKET STRUCTURE
+=========================================
+${structure !== null ? `- Latest Swing High: ${structure.latestHigh.toFixed(2)} USD
+- Latest Swing Low: ${structure.latestLow.toFixed(2)} USD
+- Previous Swing High: ${structure.prevHigh.toFixed(2)} USD
+- Previous Swing Low: ${structure.prevLow.toFixed(2)} USD
+- Current Structure: ${structure.currentStructure}
+- Structure Strength: ${structure.strength}
+- Break of Structure: ${structure.bos}
+- Change of Character: ${structure.choch}
+- Structure Summary: Price is in a ${structure.strength} ${structure.currentStructure} layout with ${structure.bos} and ${structure.choch}.` : `- Structure: Structure unavailable`}
 
 =========================================
 SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
