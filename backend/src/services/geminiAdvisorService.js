@@ -1,7 +1,12 @@
+/* eslint-disable */
 import mongoose from "mongoose";
 import crypto from "crypto";
 import { config } from "../config/env.js";
 import { ParsedSignal } from "../models/parsedSignalModel.js";
+import { AiRecommendationSnapshot } from "../models/aiRecommendationSnapshotModel.js";
+
+// Global cache to smooth weights across cycles
+let lastComputedWeights = null;
 import { getParsedSignals } from "./parsedSignalStore.js";
 import { getCurrentPrice, getPriceHistory } from "./priceIngestionService.js";
 import { getXauusdNewsContext } from "./xauusdNewsService.js";
@@ -1758,342 +1763,363 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     // Call Phase 1.8 Multi-Asset Macro Intelligence
     const macroIntel = await calculateMacroIntelligence(priceHistory, currentPrice);
 
-    // 4. Build prompt incorporating structured indicator blocks in the approved sequence
+    // Calculate average TP target distance and pre-flight risk-reward ratio
+    let averageTPDistance = 0;
+    let validTPDistanceCount = 0;
+    let totalTPDistance = 0;
+
+    signals.forEach(s => {
+      let entryPrice = null;
+      if (typeof s.entry === "number" && s.entry > 0) {
+        entryPrice = s.entry;
+      } else if (Array.isArray(s.entryRange) && s.entryRange.length > 0) {
+        const validRange = s.entryRange.filter(val => typeof val === "number" && val > 0);
+        if (validRange.length > 0) {
+          entryPrice = validRange.reduce((a, b) => a + b, 0) / validRange.length;
+        }
+      }
+      if (entryPrice !== null) {
+        const tgts = Array.isArray(s.remainingTargets) ? s.remainingTargets : (Array.isArray(s.targets) ? s.targets.map(t => typeof t === "object" ? t.target : t) : []);
+        tgts.forEach(t => {
+          if (typeof t === "number" && t > 0) {
+            totalTPDistance += Math.abs(t - entryPrice);
+            validTPDistanceCount++;
+          }
+        });
+      }
+    });
+    averageTPDistance = validTPDistanceCount > 0 ? totalTPDistance / validTPDistanceCount : 0;
+    const averageRR = averageSLDistance > 0 ? averageTPDistance / averageSLDistance : 1.5;
+
+    const currentUtcHour = now.getUTCHours();
+    const isLondonActive = currentUtcHour >= 8 && currentUtcHour < 16;
+    const isNyActive = currentUtcHour >= 13 && currentUtcHour < 21;
+    const isOverlapActive = currentUtcHour >= 13 && currentUtcHour < 16;
+    const tradingSession = {
+      active: isLondonActive || isNyActive,
+      overlap: isOverlapActive,
+      isLondonActive,
+      isNyActive
+    };
+
+    // Fetch historical category effectiveness win rates
+    const winRates = await getCategoryHistoricalWinRates();
+
+    // Run Adaptive Weighting Engine
+    const weightResult = calculateAdaptiveWeights({
+      buyPercentage, sellPercentage,
+      institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+      mtfContext,
+      macroConflictLevel: macroIntel ? macroIntel.macroConflictLevel : "Low",
+      trustLevel: trustLevel || "Medium",
+      orderFlow,
+      tradingSession,
+      volatilityLevel,
+      dxyStats: calculateCrossMarketMetrics("DXY", dxyPrice, dxyHistory),
+      us10yStats: calculateCrossMarketMetrics("US10Y", us10yPrice, us10yHistory),
+      overallRegime: regimeData?.overallRegime || "Range",
+      momentumDirection,
+      structure,
+      currentSpread,
+      averageSignalAgeMin,
+      liveEvents,
+      newsContext
+    }, winRates, lastComputedWeights);
+
+    const weights = weightResult.weights;
+    const weightExplanationStr = generateWeightExplanation(weights, weightResult.scores);
+
+    // Run Directional Intelligence Score
+    const directionalData = calculateDirectionalScore({
+      buyPercentage, sellPercentage,
+      institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+      mtfContext,
+      macroBias: macroIntel ? macroIntel.goldMacroBias : "Mixed",
+      overallRegime: regimeData?.overallRegime || "Range",
+      momentumDirection,
+      structure
+    }, weights);
+
+    // Run Evidence Coverage
+    const coverageData = calculateEvidenceCoverage({
+      buyPercentage, sellPercentage,
+      institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+      macroBias: macroIntel ? macroIntel.goldMacroBias : "Mixed",
+      overallRegime: regimeData?.overallRegime || "Range",
+      structure,
+      liveEvents,
+      newsContext
+    });
+
+    // Run Execution Environment Filter
+    const executionEnvData = calculateExecutionEnvironment({
+      overallConfluence,
+      institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+      dominantDir,
+      macroConflictLevel: macroIntel ? macroIntel.macroConflictLevel : "Low",
+      trustLevel: trustLevel || "Medium",
+      mtfContext,
+      volatilityLevel,
+      tradingSession,
+      signalsCount: totalActive,
+      hasExtremeMtfConflict,
+      hasLiveNewsBlock,
+      hasVeryLowScore,
+      hasVolConsensusBlock,
+      currentSpread
+    }, weights);
+
+    readinessScore = Math.max(0, 100 - executionEnvData.riskPenalty);
+
+    // Run Contradiction, Checklist, and Consistency Engines
+    const conflictsData = detectConflicts({
+      buyPercentage, sellPercentage,
+      institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+      macroBias: macroIntel ? macroIntel.goldMacroBias : "Mixed",
+      structure,
+      currentPrice,
+      dxyStats: calculateCrossMarketMetrics("DXY", dxyPrice, dxyHistory),
+      us10yStats: calculateCrossMarketMetrics("US10Y", us10yPrice, us10yHistory),
+      overallRegime: regimeData?.overallRegime || "Range",
+      momentumDirection,
+      mtfContext,
+      tradeTiming,
+      orderFlow,
+      volatilityLevel,
+      liveEvents,
+      newsContext,
+      tradingSession
+    });
+
+    const checklistData = generateChecklist({
+      overallRegime: regimeData?.overallRegime || "Range",
+      volatilityLevel,
+      institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+      dominantDir,
+      mtfContext,
+      macroConflictLevel: macroIntel ? macroIntel.macroConflictLevel : "Low",
+      trustLevel: trustLevel || "Medium",
+      averageRR,
+      orderFlow,
+      tradingSession,
+      overallConfluence
+    });
+
+    const consistencyFlags = runSelfConsistencyChecks(
+      dominantDir,
+      orderFlow ? orderFlow.institutionalBias : "Neutral",
+      regimeData?.overallRegime || "Range",
+      overallConfluence
+    );
+
+    // Prompt Compression: Pre-computed Summaries
+    const mtfBullish = ["1m", "5m", "15m", "1h", "4h"].filter(tf => mtfContext[tf]?.trendDirection === "Bullish");
+    const mtfBearish = ["1m", "5m", "15m", "1h", "4h"].filter(tf => mtfContext[tf]?.trendDirection === "Bearish");
+    const mtfSummary = mtfBullish.length >= 3 ? "Bullish" : (mtfBearish.length >= 3 ? "Bearish" : "Neutral");
+    
+    const compressedMarketSummary = `Market Regime is ${regimeData.overallRegime} (Confidence: ${regimeData.regimeConfidence}%). Intraday momentum: ${momentumDirection} (${momentumStrength}). Trends: cohesive ${mtfSummary} across key timeframes (Aligned: ${mtfBullish.length >= 3 ? mtfBullish.join(",") : (mtfBearish.length >= 3 ? mtfBearish.join(",") : "none")}).`;
+    const compressedTelegramSummary = `Sentiment consensus is ${dominantDir} with ${buyPercentage.toFixed(0)}% BUY / ${sellPercentage.toFixed(0)}% SELL weight split from ${uniqueChannelsCount} unique channels. Average signal age is ${averageSignalAgeMin.toFixed(1)}m. Trust Index: ${trustLevel || "Medium"}.`;
+    const compressedMacroSummary = `Yields/Currency trend: US10Y yield yields ${us10yPrice ? us10yPrice.toFixed(3) + "%" : "N/A"} (${us10yStats ? us10yStats.trendDirection : "N/A"}), Dollar Index (DXY) at ${dxyPrice ? dxyPrice.toFixed(2) : "N/A"} (${dxyStats ? dxyStats.trendDirection : "N/A"}). Gold Macro Bias: ${macroIntel ? macroIntel.goldMacroBias : "Mixed"}. Macro Conflict Severity: ${macroIntel ? macroIntel.macroConflictLevel : "Low"}.`;
+    const compressedInstSummary = `Institutional Bias is ${orderFlow ? orderFlow.institutionalBias : "Neutral"}. Nearest active blocks: Bullish OB ${orderFlow?.nearestBullishOB ? `${orderFlow.nearestBullishOB.top.toFixed(2)}-${orderFlow.nearestBullishOB.bottom.toFixed(2)} (Str: ${orderFlow.nearestBullishOB.strengthScore})` : "None"} | Bearish OB ${orderFlow?.nearestBearishOB ? `${orderFlow.nearestBearishOB.top.toFixed(2)}-${orderFlow.nearestBearishOB.bottom.toFixed(2)} (Str: ${orderFlow.nearestBearishOB.strengthScore})` : "None"}. Nearest Bullish FVG range ${orderFlow?.nearestBullishFvg ? `${orderFlow.nearestBullishFvg.bottom.toFixed(2)}-${orderFlow.nearestBullishFvg.top.toFixed(2)}` : "None"}. lastSweepType: ${orderFlow?.liquidity?.lastSweepType || "None"}.`;
+    const compressedSignalsText = signals.map(s => `[${s.action} @ ${s.entry || (s.entryRange ? s.entryRange.join("-") : "")}]`).slice(0, 8).join(", ") + (signals.length > 8 ? ` (+${signals.length - 8} more)` : "");
+
+    // Phase 2.2 Prompt Construction ordered by Priority Layer (Critical -> Important -> Supporting)
     const prompt = `You are a professional financial trading advisor specializing in Gold (XAUUSD).
 Analyze the market intelligence indicators, price clusters, active signals, recent high-impact macroeconomic events, gold market news, and multi-timeframe context to make a trading decision.
 
-CRITICAL MULTI-TIMEFRAME TRADING RULES:
-1. Compare all timeframes (1m, 5m, 15m, 1h, 4h).
-2. Prefer trades aligned with higher timeframes.
-3. Penalize trades fighting strong higher-timeframe trends.
-4. Prefer trades where 5m, 15m and 1h agree.
-5. Mention timeframe conflicts inside reasoning.
-6. Lower confidence when timeframes disagree.
-7. Never ignore higher timeframe structure.
+${weightExplanationStr}
 
-CRITICAL CONFLUENCE & TRADE FILTERING RULES:
-- The Confluence section is a synthesized decision-support layer.
-- If Trade Filter = AVOID, the AI should strongly prefer a direction of "HOLD" unless overwhelming contradictory evidence exists.
-- If Trade Filter = WAIT, the AI should recommend patience (e.g. direction of "HOLD" or highly conservative entry wait ranges) unless a very strong catalyst exists.
-- Higher Overall Confluence Scores should increase your output confidence rating.
-- Lower Overall Confluence Scores should reduce your output confidence rating.
+========================================
+DIRECTIONAL INTELLIGENCE
+========================================
+- Directional Score: ${directionalData.directionalScore}/100 (Bullish bias strength)
+- Directional Confidence: ${directionalData.directionalConfidence}/100 (Evidence agreement)
+- Primary Market Bias: ${directionalData.primaryMarketBias}
+- Top Bullish Drivers:
+${directionalData.topBullishDrivers.map(d => `  * ${d}`).join("\n") || "  * None"}
+- Top Bearish Drivers:
+${directionalData.topBearishDrivers.map(d => `  * ${d}`).join("\n") || "  * None"}
 
-CRITICAL AUTO-EXECUTION & DECISION QUALITY RULES:
-- Your recommendations are automatically executed on a MetaTrader 5 DEMO account without manual confirmation.
-- Every BUY or SELL recommendation should represent a trade you would personally be comfortable executing based on the available evidence.
-- Produce BUY or SELL only when the overall market evidence, multi-timeframe structure, Telegram consensus, macro context, and risk-reward profile collectively support the trade.
-- If the evidence is mixed, conflicting, or insufficient, return HOLD rather than forcing a trade.
-- Prioritize recommendation quality, consistency, and disciplined risk management over recommendation frequency.
-- Do not avoid good opportunities simply because execution is automatic. High-confidence, high-quality setups should still be recommended.
-- Explain clearly in the reasoning why a BUY, SELL, or HOLD decision was reached.
+========================================
+EXECUTION ENVIRONMENT
+========================================
+- Execution Environment Rating: ${executionEnvData.executionRating}
+- Decision Readiness Score: ${readinessScore}/100
+- Conflict Severity: ${conflictsData.severity}
+- Trading Environment: ${regimeData.overallRegime} (Volatility: ${regimeData.volatilityState})
+- Reasons to Avoid Trade:
+${executionEnvData.reasonsToAvoid.map(r => `  * ${r}`).join("\n")}
+
+========================================
+EVIDENCE COVERAGE
+========================================
+- Evidence Coverage: ${coverageData.coveragePercentage}%
+- Critical Missing:
+${coverageData.criticalMissing.map(m => `  * ${m}`).join("\n") || "  * None"}
+- Important Missing:
+${coverageData.importantMissing.map(m => `  * ${m}`).join("\n") || "  * None"}
+- Optional Missing:
+${coverageData.optionalMissing.map(m => `  * ${m}`).join("\n") || "  * None"}
+
+========================================
+FINAL DECISION MATRIX & CRITICAL RULES
+========================================
+You must adhere to the following professional Decision Matrix:
+1. Strong Direction (Score >75 or <25) + Excellent/Good Execution Environment → Execute BUY/SELL
+2. Strong Direction + Caution/Poor/Do Not Trade Execution Environment → HOLD
+3. Moderate Direction (Score 55-75 or 25-45) + Excellent/Good Execution Environment → Conservative BUY/SELL
+4. Moderate Direction + Caution/Poor/Do Not Trade Execution Environment → HOLD
+5. Weak Direction (Score 45-55) + Any Execution Environment → HOLD
+6. If Evidence Coverage falls below 60%, heavily prefer HOLD unless overwhelming directional evidence exists.
+
+CRITICAL TRADING SYSTEM RULES (EVIDENCE-ONLY REASONING):
+1. CITE SUPPLIED EVIDENCE: Every BUY, SELL, or HOLD recommendation must explicitly cite the evidence (signals, regime, order flow, macro yields/DXY, checklist results) that directly supports the decision.
+2. EVIDENCE-ONLY: Do not assume or guess missing indicators. If evidence is insufficient, return HOLD.
+3. NEVER INVENT: Never invent reasons, headlines, or macroeconomic events.
+4. EXPLAIN CONTRADICTIONS: Never contradict supplied evidence without explaining why inside the reasoning.
+5. QUALITY OVER FREQUENCY: Prioritize high-quality setups and discipline over transaction volume.
+6. FINAL CHECKLIST QUESTIONS: Before issuing a trade, answer internally:
+   - Is direction clear?
+   - Is institutional evidence aligned?
+   - Is macro aligned?
+   - Is market structure aligned?
+    - Is Telegram supporting?
+   - Is risk acceptable?
+   If ANY critical answer is NO, prefer HOLD.
+
+========================================
+SELF VALIDATION
+========================================
+Answer these check questions internally before finalizing your decision:
+- Is this recommendation supported by the strongest evidence?
+- What evidence contradicts this recommendation?
+- If BUY or SELL cannot be justified using the supplied evidence alone, return HOLD.
 
 CURRENT GOLD PRICE: ${currentPrice !== null ? currentPrice : "Unavailable"}
 
-=========================================
-SECTION 1: SIGNAL INTELLIGENCE SUMMARY
-=========================================
-- Total Active Signals: ${totalActive}
-- BUY Signals Count: ${buyCount}
-- SELL Signals Count: ${sellCount}
-- BUY Percentage: ${buyPercentage.toFixed(1)}%
-- SELL Percentage: ${sellPercentage.toFixed(1)}%
-- Newest Signal Age: ${newestSignalAgeMin.toFixed(1)} minutes
-- Oldest Signal Age: ${oldestSignalAgeMin.toFixed(1)} minutes
-- Average Signal Age: ${averageSignalAgeMin.toFixed(1)} minutes
+==================================================
+1. PRIORITY 1: CRITICAL DECISION EVIDENCE
+==================================================
+${formatEvidenceItem("Trade Filter & Execution Controls", "Critical", "High", 0)}
+- Trade Filter: ${tradeFilter}
+- Trade Timing: ${tradeTiming}
+- Recommended Risk: ${recommendedRisk}
 
-- Signal Time Distribution:
-  - 0-5 min: ${timeDistribution["0-5 min"]}
-  - 5-15 min: ${timeDistribution["5-15 min"]}
-  - 15-30 min: ${timeDistribution["15-30 min"]}
-  - 30-60 min: ${timeDistribution["30-60 min"]}
-  - 60+ min: ${timeDistribution["60+ min"]}
+${formatEvidenceItem("Overall Confluence Synthesis", "Critical", "High", 0)}
+- Confluence Grade: ${confluenceGrade}
+- Overall Confluence Score: ${overallConfluence}
+- Expected Win Probability: ${expectedProbability !== null ? expectedProbability + "%" : "Blocked"}
 
-- Signal Inflow Density:
-  - Last 5 min: ${signalDensity["last 5 min"]} signals
-  - Last 15 min: ${signalDensity["last 15 min"]} signals
-  - Last 30 min: ${signalDensity["last 30 min"]} signals
-  - Last 60 min: ${signalDensity["last 60 min"]} signals
+${formatEvidenceItem("Market Regime State", "Critical", "High", (Date.now() - (regimeState.lastCheckedTimestamp || Date.now())) / 60000)}
+- Current Regime: ${regimeData.overallRegime}
+- Regime Confidence: ${regimeData.regimeConfidence}%
+- Volatility State: ${regimeData.volatilityState}
+- Trend Quality: ${regimeData.trendQuality}
 
-- Direction Agreement: ${directionAgreement}
-- Consensus Strength Score (0-100): ${consensusStrength}
-- Signal Quality Summary: ${signalQualitySummary}
+${formatEvidenceItem("Institutional Directional Bias", "Critical", "High", 1)}
+- Institutional Bias: ${orderFlow ? orderFlow.institutionalBias : "Neutral"}
 
-- Cluster Analysis & Price Concentrations:
-  - Entry Price Clusters:
-${entryClusterText}
-    - Primary Entry Cluster Width: ${entryClusterWidth.toFixed(2)}
-  - Stop Loss (SL) Price Clusters:
-${slClusterText}
-    - SL Spread (Max SL - Min SL): ${slSpread.toFixed(2)}
-    - Average SL Distance (from Entry): ${averageSLDistance.toFixed(2)}
-    - SL Consistency Rating: ${slConsistency}%
-  - Take Profit (TP) Price Clusters:
-${tpClusterText}
-    - Primary TP Cluster Width: ${tpClusterWidth.toFixed(2)}
+${formatEvidenceItem("Multi-Timeframe Trend Alignment", "Critical", "High", 2)}
+- 5m trend: ${mtfContext["5m"]?.trendDirection || "Neutral"} (${mtfContext["5m"]?.trendStrength || "Weak"})
+- 15m trend: ${mtfContext["15m"]?.trendDirection || "Neutral"} (${mtfContext["15m"]?.trendStrength || "Weak"})
+- 1h trend: ${mtfContext["1h"]?.trendDirection || "Neutral"} (${mtfContext["1h"]?.trendStrength || "Weak"})
 
-=========================================
-SECTION 2: MARKET INTELLIGENCE LAYER
-=========================================
-- Price Action & Metrics:
-  - Current Price: ${currentPrice !== null ? currentPrice : "Unavailable"}
-  - 5-Min Price Change: ${change5m.toFixed(2)}
-  - 15-Min Price Change: ${change15m.toFixed(2)}
-  - 30-Min Price Change: ${change30m.toFixed(2)}
-  - 60-Min Price Change: ${change60m.toFixed(2)}
-  - Intraday Highest (60m): ${highestPrice60m.toFixed(2)}
-  - Intraday Lowest (60m): ${lowestPrice60m.toFixed(2)}
-  - 60-Min Trading Price Range: ${range60m.toFixed(2)}
+${formatEvidenceItem("Macro Correlation & Alignment", "Critical", "High", 1)}
+- Gold Macro Bias: ${macroIntel ? macroIntel.goldMacroBias : "Mixed"}
+- Correlation Confidence: ${macroIntel ? macroIntel.correlationConfidence : "Medium"}
 
-- Intraday Momentum:
-  - Momentum Direction: ${momentumDirection}
-  - Momentum Strength: ${momentumStrength}
+${formatEvidenceItem("US Dollar Index (DXY) Status", "Critical", "High", 1)}
+- DXY Price: ${dxyPrice !== null ? dxyPrice.toFixed(2) : "Unavailable"}
+- DXY Trend: ${dxyStats !== null ? dxyStats.trendDirection + " (" + dxyStats.trendStrength + ")" : "Unavailable"}
 
-- Intraday Volatility:
-  - Volatility Level: ${volatilityLevel}
-  - Current 60-Min Volatility Range: ${range60m.toFixed(2)}
+${formatEvidenceItem("US 10-Year Treasury Yield (US10Y) Status", "Critical", "High", 1)}
+- US10Y Yield: ${us10yPrice !== null ? us10yPrice.toFixed(3) + "%" : "Unavailable"}
+- US10Y Trend: ${us10yStats !== null ? us10yStats.trendDirection + " (" + us10yStats.trendStrength + ")" : "Unavailable"}
 
-- Nearest Price Cluster Analysis:
-  - Nearest Cluster Type: ${nearestClusterType}
-  - Distance to Nearest Cluster: ${nearestClusterDistance === Infinity ? "N/A" : nearestClusterDistance.toFixed(2)}
-  - Nearest Cluster Range Width: ${nearestClusterWidth.toFixed(2)}
-
-- Market Alignment Status: ${marketAlignment}
-
-=========================================
-SECTION 3: MULTI-TIMEFRAME MARKET ANALYSIS
-=========================================
-${formattedMtfText}
-
-=========================================
-SECTION 4: CONFLUENCE INTELLIGENCE
-=========================================
-- Confluence Score Metrics:
-  - Signal Confluence: ${signalConfluence !== null ? signalConfluence : "Excluded (No active signals)"}
-  - Market Confluence: ${marketConfluence !== null ? marketConfluence : "Excluded (No active price clusters)"}
-  - Timeframe Confluence: ${timeframeConfluence !== null ? timeframeConfluence : "Excluded (Insufficient timeframe history)"}
-  - News Confluence: ${newsConfluence}
-  - Decision Confluence: ${decisionConfluence}
-  - Overall Confluence Score: ${overallConfluence}
-
-- Synthesis & Grade:
-  - Confluence Grade: ${confluenceGrade}
-  - Expected Probability: ${expectedProbability !== null ? expectedProbability + "%" : "Unavailable (Trade Blocked)"}
-
-- Execution Controls:
-  - Trade Filter: ${tradeFilter}
-  - Trade Timing: ${tradeTiming}
-  - Recommended Risk: ${recommendedRisk}
-
-- Reasons To Trade:
-${reasonsToTrade.slice(0, 5).map(r => `  - ${r}`).join("\n")}
-
-- Reasons NOT To Trade:
-${reasonsNotToTrade.slice(0, 5).map(r => `  - ${r}`).join("\n")}
-
-- Market Conflict Summary:
-${marketConflictSummary}
-
-- Missing Input Sources:
-${missingInputs.length > 0 ? missingInputs.map(m => `  - ${m}`).join("\n") : "  - None (All data streams online)"}
-
-=========================================
-SECTION 5: DECISION INTELLIGENCE
-=========================================
-- Market Summary: ${decisionIntelligence.marketSummary}
-- Trade Readiness:
-  - Score (0-100): ${decisionIntelligence.readinessScore}
-  - Rating: ${decisionIntelligence.readinessRating}
-  - Readiness Reason: ${decisionIntelligence.readinessReason}
-- Decision Confidence:
-  - Confidence Rating (0-100): ${decisionIntelligence.decisionConfidence}
-  - Confidence Reason: ${decisionIntelligence.confidenceReason}
-- Opportunity Grade: ${decisionIntelligence.opportunityGrade}
-- Risk Assessment:
-  - Risk Level: ${decisionIntelligence.riskLevel}
-  - Risk Reason: ${decisionIntelligence.riskReason}
-- Entry Timing: ${decisionIntelligence.entryTiming}
-- Conflict Analysis:
-  - Conflict Severity: ${decisionIntelligence.conflictSeverity}
-  - Active Conflicts: ${decisionIntelligence.conflicts.length > 0 ? decisionIntelligence.conflicts.map(c => "\n    - " + c).join("") : " None detected."}
-
-- Synthesized Trade Outlook:
-  - Strengths:
-${strengths.map(s => `    - ${s}`).join("\n")}
-  - Weaknesses:
-${weaknesses.map(w => `    - ${w}`).join("\n")}
-  - Action Plan Recommendation:
-    - ${decisionIntelligence.recommendation}
-
-=========================================
-SECTION 6: AI EXPERIENCE
-=========================================
-- Learning Status: ${aiExperience.learningStatus}
-- Recommendation History: ${aiExperience.recommendationHistory}
-- Primary Confidence Sources:
-${aiExperience.confidenceSource.map(src => `  - ${src}`).join("\n")}
-- Experience Notes: ${aiExperience.experienceNotes}
-
-=========================================
-SECTION 7: ADVANCED MARKET CONTEXT
-=========================================
-- Nearest Support Level: ${nearestSupport}
-- Nearest Resistance Level: ${nearestResistance}
-- 24-hour High: ${high24h}
-- 24-hour Low: ${low24h}
-- Current Daily Range: ${dailyRange}
-- Distance to Daily High: ${distToHigh}
-- Distance to Daily Low: ${distToLow}
-- ATR (Average True Range): ${atr}
-- Current Spread: ${currentSpread}
-- Market Liquidity Status: ${marketLiquidity}
-- Trend Strength: ${trendStrength}
-- Market Phase: ${marketPhase}
-- Market Bias: ${marketBias}
-- Distance to Entry Zone: ${distanceToEntry}
-
-=========================================
-SECTION 7.5: INSTITUTIONAL MARKET STRUCTURE
-=========================================
-- Previous Day High (PDH): ${pdh !== null ? pdh.toFixed(2) + " USD" : "N/A"}${pdh !== null && currentPrice !== null ? " (Distance: " + (pdh - currentPrice).toFixed(2) + " USD)" : ""}
-- Previous Day Low (PDL): ${pdl !== null ? pdl.toFixed(2) + " USD" : "N/A"}${pdl !== null && currentPrice !== null ? " (Distance: " + (currentPrice - pdl).toFixed(2) + " USD)" : ""}
-- Asian Session:
-  - High: ${asianHigh !== null ? asianHigh.toFixed(2) + " USD" : "N/A"}
-  - Low: ${asianLow !== null ? asianLow.toFixed(2) + " USD" : "N/A"}
-  - Position: ${asianRelation}
-- London Session:
-  - High: ${londonHigh !== null ? londonHigh.toFixed(2) + " USD" : "N/A"}
-  - Low: ${londonLow !== null ? londonLow.toFixed(2) + " USD" : "N/A"}
-  - Position: ${londonRelation}
-- New York Session:
-  - High: ${nyHigh !== null ? nyHigh.toFixed(2) + " USD" : "N/A"}
-  - Low: ${nyLow !== null ? nyLow.toFixed(2) + " USD" : "N/A"}
-  - Position: ${nyRelation}
-- Daily Midpoint (50%): ${midpoint !== null ? midpoint.toFixed(2) + " USD" : "N/A"}${distFromMidpoint !== null ? " (Distance: " + distFromMidpoint.toFixed(2) + " USD)" : ""}
-- Premium / Discount Rating: ${premiumDiscount} (${percentThroughRange.toFixed(1)}% through today's range)
-
-=========================================
-SECTION 7.6: CROSS MARKET INTELLIGENCE
-=========================================
-- DXY (US Dollar Index):
-  - Current Price: ${dxyStats !== null ? dxyStats.current.toFixed(2) : "Unavailable"}
-  - Trend: ${dxyStats !== null ? dxyStats.trendDirection + " (" + dxyStats.trendStrength + ")" : "Unavailable"}
-  - Momentum: ${dxyStats !== null ? dxyStats.momentumDirection + " (" + dxyStats.momentumStrength + ")" : "Unavailable"}
-- US10Y (US 10-Year Treasury Yield):
-  - Current Yield: ${us10yStats !== null ? us10yStats.current.toFixed(3) + "%" : "Unavailable"}
-  - Trend: ${us10yStats !== null ? us10yStats.trendDirection + " (" + us10yStats.trendStrength + ")" : "Unavailable"}
-  - Momentum: ${us10yStats !== null ? us10yStats.momentumDirection + " (" + us10yStats.momentumStrength + ")" : "Unavailable"}
-- Macro Correlations & Alignments:
-  - Gold vs DXY: ${dxyCorrelation}
-  - Gold vs US10Y: ${yieldAlignment}
-  - Overall Macro Alignment: ${macroAlignment}
-
-=========================================
-SECTION 7.7: MARKET STRUCTURE
-=========================================
-${structure !== null ? `- Latest Swing High: ${structure.latestHigh.toFixed(2)} USD
-- Latest Swing Low: ${structure.latestLow.toFixed(2)} USD
-- Previous Swing High: ${structure.prevHigh.toFixed(2)} USD
-- Previous Swing Low: ${structure.prevLow.toFixed(2)} USD
-- Current Structure: ${structure.currentStructure}
-- Structure Strength: ${structure.strength}
-- Break of Structure: ${structure.bos}
-- Change of Character: ${structure.choch}
-- Structure Summary: Price is in a ${structure.strength} ${structure.currentStructure} layout with ${structure.bos} and ${structure.choch}.` : `- Structure: Structure unavailable`}
-
-====================================
-MARKET REGIME
-====================================
-Current Regime: ${regimeData.overallRegime}
-Regime Confidence: ${regimeData.regimeConfidence}%
-Trend Quality: ${regimeData.trendQuality}
-Volatility State: ${regimeData.volatilityState}
-Momentum Quality: ${regimeData.momentumQuality}
-Recommended Trading Environment: ${regimeData.recommendedEnv}
-
-====================================
-INSTITUTIONAL ORDER FLOW
-====================================
-${orderFlow !== null ? `Nearest Bullish Order Block: ${orderFlow.nearestBullishOB ? `${orderFlow.nearestBullishOB.top.toFixed(2)} - ${orderFlow.nearestBullishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBullishOB.strengthScore}, Freshness: ${orderFlow.nearestBullishOB.freshness} bars, Mitigated: ${orderFlow.nearestBullishOB.mitigated})` : "None"}
-Nearest Bearish Order Block: ${orderFlow.nearestBearishOB ? `${orderFlow.nearestBearishOB.top.toFixed(2)} - ${orderFlow.nearestBearishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBearishOB.strengthScore}, Freshness: ${orderFlow.nearestBearishOB.freshness} bars, Mitigated: ${orderFlow.nearestBearishOB.mitigated})` : "None"}
-Nearest Bullish FVG: ${orderFlow.nearestBullishFvg ? `Gap from ${orderFlow.nearestBullishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBullishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBullishFvg.timeframe}, Size: ${orderFlow.nearestBullishFvg.size.toFixed(2)}, Quality: ${orderFlow.nearestBullishFvg.qualityScore})` : "None"}
-Nearest Bearish FVG: ${orderFlow.nearestBearishFvg ? `Gap from ${orderFlow.nearestBearishFvg.bottom.toFixed(2)} to ${orderFlow.nearestBearishFvg.top.toFixed(2)} (Timeframe: ${orderFlow.nearestBearishFvg.timeframe}, Size: ${orderFlow.nearestBearishFvg.size.toFixed(2)}, Quality: ${orderFlow.nearestBearishFvg.qualityScore})` : "None"}
-Nearest Liquidity Pool: ${orderFlow.nearestPool ? `${orderFlow.nearestPool.price.toFixed(2)} (${orderFlow.nearestPool.type}, Priority: ${orderFlow.nearestPool.priority})` : "None"}
-Liquidity Status: Equal Highs: ${orderFlow.liquidity.equalHighs ? orderFlow.liquidity.equalHighs.toFixed(2) : "None"} | Equal Lows: ${orderFlow.liquidity.equalLows ? orderFlow.liquidity.equalLows.toFixed(2) : "None"} | Last Sweep: ${orderFlow.liquidity.lastSweepType}
-Institutional Bias: ${orderFlow.institutionalBias}
-Recommended Interpretation: ${orderFlow.recommendedInterpretation}` : `- Institutional Structure: Institutional Structure Unavailable`}
-
-====================================
-MULTI-ASSET MACRO INTELLIGENCE
-====================================
-${macroIntel !== null ? `Macro Alignment Score: ${macroIntel.macroAlignment} (Bullish: ${macroIntel.bullishPct}%, Bearish: ${macroIntel.bearishPct}%)
-Gold Macro Bias: ${macroIntel.goldMacroBias}
-Correlation Confidence: ${macroIntel.correlationConfidence}
-Macro Conflict Level: ${macroIntel.macroConflictLevel}
-Highest Conviction Drivers: ${macroIntel.highestConvictionDrivers}
-Weakest Drivers: ${macroIntel.weakestDrivers}
-Primary Macro Reason: ${macroIntel.primaryMacroReason}
-Recommended Interpretation: ${macroIntel.recommendedInterpretation}` : `- Macro Status: Macro Intelligence Unavailable`}
-
-=========================================
-SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
-=========================================
-- Live Events (Scheduled within +/- 15 mins):
-${formattedLiveEvents}
-
-- Upcoming Events (Scheduled in > 15 mins):
-${formattedUpcomingEvents}
-
-- Recently Released Events (Scheduled in the past / < -15 mins):
-${formattedRecentlyReleasedEvents}
-
-- Market Headlines & Economic News:
-${formattedNews}
-
-=========================================
-SECTION 9: RAW ACTIVE SIGNAL PARAMETERS
-=========================================
-${formattedSignals || "No active signals."}
-
-=========================================
-SECTION 9.5: TELEGRAM INTELLIGENCE
-=========================================
-- BUY Channels: ${buyChannelsCount}
-- SELL Channels: ${sellChannelsCount}
-- Unique Channels Count: ${uniqueChannelsCount}
-- Consensus: ${channelAgreementPct}%
-- Consensus Acceleration: ${consensusAcceleration}
-- Signal Quality: ${telegramSignalQuality}
-- Entry Cluster: ${entryClusterTightness}
-- SL Cluster: ${slClusterTightness}
-- TP Cluster: ${tpClusterTightness}
-- Conflict Level: ${telegramConflictLevel}
-- Duplicate Signals: ${duplicateSignalsCount}
-- Conflicting Signals: ${conflictingSignalsCount}
+==================================================
+2. PRIORITY 2: IMPORTANT EXECUTION EVIDENCE
+==================================================
+${formatEvidenceItem("Telegram Consensus Inflow", "Important", "Medium", averageSignalAgeMin)}
+- Inflow Consensus: ${dominantDir} with ${buyPercentage.toFixed(1)}% BUY / ${sellPercentage.toFixed(1)}% SELL
 - Average Signal Age: ${averageSignalAgeMin.toFixed(1)} mins
-- Median Signal Age: ${medianSignalAgeMin.toFixed(1)} mins
-- Newest Signal Age: ${newestSignalAgeMin.toFixed(1)} mins
-- Oldest Signal Age: ${oldestSignalAgeMin.toFixed(1)} mins
-- Signal Arrival Rate: ${signalArrivalRate} signals/min over the last hour
-- Overall Telegram Quality: ${overallTelegramQuality}
+
+${formatEvidenceItem("Channel Reliability Tracker", "Important", "Medium", averageSignalAgeMin)}
+- Consensus Trust Level: ${trustLevel || "Medium"}
+- Raw BUY/SELL Split: ${rawBuyPct.toFixed(1)}% BUY / ${rawSellPct.toFixed(1)}% SELL
+- Weighted BUY/SELL Split: ${weightedBuyPct.toFixed(1)}% BUY / ${weightedSellPct.toFixed(1)}% SELL
+
+${formatEvidenceItem("Order Block Support/Resistance", "Important", "High", 2)}
+- Nearest Bullish OB: ${orderFlow?.nearestBullishOB ? `${orderFlow.nearestBullishOB.top.toFixed(2)} - ${orderFlow.nearestBullishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBullishOB.strengthScore})` : "None"}
+- Nearest Bearish OB: ${orderFlow?.nearestBearishOB ? `${orderFlow.nearestBearishOB.top.toFixed(2)} - ${orderFlow.nearestBearishOB.bottom.toFixed(2)} (Strength: ${orderFlow.nearestBearishOB.strengthScore})` : "None"}
+
+${formatEvidenceItem("Fair Value Gaps (FVG) Mitigation", "Important", "High", 2)}
+- Bullish FVG: ${orderFlow?.nearestBullishFvg ? `${orderFlow.nearestBullishFvg.bottom.toFixed(2)} - ${orderFlow.nearestBullishFvg.top.toFixed(2)} (${orderFlow.nearestBullishFvg.timeframe})` : "None"}
+- Bearish FVG: ${orderFlow?.nearestBearishFvg ? `${orderFlow.nearestBearishFvg.bottom.toFixed(2)} - ${orderFlow.nearestBearishFvg.top.toFixed(2)} (${orderFlow.nearestBearishFvg.timeframe})` : "None"}
+
+${formatEvidenceItem("Session Liquidity & Sweep pools", "Important", "High", 2)}
+- Session Sweep: ${orderFlow?.liquidity?.lastSweepType || "None"}
+- Pool levels: Equal Highs: ${orderFlow?.liquidity?.equalHighs || "None"} | Equal Lows: ${orderFlow?.liquidity?.equalLows || "None"}
+
+${formatEvidenceItem("Intraday Session Range & Midpoints", "Important", "High", 2)}
+- PDH / PDL levels: PDH: ${pdh || "N/A"} | PDL: ${pdl || "N/A"}
+- Midpoint Position: ${asianRelation || "N/A"}
+
+${formatEvidenceItem("Premium / Discount Valuation", "Important", "High", 2)}
+- Valuation Rating: ${premiumDiscount || "N/A"}
+
+==================================================
+3. PRIORITY 3: SUPPORTING CONTEXT EVIDENCE
+==================================================
+${formatEvidenceItem("Average True Range (ATR)", "Supporting", "High", 2)}
+- ATR Value: ${atr}
+
+${formatEvidenceItem("Volatility Ranges", "Supporting", "High", 2)}
+- Volatility Level: ${volatilityLevel}
+- 60m range: ${range60m.toFixed(2)}
+
+${formatEvidenceItem("Bid/Ask Spread", "Supporting", "High", 1)}
+- Spread: ${currentSpread}
+
+${formatEvidenceItem("Distance to Target Entries", "Supporting", "High", 1)}
+- Distance to Entry: ${distanceToEntry}
+
+${formatEvidenceItem("Active Sessions Clock", "Supporting", "High", 0)}
+- London Session Range: ${londonHigh ? `${londonLow.toFixed(2)}-${londonHigh.toFixed(2)}` : "Inactive"}
+- NY Session Range: ${nyHigh ? `${nyLow.toFixed(2)}-${nyHigh.toFixed(2)}` : "Inactive"}
+
+${formatEvidenceItem("Macroeconomic News & headlines", "Supporting", "Medium", 5)}
+- Live Events: ${formattedLiveEvents || "None"}
+- Headlines: ${formattedNews || "None"}
 
 =========================================
-SECTION 9.6: CHANNEL RELIABILITY
+4. CONTEXT SUMMARIES (COMPRESSED)
 =========================================
-${historicalOutcomes.length === 0 || activeChannels.length === 0 ? `- Structure: History Insufficient` : `- Channel Details:
-${channelDetails.join("\n")}
-- Top Performing Channels: ${topPerforming.length > 0 ? topPerforming.join(", ") : "None in active list"}
-- Bottom Performing Channels: ${bottomPerforming.length > 0 ? bottomPerforming.join(", ") : "None in active list"}
-- Channels with Insufficient History: ${insufficientHistoryChannels.length > 0 ? insufficientHistoryChannels.join(", ") : "None"}
-- Raw BUY Consensus: ${rawBuyPct.toFixed(1)}%
-- Weighted BUY Consensus: ${weightedBuyPct.toFixed(1)}%
-- Raw SELL Consensus: ${rawSellPct.toFixed(1)}%
-- Weighted SELL Consensus: ${weightedSellPct.toFixed(1)}%
-- Consensus Trust Level: ${trustLevel}
-- Recommended Interpretation: ${interpretation}
-- Overall Channel Performance Trend: ${overallPerformanceTrend}`}
+- ${compressedMarketSummary}
+- ${compressedTelegramSummary}
+- ${compressedMacroSummary}
+- ${compressedInstSummary}
+- Raw Signals: ${compressedSignalsText}
 
 =========================================
-SECTION 10: TRADING DECISION OUTPUT
+5. CONTRADICTION & CONFLICT RESOLUTION
+=========================================
+- Conflict Severity: ${conflictsData.severity}
+- Conflict Confidence: ${conflictsData.confidence}
+- Active Meaningful Conflicts:
+${conflictsData.conflicts.map(c => `  * [${c.severity} Severity | ${c.confidence} Confidence] ${c.name}: ${c.description}`).join("\n") || "  * No meaningful conflicts identified."}
+
+=========================================
+6. AUTOMATED DECISION CHECKLIST
+=========================================
+${checklistData.map(item => `- ${item.name}: [${item.status}] ${item.explanation}`).join("\n")}
+
+=========================================
+7. PRE-FLIGHT SELF-CONSISTENCY CHECKS
+=========================================
+${consistencyFlags.map(f => `[WARNING] ${f}`).join("\n") || "No self-consistency anomalies flagged."}
+
+=========================================
+9. TRADING DECISION OUTPUT SCHEMA
 =========================================
 Synthesize a consensus trade recommendation based on all the provided information.
 Produce your output as a single valid JSON object matching this schema:
@@ -2310,6 +2336,30 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       return `AI-${yyyy}${mm}${dd}-${hh}${min}${ss}-${randomHex}`;
     };
 
+    const validationReview = calculateDecisionConsistency(
+      recommendation,
+      {
+        buyPercentage, sellPercentage,
+        institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+        mtfContext,
+        macroBias: macroIntel ? macroIntel.goldMacroBias : "Mixed",
+        overallRegime: regimeData?.overallRegime || "Range",
+        momentumDirection,
+        structure
+      },
+      weights,
+      directionalData,
+      coverageData,
+      executionEnvData,
+      conflictsData
+    );
+
+    logger.info("gemini_advisor.validation_review", {
+      consistencyScore: validationReview.score,
+      validationResult: validationReview.validationResult,
+      flags: validationReview.flags
+    });
+
     const generationTimeMs = Date.now() - startTime;
 
     const recResult = {
@@ -2333,7 +2383,12 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       // Confluence properties
       confluenceScore: overallConfluence,
       tradeFilter,
-      overallConfluence
+      overallConfluence,
+      // Validation fields (Phase 2.3)
+      consistencyScore: validationReview.score,
+      validationResult: validationReview.validationResult,
+      validationSummary: validationReview.validationSummary,
+      decisionFlags: validationReview.flags
     };
 
     try {
@@ -2395,7 +2450,12 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
         emergencyMacroOverrideStatus: hasEmergencyMacroEvent(newsContext, now),
         promptVersion: "1.0",
         promptHash: crypto.createHash("md5").update(prompt).digest("hex"),
-        geminiModel: "gemini-2.5-flash"
+        geminiModel: "gemini-2.5-flash",
+        // Validation fields
+        consistencyScore: validationReview.score,
+        validationResult: validationReview.validationResult,
+        validationSummary: validationReview.validationSummary,
+        decisionFlags: validationReview.flags
       };
 
       await captureIntelligenceSnapshot(recResult, snapshotContext);
@@ -3541,4 +3601,1185 @@ function calculateCorrelation(x, y) {
 
   if (denX === 0 || denY === 0) return 0;
   return num / Math.sqrt(denX * denY);
+}
+
+// ==================================================
+// PHASE 2.0: INTEL ENGINE HELPER FUNCTIONS
+// ==================================================
+
+function formatEvidenceItem(name, importance, reliability, ageInMins) {
+  let finalReliability = reliability;
+  if (ageInMins > 15) {
+    finalReliability = "Low (Stale)";
+  } else if (ageInMins > 5 && reliability === "High") {
+    finalReliability = "Medium";
+  }
+  
+  return `### ${name}
+- Importance: ${importance}
+- Reliability: ${finalReliability}
+- Freshness: ${ageInMins !== null && ageInMins !== undefined ? `${Math.round(ageInMins)}m ago` : "1m ago"}`;
+}
+
+export function detectConflicts(params) {
+  const {
+    buyPercentage, sellPercentage,
+    institutionalBias,
+    macroBias,
+    structure,
+    currentPrice,
+    dxyStats,
+    us10yStats,
+    overallRegime,
+    momentumDirection,
+    mtfContext,
+    tradeTiming,
+    orderFlow,
+    volatilityLevel,
+    liveEvents,
+    newsContext
+  } = params;
+
+  const conflicts = [];
+  const dominantDir = buyPercentage > sellPercentage ? "BUY" : (sellPercentage > buyPercentage ? "SELL" : "HOLD");
+
+  // 1. Telegram vs Institutional Bias
+  if (dominantDir !== "HOLD" && institutionalBias && institutionalBias !== "Neutral") {
+    if (dominantDir === "BUY" && institutionalBias === "Bearish") {
+      conflicts.push({
+        name: "Telegram vs Institutional Bias",
+        description: "Consensus is BUYing, but Institutional Order Flow shows Bearish block mitigation.",
+        severity: "HIGH",
+        confidence: "HIGH"
+      });
+    } else if (dominantDir === "SELL" && institutionalBias === "Bullish") {
+      conflicts.push({
+        name: "Telegram vs Institutional Bias",
+        description: "Consensus is SELLing, but Institutional Order Flow shows Bullish displacement and blocks.",
+        severity: "HIGH",
+        confidence: "HIGH"
+      });
+    }
+  }
+
+  // 2. Telegram vs Macro Alignment
+  if (dominantDir !== "HOLD" && macroBias && macroBias !== "Mixed") {
+    if (dominantDir === "BUY" && macroBias === "Bearish") {
+      conflicts.push({
+        name: "Telegram vs Macro Alignment",
+        description: "Consensus is BUYing, but DXY/Yield trends create a bearish Gold environment.",
+        severity: "HIGH",
+        confidence: "MEDIUM"
+      });
+    } else if (dominantDir === "SELL" && macroBias === "Bullish") {
+      conflicts.push({
+        name: "Telegram vs Macro Alignment",
+        description: "Consensus is SELLing, but dollar/yield weakness supports a bullish Gold environment.",
+        severity: "HIGH",
+        confidence: "MEDIUM"
+      });
+    }
+  }
+
+  // 3. Institutional Bias vs Market Structure
+  if (institutionalBias && institutionalBias !== "Neutral" && structure && structure.currentStructure) {
+    if (institutionalBias === "Bearish" && structure.currentStructure.includes("Bullish")) {
+      conflicts.push({
+        name: "Institutional Bias vs Market Structure",
+        description: "Institutions are Bearish, but technical market structure is in a Bullish swing layout.",
+        severity: "MEDIUM",
+        confidence: "HIGH"
+      });
+    } else if (institutionalBias === "Bullish" && structure.currentStructure.includes("Bearish")) {
+      conflicts.push({
+        name: "Institutional Bias vs Market Structure",
+        description: "Institutions are Bullish, but technical market structure is in a Bearish swing layout.",
+        severity: "MEDIUM",
+        confidence: "HIGH"
+      });
+    }
+  }
+
+  // 4. DXY vs Gold
+  if (dxyStats && dxyStats.trendDirection && dxyStats.trendDirection !== "Neutral") {
+    if (dominantDir === "BUY" && dxyStats.trendDirection === "Bullish") {
+      conflicts.push({
+        name: "DXY vs Gold Correlation",
+        description: "Attempting to BUY Gold while DXY index is in a confirmed Bullish trend.",
+        severity: "MEDIUM",
+        confidence: "HIGH"
+      });
+    }
+  }
+
+  // 5. US10Y vs Gold
+  if (us10yStats && us10yStats.trendDirection && us10yStats.trendDirection !== "Neutral") {
+    if (dominantDir === "BUY" && us10yStats.trendDirection === "Bullish") {
+      conflicts.push({
+        name: "US10Y vs Gold Correlation",
+        description: "BUY setup conflicts with a rising US 10-Year yield.",
+        severity: "LOW",
+        confidence: "MEDIUM"
+      });
+    }
+  }
+
+  // 6. Market Regime vs Momentum
+  if (overallRegime && momentumDirection && momentumDirection !== "Neutral") {
+    if (overallRegime.includes("Trending") && momentumDirection === (dominantDir === "BUY" ? "Bearish" : "Bullish")) {
+      conflicts.push({
+        name: "Market Regime vs Momentum",
+        description: "Market regime is Trending, but price momentum is counter-trend.",
+        severity: "MEDIUM",
+        confidence: "MEDIUM"
+      });
+    }
+  }
+
+  // 7. Higher timeframe vs Lower timeframe
+  let htfConflict = false;
+  if (dominantDir !== "HOLD") {
+    ["1h", "4h"].forEach(tf => {
+      const tfData = mtfContext[tf];
+      if (tfData && tfData.status === "OK" && tfData.trendDirection) {
+        if (dominantDir === "BUY" && tfData.trendDirection === "Bearish") htfConflict = true;
+        if (dominantDir === "SELL" && tfData.trendDirection === "Bullish") htfConflict = true;
+      }
+    });
+  }
+  if (htfConflict) {
+    conflicts.push({
+      name: "HTF vs LTF Alignment",
+      description: "Intraday signals conflict directly with Higher Timeframe structure.",
+      severity: "HIGH",
+      confidence: "HIGH"
+    });
+  }
+
+  // 8. Liquidity vs Breakout
+  if (tradeTiming === "WAIT BREAKOUT" && orderFlow && orderFlow.liquidity && (orderFlow.liquidity.equalHighs || orderFlow.liquidity.equalLows)) {
+    conflicts.push({
+      name: "Liquidity vs Breakout Timing",
+      description: "Breakout target has sweep pool risk at session highs/lows.",
+      severity: "MEDIUM",
+      confidence: "MEDIUM"
+    });
+  }
+
+  // 9. Session vs Volatility
+  if (volatilityLevel === "High" && (!params.tradingSession || !params.tradingSession.active)) {
+    conflicts.push({
+      name: "Session vs Volatility",
+      description: "High volatility detected outside overlap hours.",
+      severity: "LOW",
+      confidence: "LOW"
+    });
+  }
+
+  // 10. News vs Technicals
+  if (liveEvents && liveEvents.length > 0 && dominantDir !== "HOLD") {
+    conflicts.push({
+      name: "News vs Technical Setup",
+      description: "Trading setup relies on technical parameters during live high-impact news.",
+      severity: "HIGH",
+      confidence: "HIGH"
+    });
+  }
+
+  let severity = "LOW";
+  const hasHigh = conflicts.some(c => c.severity === "HIGH");
+  const hasMed = conflicts.some(c => c.severity === "MEDIUM");
+  if (hasHigh) severity = "HIGH";
+  else if (hasMed) severity = "MEDIUM";
+
+  let confidence = "MEDIUM";
+  const highConfCount = conflicts.filter(c => c.confidence === "HIGH").length;
+  if (highConfCount >= 2) confidence = "HIGH";
+  else if (conflicts.length > 0 && highConfCount === 0) confidence = "LOW";
+
+  return {
+    conflicts,
+    severity,
+    confidence
+  };
+}
+
+export function generateChecklist(params) {
+  const {
+    overallRegime, volatilityLevel,
+    institutionalBias, dominantDir,
+    mtfContext,
+    macroConflictLevel,
+    trustLevel,
+    averageRR,
+    orderFlow,
+    tradingSession,
+    overallConfluence
+  } = params;
+
+  const checklist = [];
+
+  // 1. Market Regime
+  let status = "PASS";
+  let explanation = "Market trend is stable and clean.";
+  if (volatilityLevel === "Extreme") {
+    status = "FAIL";
+    explanation = "Extreme volatility makes execution risky.";
+  } else if (volatilityLevel === "High" || overallRegime.includes("Unstable")) {
+    status = "WARNING";
+    explanation = "Elevated volatility or unstable range noise.";
+  }
+  checklist.push({ name: "Market Regime", status, explanation });
+
+  // 2. Institutional Bias
+  status = "PASS";
+  explanation = "Bias aligns with trade direction.";
+  if (institutionalBias === "Neutral" || institutionalBias === "Mixed") {
+    status = "WARNING";
+    explanation = "Institutional order flow is sidelined.";
+  } else if (dominantDir !== "HOLD" && institutionalBias !== (dominantDir === "BUY" ? "Bullish" : "Bearish")) {
+    status = "FAIL";
+    explanation = `Opposing institutional flow detected (${institutionalBias}).`;
+  }
+  checklist.push({ name: "Institutional Bias", status, explanation });
+
+  // 3. Multi-Timeframe Alignment
+  status = "PASS";
+  explanation = "Multiple key timeframes are aligned.";
+  let counterCount = 0;
+  if (dominantDir !== "HOLD") {
+    ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+      const tfData = mtfContext[tf];
+      if (tfData && tfData.status === "OK" && tfData.trendDirection) {
+        if (dominantDir === "BUY" && tfData.trendDirection === "Bearish") counterCount++;
+        if (dominantDir === "SELL" && tfData.trendDirection === "Bullish") counterCount++;
+      }
+    });
+  }
+  if (counterCount >= 2) {
+    status = "FAIL";
+    explanation = `${counterCount} key timeframes actively oppose trade.`;
+  } else if (counterCount === 1) {
+    status = "WARNING";
+    explanation = "One timeframe trend conflict detected.";
+  }
+  checklist.push({ name: "Multi-Timeframe Alignment", status, explanation });
+
+  // 4. Macro Alignment
+  status = "PASS";
+  explanation = "Yields and currencies align with Gold direction.";
+  if (macroConflictLevel === "High" || macroConflictLevel === "Extreme") {
+    status = "FAIL";
+    explanation = "Strong dollar/yield headwinds active.";
+  } else if (macroConflictLevel === "Medium") {
+    status = "WARNING";
+    explanation = "Moderate macro cross-currents active.";
+  }
+  checklist.push({ name: "Macro Alignment", status, explanation });
+
+  // 5. Telegram Reliability
+  status = "PASS";
+  explanation = "Ingested sentiment consensus is reliable.";
+  if (trustLevel === "Low") {
+    status = "FAIL";
+    explanation = "Consensus derived from poorly rated channels.";
+  } else if (trustLevel === "Medium") {
+    status = "WARNING";
+    explanation = "Moderate consensus channels weight active.";
+  }
+  checklist.push({ name: "Telegram Reliability", status, explanation });
+
+  // 6. Risk Reward
+  status = "PASS";
+  explanation = "Favorable risk-reward target boundaries.";
+  if (averageRR < 1.0) {
+    status = "FAIL";
+    explanation = "Negative risk-reward profile target.";
+  } else if (averageRR < 1.5) {
+    status = "WARNING";
+    explanation = "Tight target ratios relative to stop loss.";
+  }
+  checklist.push({ name: "Risk Reward", status, explanation });
+
+  // 7. Liquidity
+  status = "PASS";
+  explanation = "No order sweep risks at session boundaries.";
+  if (orderFlow && orderFlow.liquidity && (orderFlow.liquidity.equalHighs || orderFlow.liquidity.equalLows)) {
+    status = "WARNING";
+    explanation = "Sweep pools exist near session highs/lows.";
+  }
+  checklist.push({ name: "Liquidity", status, explanation });
+
+  // 8. Trading Session
+  status = "PASS";
+  explanation = "Executing during standard London-NY overlap window.";
+  if (!tradingSession || !tradingSession.active) {
+    status = "WARNING";
+    explanation = "Trading outside standard prime liquidity hours.";
+  }
+  checklist.push({ name: "Trading Session", status, explanation });
+
+  // 9. Confluence
+  status = "PASS";
+  explanation = "Strong confluence scores support the trade.";
+  if (overallConfluence < 50) {
+    status = "FAIL";
+    explanation = `Low confluence score (${overallConfluence}).`;
+  } else if (overallConfluence < 70) {
+    status = "WARNING";
+    explanation = `Moderate confluence score (${overallConfluence}).`;
+  }
+  checklist.push({ name: "Confluence", status, explanation });
+
+  return checklist;
+}
+
+function calculateReadiness(params) {
+  const {
+    overallConfluence,
+    institutionalBias, dominantDir,
+    macroConflictLevel,
+    trustLevel,
+    mtfContext,
+    volatilityLevel,
+    tradingSession,
+    signalsCount,
+    hasExtremeMtfConflict,
+    hasLiveNewsBlock,
+    hasVeryLowScore,
+    hasVolConsensusBlock
+  } = params;
+
+  let score = 100;
+  const positives = [];
+  const negatives = [];
+
+  if (overallConfluence >= 75) {
+    positives.push(`High Confluence Score (${overallConfluence})`);
+  }
+  if (dominantDir !== "HOLD" && institutionalBias === (dominantDir === "BUY" ? "Bullish" : "Bearish")) {
+    positives.push("Institutional flow aligned with trade direction");
+  }
+  if (trustLevel === "High") {
+    positives.push("Consensus signals from highly reliable channels");
+  }
+  if (volatilityLevel === "Low") {
+    positives.push("Low volatility regime ensures cleaner executions");
+  }
+  let alignedCount = 0;
+  if (dominantDir !== "HOLD") {
+    ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+      const tfData = mtfContext[tf];
+      if (tfData && tfData.status === "OK" && tfData.trendDirection === (dominantDir === "BUY" ? "Bullish" : "Bearish")) {
+        alignedCount++;
+      }
+    });
+  }
+  if (alignedCount >= 3) {
+    positives.push(`Timeframe trend agreement across ${alignedCount} intervals`);
+  }
+
+  if (hasExtremeMtfConflict) {
+    score -= 20;
+    negatives.push("Extreme higher-timeframe trend conflict");
+  }
+  if (macroConflictLevel === "High" || macroConflictLevel === "Extreme") {
+    score -= 15;
+    negatives.push(`High macro conflict level (${macroConflictLevel})`);
+  }
+  if (dominantDir !== "HOLD" && institutionalBias !== "Neutral" && institutionalBias !== (dominantDir === "BUY" ? "Bullish" : "Bearish")) {
+    score -= 15;
+    negatives.push("Opposing institutional flow");
+  }
+  if (signalsCount === 0 || overallConfluence < 50) {
+    score -= 20;
+    negatives.push("Weak active signal consensus");
+  }
+  if (!tradingSession || !tradingSession.active) {
+    score -= 10;
+    negatives.push("Outside prime London-NY session overlap");
+  }
+  if (hasLiveNewsBlock) {
+    score -= 15;
+    negatives.push("Live high-impact news pending");
+  }
+  if (hasVeryLowScore) {
+    score -= 20;
+    negatives.push("Overall confluence score is extremely low");
+  }
+  if (hasVolConsensusBlock) {
+    score -= 15;
+    negatives.push("Weak active signal consensus combined with high volatility");
+  }
+
+  if (volatilityLevel === "High" || volatilityLevel === "Extreme") {
+    score -= 10;
+    negatives.push("Elevated volatility spreads increase slippage risk");
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  return {
+    score,
+    positives: positives.length > 0 ? positives : ["No outstanding positive parameters"],
+    negatives: negatives.length > 0 ? negatives : ["No high-risk negative factors present"]
+  };
+}
+
+function runSelfConsistencyChecks(dominantDir, institutionalBias, overallRegime, overallConfluence) {
+  const flags = [];
+  if (dominantDir === "BUY" && institutionalBias === "Bearish") {
+    flags.push("CRITICAL ALERT: Attempting to BUY Gold while Institutional Flow is Bearish.");
+  }
+  if (dominantDir === "SELL" && overallRegime.includes("Trending") && overallRegime.includes("Bullish")) {
+    flags.push("CRITICAL ALERT: Attempting to SELL Gold against a strong Bullish market regime.");
+  }
+  if (overallConfluence < 50) {
+    flags.push("WARNING FLAG: Extremely weak overall confluence score. HOLD should be strongly preferred.");
+  }
+  return flags;
+}
+
+// ==================================================
+// PHASE 2.2: DIRECTIONAL INTELLIGENCE & EXECUTION ENVIRONMENT SEPARATION
+// ==================================================
+
+export async function getCategoryHistoricalWinRates() {
+  const isMongoConnected = mongoose.connection.readyState === 1;
+  let snapshots = [];
+  if (isMongoConnected) {
+    try {
+      snapshots = await AiRecommendationSnapshot.find({ "outcome.status": { $ne: null } }).lean();
+    } catch (e) {
+      logger.warn("gemini_advisor.snapshot_fetch_failed", { error: e.message });
+    }
+  }
+  
+  if (snapshots.length < 5) {
+    return {
+      instFlow: 70,
+      telegram: 70,
+      macro: 70,
+      structure: 70,
+      regime: 70
+    };
+  }
+
+  const getWinRate = (subset) => {
+    if (subset.length === 0) return 70;
+    const wins = subset.filter(s => s.outcome.status === "FULL_TP" || s.outcome.status === "PARTIAL_TP").length;
+    return (wins / subset.length) * 100;
+  };
+
+  const instSubset = snapshots.filter(s => s.institutionalBias && s.institutionalBias !== "Neutral");
+  const telSubset = snapshots.filter(s => s.telegramConsensus && s.telegramConsensus > 50);
+  const macroSubset = snapshots.filter(s => s.macroAlignment && s.macroAlignment !== "Neutral/Mixed Macro Conditions");
+  const structSubset = snapshots.filter(s => s.nearestOrderBlock || s.nearestFairValueGap);
+  const regimeSubset = snapshots.filter(s => s.marketRegime && s.marketRegime !== "Regime Unknown");
+
+  return {
+    instFlow: getWinRate(instSubset.length >= 3 ? instSubset : snapshots),
+    telegram: getWinRate(telSubset.length >= 3 ? telSubset : snapshots),
+    macro: getWinRate(macroSubset.length >= 3 ? macroSubset : snapshots),
+    structure: getWinRate(structSubset.length >= 3 ? structSubset : snapshots),
+    regime: getWinRate(regimeSubset.length >= 3 ? regimeSubset : snapshots)
+  };
+}
+
+export function calculateContinuousCategoryScores(params) {
+  const {
+    buyPercentage, sellPercentage,
+    institutionalBias,
+    macroConflictLevel,
+    trustLevel,
+    orderFlow,
+    tradingSession,
+    volatilityLevel,
+    dxyStats,
+    us10yStats,
+    overallRegime,
+    momentumDirection,
+    structure,
+    averageSignalAgeMin,
+    liveEvents
+  } = params;
+
+  const hour = tradingSession && typeof tradingSession.activeHour === "number" ? tradingSession.activeHour : new Date().getUTCHours();
+  const isOverlap = (hour >= 13 && hour < 16);
+  const isSessionActive = (hour >= 8 && hour < 21);
+  const isNewsActive = (liveEvents && liveEvents.length > 0) || (macroConflictLevel === "High");
+
+  // 1. Institutional Flow Score
+  const biasStr = (institutionalBias && institutionalBias !== "Neutral") ? 1.0 : 0.2;
+  const obStr = (orderFlow && (orderFlow.nearestBullishOB || orderFlow.nearestBearishOB)) ? 1.0 : 0.0;
+  const fvgStr = (orderFlow && (orderFlow.nearestBullishFvg || orderFlow.nearestBearishFvg)) ? 1.0 : 0.0;
+  const sweepConf = (orderFlow && orderFlow.liquidity && orderFlow.liquidity.lastSweepType && orderFlow.liquidity.lastSweepType !== "None") ? 1.0 : 0.1;
+  
+  let instScore = (biasStr + obStr + fvgStr + sweepConf) / 4;
+  if (isOverlap) instScore += 0.3;
+  if (overallRegime && (overallRegime.includes("Trending") || overallRegime.includes("Stable"))) instScore += 0.2;
+
+  // 2. Telegram Sentiment Score
+  const sessionFact = isOverlap ? 1.0 : (isSessionActive ? 0.7 : 0.4);
+  const consensusPct = Math.max(buyPercentage || 0, sellPercentage || 0) / 100;
+  const relFact = trustLevel === "High" ? 1.0 : (trustLevel === "Medium" ? 0.6 : 0.3);
+  const freshFact = averageSignalAgeMin <= 5 ? 1.0 : (averageSignalAgeMin <= 15 ? 0.8 : (averageSignalAgeMin <= 60 ? 0.5 : 0.2));
+  
+  let telScore = (sessionFact + consensusPct + relFact + freshFact) / 4;
+  if (volatilityLevel === "High" || volatilityLevel === "Extreme") telScore -= 0.3;
+  if (isNewsActive) telScore -= 0.3;
+  if (!isSessionActive) telScore -= 0.2;
+
+  // 3. Macro Intelligence Score
+  const dxyFact = (dxyStats && dxyStats.trendDirection && dxyStats.trendDirection !== "Neutral") ? 1.0 : 0.5;
+  const yieldFact = (us10yStats && us10yStats.trendDirection && us10yStats.trendDirection !== "Neutral") ? 1.0 : 0.5;
+  const alignmentFact = 0.8; 
+  const conflictFact = macroConflictLevel === "Low" ? 1.0 : (macroConflictLevel === "Medium" ? 0.5 : 0.2);
+  
+  let macroScore = (dxyFact + yieldFact + alignmentFact + conflictFact) / 4;
+  if (isNewsActive) macroScore += 0.4;
+
+  // 4. Market Structure Score
+  const bosFact = (structure && structure.bos && structure.bos !== "None") ? 1.0 : 0.5;
+  const chochFact = (structure && structure.choch && structure.choch !== "None") ? 1.0 : 0.5;
+  const consistencyFact = 0.8;
+  const structFact = (structure && structure.strength === "Strong") ? 1.0 : ((structure && structure.strength === "Medium") ? 0.6 : 0.3);
+  
+  let structScore = (bosFact + chochFact + consistencyFact + structFact) / 4;
+  if (isOverlap) structScore += 0.2;
+  if (overallRegime && (overallRegime.includes("Trending") || overallRegime.includes("Stable"))) structScore += 0.2;
+
+  // 5. Market Regime Score
+  const confFact = 0.8;
+  const trendFact = (overallRegime && (overallRegime.includes("Trending") || overallRegime.includes("Stable"))) ? 1.0 : 0.5;
+  const momFact = (momentumDirection && momentumDirection !== "Neutral") ? 1.0 : 0.4;
+  const regimeScore = (confFact + trendFact + momFact) / 3;
+
+  return {
+    instFlow: Math.max(0.1, instScore),
+    telegram: Math.max(0.1, telScore),
+    macro: Math.max(0.1, macroScore),
+    structure: Math.max(0.1, structScore),
+    regime: Math.max(0.1, regimeScore)
+  };
+}
+
+export function calculateAdaptiveWeights(params, winRates, prevWeights = null) {
+  const scores = calculateContinuousCategoryScores(params);
+  
+  // Calculate Multipliers
+  const multipliers = {};
+  Object.keys(scores).forEach(cat => {
+    const wr = winRates[cat] !== undefined ? winRates[cat] : 70;
+    multipliers[cat] = Math.max(0.8, Math.min(1.2, 1 + (wr - 70) / 100));
+  });
+
+  // Target Raw Weights
+  const targetWeights = {};
+  let totalScore = 0;
+  Object.keys(scores).forEach(cat => {
+    targetWeights[cat] = scores[cat] * multipliers[cat];
+    totalScore += targetWeights[cat];
+  });
+
+  // Convert to Percentage
+  Object.keys(targetWeights).forEach(cat => {
+    targetWeights[cat] = totalScore > 0 ? (targetWeights[cat] / totalScore) * 100 : 20.0;
+  });
+
+  // Cycle Smoothing: max delta +-10%
+  let smoothed = { ...targetWeights };
+  if (prevWeights) {
+    Object.keys(targetWeights).forEach(cat => {
+      if (prevWeights[cat] !== undefined) {
+        const delta = targetWeights[cat] - prevWeights[cat];
+        const clampedDelta = Math.max(-10, Math.min(10, delta));
+        smoothed[cat] = prevWeights[cat] + clampedDelta;
+      }
+    });
+  }
+
+  // Normalize and apply constraints
+  const finalWeights = normalizeWeights(smoothed, scores);
+  lastComputedWeights = finalWeights; // Save for next cycle
+
+  return {
+    weights: finalWeights,
+    scores,
+    multipliers
+  };
+}
+
+function normalizeWeights(weights, otherScores) {
+  const categories = Object.keys(weights);
+  const avgWeight = 100 / categories.length; // 20
+  const safetyLimit = 1.75 * avgWeight; // 35
+
+  const isEveryOtherLow = (cat) => {
+    return categories.every(c => c === cat || (otherScores[c] || 0) < 0.3);
+  };
+
+  let clamped = {};
+  categories.forEach(cat => {
+    let maxLimit = 40;
+    if (!isEveryOtherLow(cat)) {
+      maxLimit = Math.min(40, safetyLimit);
+    }
+    clamped[cat] = Math.max(5, Math.min(maxLimit, weights[cat]));
+  });
+
+  for (let iter = 0; iter < 10; iter++) {
+    const sum = Object.values(clamped).reduce((a, b) => a + b, 0);
+    const diff = 100 - sum;
+    if (Math.abs(diff) < 0.001) break;
+
+    let adjustableSum = 0;
+    categories.forEach(cat => {
+      let maxLimit = 40;
+      if (!isEveryOtherLow(cat)) {
+        maxLimit = Math.min(40, safetyLimit);
+      }
+      if ((diff > 0 && clamped[cat] < maxLimit) || (diff < 0 && clamped[cat] > 5)) {
+        adjustableSum += clamped[cat];
+      }
+    });
+
+    if (adjustableSum === 0) {
+      const count = categories.length;
+      categories.forEach(cat => {
+        clamped[cat] += diff / count;
+      });
+      break;
+    }
+
+    categories.forEach(cat => {
+      let maxLimit = 40;
+      if (!isEveryOtherLow(cat)) {
+        maxLimit = Math.min(40, safetyLimit);
+      }
+      if ((diff > 0 && clamped[cat] < maxLimit) || (diff < 0 && clamped[cat] > 5)) {
+        clamped[cat] += (clamped[cat] / adjustableSum) * diff;
+        clamped[cat] = Math.max(5, Math.min(maxLimit, clamped[cat]));
+      }
+    });
+  }
+
+  const finalSum = Object.values(clamped).reduce((a, b) => a + b, 0);
+  if (Math.abs(finalSum - 100) > 0.0001) {
+    const lastCat = categories[categories.length - 1];
+    clamped[lastCat] += (100 - finalSum);
+  }
+
+  // Round values to 1 decimal place
+  categories.forEach(cat => {
+    clamped[cat] = Number(clamped[cat].toFixed(1));
+  });
+
+  // Re-adjust sum of rounded values to exactly 100
+  let roundedSum = Object.values(clamped).reduce((a, b) => a + b, 0);
+  let diff = 100 - roundedSum;
+  if (Math.abs(diff) > 0.01) {
+    let adjusted = false;
+    for (const cat of categories) {
+      const targetVal = Number((clamped[cat] + diff).toFixed(1));
+      let maxLimit = 40;
+      if (!isEveryOtherLow(cat)) {
+        maxLimit = Math.min(40, safetyLimit);
+      }
+      if (targetVal >= 5 && targetVal <= maxLimit) {
+        clamped[cat] = targetVal;
+        adjusted = true;
+        break;
+      }
+    }
+    if (!adjusted) {
+      const largestCat = categories.sort((a, b) => clamped[b] - clamped[a])[0];
+      clamped[largestCat] = Number((clamped[largestCat] + diff).toFixed(1));
+    }
+  }
+
+  return clamped;
+}
+
+export function generateWeightExplanation(weights, scores) {
+  const categories = {
+    instFlow: "Institutional Order Flow",
+    telegram: "Telegram Intelligence",
+    macro: "Macro Intelligence",
+    structure: "Market Structure",
+    regime: "Market Regime"
+  };
+
+  const reasons = {
+    instFlow: [],
+    telegram: [],
+    macro: [],
+    structure: [],
+    regime: []
+  };
+
+  if (scores.instFlow > 0.7) reasons.instFlow.push("Strong Institutional flow / OB Sweep present");
+  else reasons.instFlow.push("Neutral order block mitigation");
+
+  if (scores.telegram > 0.7) reasons.telegram.push("High Reliability & Consensus agreement");
+  else reasons.telegram.push("Moderate or stale consensus active");
+
+  if (scores.macro > 0.7) reasons.macro.push("Strong cross-market alignment with DXY / US10Y");
+  else reasons.macro.push("Neutral DXY yield correlation");
+
+  if (scores.structure > 0.7) reasons.structure.push("BOS / CHoCH confirming swing structure");
+  else reasons.structure.push("Sidelined range structure");
+
+  if (scores.regime > 0.7) reasons.regime.push("High confidence trending state");
+  else reasons.regime.push("Weak regime / unstable ranges");
+
+  const lines = ["====================================", "WEIGHT SUMMARY", "===================================="];
+  Object.keys(categories).forEach(key => {
+    lines.push(`${categories[key]}`);
+    lines.push(`${weights[key]}%`);
+    lines.push("Reason:");
+    reasons[key].forEach(r => lines.push(`• ${r}`));
+    lines.push("");
+  });
+
+  return lines.join("\n");
+}
+
+export function calculateDirectionalScore(params, weights) {
+  const {
+    buyPercentage, sellPercentage,
+    institutionalBias,
+    mtfContext,
+    macroBias,
+    overallRegime,
+    momentumDirection,
+    structure
+  } = params;
+
+  let bullishVotes = 0;
+  let bearishVotes = 0;
+  const topBullishDrivers = [];
+  const topBearishDrivers = [];
+
+  const wInst = (weights.instFlow || 20) / 100;
+  if (institutionalBias === "Bullish") {
+    bullishVotes += 100 * wInst;
+    topBullishDrivers.push("Bullish Institutional order flow");
+  } else if (institutionalBias === "Bearish") {
+    bearishVotes += 100 * wInst;
+    topBearishDrivers.push("Bearish Institutional order flow");
+  }
+
+  const wStruct = (weights.structure || 20) / 100;
+  if (structure) {
+    if (structure.strength === "Strong" || structure.strength === "Medium") {
+      if (structure.bos === "Bullish" || structure.choch === "Bullish" || structure.currentStructure?.includes("Bullish")) {
+        bullishVotes += 100 * wStruct;
+        topBullishDrivers.push(`Market Structure aligned Bullish (${structure.strength})`);
+      } else if (structure.bos === "Bearish" || structure.choch === "Bearish" || structure.currentStructure?.includes("Bearish")) {
+        bearishVotes += 100 * wStruct;
+        topBearishDrivers.push(`Market Structure aligned Bearish (${structure.strength})`);
+      }
+    }
+  }
+
+  let mtfBullish = 0;
+  let mtfBearish = 0;
+  ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+    const tfData = mtfContext?.[tf];
+    if (tfData && tfData.status === "OK") {
+      if (tfData.trendDirection === "Bullish") mtfBullish++;
+      else if (tfData.trendDirection === "Bearish") mtfBearish++;
+    }
+  });
+  const wRegime = (weights.regime || 20) / 100;
+  if (mtfBullish >= 3) {
+    bullishVotes += 50 * wRegime;
+    topBullishDrivers.push(`MTF trend agreement across ${mtfBullish} intervals`);
+  } else if (mtfBearish >= 3) {
+    bearishVotes += 50 * wRegime;
+    topBearishDrivers.push(`MTF trend conflict across ${mtfBearish} intervals`);
+  }
+
+  if (overallRegime) {
+    if (overallRegime.includes("Bullish") || overallRegime.includes("Trending Up")) {
+      bullishVotes += 50 * wRegime;
+      topBullishDrivers.push("Bullish market regime trend");
+    } else if (overallRegime.includes("Bearish") || overallRegime.includes("Trending Down")) {
+      bearishVotes += 50 * wRegime;
+      topBearishDrivers.push("Bearish market regime trend");
+    }
+  }
+
+  const wMacro = (weights.macro || 20) / 100;
+  if (macroBias === "Bullish") {
+    bullishVotes += 100 * wMacro;
+    topBullishDrivers.push("Macro conditions support Bullish Gold");
+  } else if (macroBias === "Bearish") {
+    bearishVotes += 100 * wMacro;
+    topBearishDrivers.push("Macro yields/currency favor Bearish Gold");
+  }
+
+  const wTel = (weights.telegram || 20) / 100;
+  if (buyPercentage > 60) {
+    bullishVotes += 100 * wTel;
+    topBullishDrivers.push(`Telegram Consensus BUY (${buyPercentage.toFixed(0)}%)`);
+  } else if (sellPercentage > 60) {
+    bearishVotes += 100 * wTel;
+    topBearishDrivers.push(`Telegram Consensus SELL (${sellPercentage.toFixed(0)}%)`);
+  }
+
+  let directionalScore = 50 + (bullishVotes - bearishVotes) / 2;
+  directionalScore = Math.max(0, Math.min(100, directionalScore));
+
+  let primaryMarketBias = "NEUTRAL";
+  if (directionalScore > 55) primaryMarketBias = "BULLISH";
+  else if (directionalScore < 45) primaryMarketBias = "BEARISH";
+
+  const totalVotes = bullishVotes + bearishVotes;
+  let directionalConfidence = totalVotes > 0 ? (Math.abs(bullishVotes - bearishVotes) / totalVotes) * 100 : 0;
+  directionalConfidence = Math.max(10, Math.min(100, Math.round(directionalConfidence)));
+
+  return {
+    directionalScore: Math.round(directionalScore),
+    directionalConfidence,
+    primaryMarketBias,
+    topBullishDrivers: topBullishDrivers.slice(0, 3),
+    topBearishDrivers: topBearishDrivers.slice(0, 3)
+  };
+}
+
+export function calculateEvidenceCoverage(params) {
+  const {
+    buyPercentage, sellPercentage,
+    institutionalBias,
+    macroBias,
+    overallRegime,
+    structure,
+    liveEvents,
+    newsContext
+  } = params;
+
+  let score = 0;
+  let maxScore = 0;
+  const criticalMissing = [];
+  const importantMissing = [];
+  const optionalMissing = [];
+
+  maxScore += 30;
+  if (institutionalBias && institutionalBias !== "Neutral") {
+    score += 30;
+  } else {
+    criticalMissing.push("Institutional Flow direction");
+  }
+
+  maxScore += 25;
+  if (structure && structure.strength && structure.strength !== "Weak" && structure.bos && structure.bos !== "None") {
+    score += 25;
+  } else {
+    criticalMissing.push("Market Structure (BOS / CHoCH alignment)");
+  }
+
+  maxScore += 20;
+  if (macroBias && macroBias !== "Mixed" && macroBias !== "Neutral") {
+    score += 20;
+  } else {
+    importantMissing.push("Macro Currency & Yield Trends");
+  }
+
+  maxScore += 15;
+  if (buyPercentage !== undefined && sellPercentage !== undefined && (buyPercentage > 0 || sellPercentage > 0)) {
+    score += 15;
+  } else {
+    importantMissing.push("Telegram Sentiment Consensus Inflows");
+  }
+
+  maxScore += 5;
+  if (overallRegime && overallRegime !== "Regime Unknown" && overallRegime !== "Range") {
+    score += 5;
+  } else {
+    optionalMissing.push("Trending Market Regime");
+  }
+
+  maxScore += 5;
+  if ((liveEvents && liveEvents.length > 0) || (newsContext && newsContext.length > 0)) {
+    score += 5;
+  } else {
+    optionalMissing.push("Recent News & Macro Calendar Events");
+  }
+
+  const coveragePercentage = Math.round((score / maxScore) * 100);
+
+  return {
+    coveragePercentage,
+    criticalMissing,
+    importantMissing,
+    optionalMissing
+  };
+}
+
+export function calculateExecutionEnvironment(params, weights) {
+  const {
+    overallConfluence,
+    institutionalBias, dominantDir,
+    macroConflictLevel,
+    trustLevel,
+    mtfContext,
+    volatilityLevel,
+    tradingSession,
+    signalsCount,
+    hasExtremeMtfConflict,
+    hasLiveNewsBlock,
+    hasVeryLowScore,
+    hasVolConsensusBlock,
+    currentSpread
+  } = params;
+
+  let riskPenalty = 0;
+  const reasonsToAvoid = [];
+
+  const wInst = (weights.instFlow || 20) / 20;
+  const wTel = (weights.telegram || 20) / 20;
+  const wStruct = (weights.structure || 20) / 20;
+  const wMacro = (weights.macro || 20) / 20;
+  const wRegime = (weights.regime || 20) / 20;
+
+  if (hasExtremeMtfConflict) {
+    riskPenalty += Math.round(20 * wStruct);
+    reasonsToAvoid.push("Extreme higher-timeframe trend conflict");
+  }
+  if (macroConflictLevel === "High" || macroConflictLevel === "Extreme") {
+    riskPenalty += Math.round(15 * wMacro);
+    reasonsToAvoid.push(`High macro conflict level (${macroConflictLevel})`);
+  }
+  if (dominantDir !== "HOLD" && institutionalBias !== "Neutral" && institutionalBias !== (dominantDir === "BUY" ? "Bullish" : "Bearish")) {
+    riskPenalty += Math.round(15 * wInst);
+    reasonsToAvoid.push("Trade direction opposes institutional order flow");
+  }
+  if (signalsCount === 0 || overallConfluence < 50) {
+    riskPenalty += Math.round(20 * wTel);
+    reasonsToAvoid.push("Weak active signal consensus");
+  }
+  if (!tradingSession || !tradingSession.active) {
+    riskPenalty += 10;
+    reasonsToAvoid.push("Trading outside prime London-NY session overlap");
+  }
+  if (hasLiveNewsBlock) {
+    riskPenalty += 15;
+    reasonsToAvoid.push("Live high-impact news pending");
+  }
+  if (volatilityLevel === "High" || volatilityLevel === "Extreme") {
+    riskPenalty += 10;
+    reasonsToAvoid.push("Elevated volatility spreads increase slippage risk");
+  }
+  if (hasVeryLowScore) {
+    riskPenalty += Math.round(20 * wRegime);
+    reasonsToAvoid.push("Overall confluence score is extremely low");
+  }
+  if (hasVolConsensusBlock) {
+    riskPenalty += Math.round(15 * wTel);
+    reasonsToAvoid.push("Weak active signal consensus combined with high volatility");
+  }
+  if (currentSpread && currentSpread > 4.0) {
+    riskPenalty += 10;
+    reasonsToAvoid.push(`Elevated execution spread: ${currentSpread.toFixed(1)} pips`);
+  }
+
+  let executionRating = "Excellent";
+  if (riskPenalty >= 50) {
+    executionRating = "Do Not Trade";
+  } else if (riskPenalty >= 35) {
+    executionRating = "Poor";
+  } else if (riskPenalty >= 20) {
+    executionRating = "Caution";
+  } else if (riskPenalty >= 8) {
+    executionRating = "Good";
+  }
+
+  return {
+    riskPenalty,
+    executionRating,
+    reasonsToAvoid: reasonsToAvoid.length > 0 ? reasonsToAvoid : ["None. Ideal execution conditions."]
+  };
+}
+
+// Backwards-compatible wrapper for testAdaptiveWeights.js
+export function calculateReadinessWithWeights(params, weights) {
+  const result = calculateExecutionEnvironment(params, weights);
+  
+  const positives = [];
+  if (params.overallConfluence >= 75) positives.push(`High Confluence Score (${params.overallConfluence})`);
+  if (params.dominantDir !== "HOLD" && params.institutionalBias === (params.dominantDir === "BUY" ? "Bullish" : "Bearish")) {
+    positives.push("Institutional flow aligned with trade direction");
+  }
+
+  const negatives = result.reasonsToAvoid.map(r => `${r} (-${Math.round(result.riskPenalty / result.reasonsToAvoid.length)} pts)`);
+
+  return {
+    score: Math.max(0, 100 - result.riskPenalty),
+    positives: positives.length > 0 ? positives : ["No outstanding positive parameters"],
+    negatives: negatives.length > 0 && result.riskPenalty > 0 ? negatives : ["No high-risk negative factors present"]
+  };
+}
+
+export function calculateDecisionConsistency(recommendation, params, weights, directionalData, coverageData, executionEnvData, conflictsData) {
+  const { direction } = recommendation;
+  const {
+    institutionalBias,
+    macroBias,
+    overallRegime,
+    structure,
+    mtfContext,
+    buyPercentage,
+    sellPercentage
+  } = params;
+
+  let score = 100;
+  const reasons = [];
+  const flags = [];
+
+  if (direction === "HOLD") {
+    if (directionalData && (directionalData.directionalScore > 75 || directionalData.directionalScore < 25)) {
+      if (executionEnvData && (executionEnvData.executionRating === "Excellent" || executionEnvData.executionRating === "Good")) {
+        score -= 20;
+        reasons.push("HOLD recommendation ignored a strong directional setup under favorable execution conditions");
+      } else {
+        reasons.push("HOLD recommendation is consistent due to low execution environment quality");
+      }
+    } else {
+      reasons.push("HOLD recommendation is consistent with neutral market indicators");
+    }
+  } else {
+    const dir = direction.toUpperCase();
+
+    // 1. Institutional Flow
+    if (institutionalBias && institutionalBias !== "Neutral") {
+      const isAligned = (dir === "BUY" && institutionalBias === "Bullish") || (dir === "SELL" && institutionalBias === "Bearish");
+      if (!isAligned) {
+        score -= 30;
+        reasons.push(`Contradicts Institutional Flow Bias (${institutionalBias})`);
+      } else {
+        reasons.push("Aligns with Institutional Flow Bias");
+      }
+    }
+
+    // 2. Market Structure
+    if (structure && structure.strength && structure.strength !== "Weak") {
+      const isBullishOb = structure.bos === "Bullish" || structure.choch === "Bullish" || structure.currentStructure?.includes("Bullish");
+      const isBearishOb = structure.bos === "Bearish" || structure.choch === "Bearish" || structure.currentStructure?.includes("Bearish");
+      
+      if ((dir === "BUY" && isBearishOb) || (dir === "SELL" && isBullishOb)) {
+        score -= 25;
+        reasons.push("Contradicts swing Market Structure");
+      } else if ((dir === "BUY" && isBullishOb) || (dir === "SELL" && isBearishOb)) {
+        reasons.push("Aligns with swing Market Structure");
+      }
+    }
+
+    // 3. Market Regime
+    if (overallRegime && overallRegime !== "Regime Unknown") {
+      const isRegimeBullish = overallRegime.includes("Bullish") || overallRegime.includes("Trending Up");
+      const isRegimeBearish = overallRegime.includes("Bearish") || overallRegime.includes("Trending Down");
+
+      if ((dir === "BUY" && isRegimeBearish) || (dir === "SELL" && isRegimeBullish)) {
+        score -= 20;
+        reasons.push(`Contradicts overall Market Regime (${overallRegime})`);
+      } else if ((dir === "BUY" && isRegimeBullish) || (dir === "SELL" && isRegimeBearish)) {
+        reasons.push("Aligns with overall Market Regime");
+      }
+    }
+
+    // 4. Macro Alignment
+    if (macroBias && macroBias !== "Mixed") {
+      const isAligned = (dir === "BUY" && macroBias === "Bullish") || (dir === "SELL" && macroBias === "Bearish");
+      if (!isAligned) {
+        score -= 20;
+        reasons.push(`Contradicts gold Macro Bias (${macroBias})`);
+      } else {
+        reasons.push("Aligns with gold Macro Bias");
+      }
+    }
+
+    // 5. Telegram Consensus Inflow
+    if (buyPercentage !== undefined && sellPercentage !== undefined && (buyPercentage > 60 || sellPercentage > 60)) {
+      const isAligned = (dir === "BUY" && buyPercentage > sellPercentage) || (dir === "SELL" && sellPercentage > buyPercentage);
+      if (!isAligned) {
+        score -= 15;
+        reasons.push("Contradicts retail Telegram Sentiment consensus");
+      } else {
+        reasons.push("Aligns with retail Telegram Sentiment consensus");
+      }
+    }
+
+    // 6. Multi-Timeframe Alignment
+    if (mtfContext) {
+      let counterTrendTfs = [];
+      ["1h", "4h"].forEach(tf => {
+        const tfData = mtfContext[tf];
+        if (tfData && tfData.status === "OK") {
+          if (dir === "BUY" && tfData.trendDirection === "Bearish") counterTrendTfs.push(tf);
+          else if (dir === "SELL" && tfData.trendDirection === "Bullish") counterTrendTfs.push(tf);
+        }
+      });
+      if (counterTrendTfs.length > 0) {
+        score -= 15;
+        reasons.push(`Contradicts higher-timeframe trend trend on: ${counterTrendTfs.join(", ")}`);
+      }
+    }
+  }
+
+  // General pipeline penalties
+  if (conflictsData && conflictsData.severity === "HIGH") {
+    score -= 15;
+    reasons.push("Conflict Severity is HIGH");
+  }
+  if (coverageData && coverageData.coveragePercentage < 60) {
+    score -= 20;
+    reasons.push(`Low Evidence Coverage (${coverageData.coveragePercentage}%)`);
+  }
+  if (executionEnvData && (executionEnvData.executionRating === "Poor" || executionEnvData.executionRating === "Do Not Trade")) {
+    score -= 35;
+    reasons.push(`Unfavorable Execution Environment Rating: ${executionEnvData.executionRating}`);
+  }
+  const readiness = Math.max(0, 100 - (executionEnvData ? executionEnvData.riskPenalty : 0));
+  if (readiness < 60) {
+    score -= 20;
+    reasons.push(`Decision Readiness Score is below threshold (${readiness}/100)`);
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  // Determine flags
+  let validationResult = "CONSISTENT";
+  if (score < 65) {
+    validationResult = "MAJOR_CONFLICT";
+  } else if (score < 85) {
+    validationResult = "MINOR_CONFLICT";
+  }
+
+  if (validationResult !== "CONSISTENT") {
+    flags.push(validationResult);
+  } else {
+    flags.push("CONSISTENT");
+  }
+
+  if (coverageData && coverageData.coveragePercentage < 60) {
+    flags.push("LOW_EVIDENCE");
+  }
+  if (directionalData && directionalData.directionalConfidence < 40) {
+    flags.push("LOW_CONFIDENCE");
+  }
+  if (executionEnvData && (executionEnvData.executionRating === "Poor" || executionEnvData.executionRating === "Do Not Trade")) {
+    flags.push("HIGH_RISK_ENVIRONMENT");
+  }
+
+  const validationSummary = `Decision Consistency: ${score}%\nEvidence Coverage: ${coverageData.coveragePercentage}%\nExecution Environment: ${executionEnvData.executionRating}\nConflict Severity: ${conflictsData.severity}\nValidation Result: ${validationResult}\nReason:\n${reasons.map(r => `  * ${r}`).join("\n")}`;
+
+  return {
+    score,
+    validationResult,
+    flags,
+    reasons,
+    validationSummary
+  };
 }
