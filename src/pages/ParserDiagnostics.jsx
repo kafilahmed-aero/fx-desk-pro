@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Shield, RefreshCw, AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Shield, RefreshCw, AlertCircle, AlertTriangle, CheckCircle2, Activity } from "lucide-react";
 import { fetchWithCredentials } from "../services/apiClient";
 
 function ParserDiagnostics() {
@@ -29,7 +29,9 @@ function ParserDiagnostics() {
   };
 
   useEffect(() => {
-    fetchParserData();
+    setTimeout(() => {
+      fetchParserData();
+    }, 0);
   }, []);
 
   if (loading) {
@@ -181,5 +183,4 @@ function ParserDiagnostics() {
   );
 }
 
-import { Activity } from "lucide-react";
 export default ParserDiagnostics;

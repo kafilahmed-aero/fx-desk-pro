@@ -2,10 +2,20 @@ import { useEffect, useState } from "react";
 import { BarChart3, TrendingUp, ShieldAlert, Clock, Sparkles } from "lucide-react";
 
 function AiAnalyticsCard({ data, loading }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const formatAge = (dateStr) => {
     if (!dateStr) return "—";
+    if (!now) return "Calculating...";
     try {
-      const diffMs = Date.now() - new Date(dateStr).getTime();
+      const diffMs = now - new Date(dateStr).getTime();
       const diffSec = Math.floor(diffMs / 1000);
       const diffMin = Math.floor(diffSec / 60);
       const diffHrs = Math.floor(diffMin / 60);

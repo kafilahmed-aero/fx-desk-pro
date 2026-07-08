@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Activity,
-  Award,
-  BarChart3,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -13,9 +11,9 @@ import {
   Sun,
   X,
   UserCircle,
-  TrendingUp,
   Shield,
   ShieldAlert,
+  Brain,
 } from "lucide-react";
 import {
   BrowserRouter,
@@ -32,12 +30,14 @@ import Settings from "./pages/Settings";
 import Signals from "./pages/Signals";
 import SystemMonitor from "./pages/SystemMonitor";
 import ParserDiagnostics from "./pages/ParserDiagnostics";
+import AiIntelligence from "./pages/AiIntelligence";
 import { ThemeProvider } from "./context/ThemeContext";
 import { useTheme } from "./context/useTheme";
 import { getCurrentUser, logout } from "./services/authService";
 
 const navigationItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "AI Intelligence", path: "/intelligence", icon: Brain },
   { label: "Signals", path: "/signals", icon: Signal },
   { label: "System Monitor", path: "/system-monitor", icon: Shield },
   { label: "Parser Diagnostics", path: "/parser-diagnostics", icon: ShieldAlert },
@@ -278,6 +278,14 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
                 element={
                   <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <Signals />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/intelligence"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <AiIntelligence />
                   </ProtectedRoute>
                 }
               />

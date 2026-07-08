@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   ArrowDownRight,
@@ -7,47 +7,30 @@ import {
   Minus,
   RefreshCw,
   RadioTower,
+  TrendingUp,
 } from "lucide-react";
 import {
   getActiveOpportunities,
-  getLiveMarketOverview,
   getWeightedConsensus,
   subscribeToConsensusEvents,
   getLatestXauusdRecommendation,
   getAiAnalyticsData,
 } from "../services/signalService";
 import XauusdAiAdvisorCard from "../components/XauusdAiAdvisorCard";
-import AiAnalyticsCard from "../components/AiAnalyticsCard";
 import { fetchWithCredentials } from "../services/apiClient";
 const fallbackRefreshMs = 30000;
 
 const directionStyles = {
-  STRONG_BUY:
-    "border-emerald-300/40 bg-emerald-50 text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300",
-  BUY: "border-emerald-300/40 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300",
-  NEUTRAL:
-    "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-500/30 dark:bg-slate-500/10 dark:text-slate-300",
-  SELL: "border-rose-300/40 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300",
-  STRONG_SELL:
-    "border-rose-300/40 bg-rose-50 text-rose-700 dark:border-rose-400/25 dark:bg-rose-400/10 dark:text-rose-300",
-};
-
-const freshnessStyles = {
-  VERY_FRESH:
-    "border-emerald-300/40 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300",
-  FRESH:
-    "border-sky-300/50 bg-sky-50 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300",
-  AGING:
-    "border-amber-300/60 bg-amber-50 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-300",
-  WEAK: "border-orange-300/60 bg-orange-50 text-orange-800 dark:border-orange-400/25 dark:bg-orange-400/10 dark:text-orange-300",
-  STALE:
-    "border-slate-300 bg-slate-100 text-slate-500 dark:border-slate-500/25 dark:bg-slate-500/10 dark:text-slate-400",
+  STRONG_BUY: "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20",
+  BUY: "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20",
+  NEUTRAL: "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-white/10",
+  SELL: "bg-rose-500/10 text-rose-500 dark:text-rose-455 border-rose-500/20",
+  STRONG_SELL: "bg-rose-500/10 text-rose-500 dark:text-rose-455 border-rose-500/20",
 };
 
 function Dashboard() {
   const [opportunities, setOpportunities] = useState([]);
   const [consensusPairs, setConsensusPairs] = useState([]);
-  const [marketOverview, setMarketOverview] = useState(null);
   const [aiRecommendation, setAiRecommendation] = useState(null);
   const [systemHealth, setSystemHealth] = useState(null);
   const [aiAnalytics, setAiAnalytics] = useState(null);
@@ -72,9 +55,8 @@ function Dashboard() {
       hasPendingRefresh = false;
 
       try {
-        const [nextOverview, nextOpportunities, nextConsensusPairs, nextAiData, nextHealthData, nextAnalyticsData] =
+        const [nextOpportunities, nextConsensusPairs, nextAiData, nextHealthData, nextAnalyticsData] =
           await Promise.all([
-            getLiveMarketOverview({ signal: activeController.signal }),
             getActiveOpportunities({ signal: activeController.signal }),
             getWeightedConsensus({ signal: activeController.signal }),
             getLatestXauusdRecommendation({ signal: activeController.signal }),
@@ -98,7 +80,6 @@ function Dashboard() {
 
         setOpportunities(nextOpportunities);
         setConsensusPairs(nextConsensusPairs);
-        setMarketOverview(nextOverview);
         setAiRecommendation(nextAiData);
         setSystemHealth(nextHealthData);
         setAiAnalytics(nextAnalyticsData);
@@ -108,7 +89,6 @@ function Dashboard() {
           console.info("[DASHBOARD REFRESH]", {
             opportunityCount: nextOpportunities.length,
             consensusPairs: nextConsensusPairs.length,
-            marketBias: nextOverview?.marketBias || "NEUTRAL",
           });
         }
       } catch (loadError) {
@@ -232,193 +212,75 @@ function Dashboard() {
     };
   }, []);
 
-  const summary = useMemo(
-    () => buildSummary(opportunities, marketOverview),
-    [opportunities, marketOverview]
-  );
+
 
   return (
-    <div className="animate-dashboard-in space-y-4 pb-8">
-      {/* 1. Live market overview header */}
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220] dark:shadow-black/10 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              <RadioTower size={16} />
-              Live market engine
-            </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-              Active Opportunities
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {summary.text}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4 lg:min-w-[30rem]">
-            <SummaryStat label="Market" value={isLoading ? "--" : summary.marketBias} />
-            <SummaryStat label="Pairs" value={isLoading ? "--" : summary.pairCount} />
-            <SummaryStat label="Signals" value={isLoading ? "--" : summary.signalCount} />
-            <SummaryStat label="Updated" value={formatUpdatedAt(lastLoadedAt)} />
-          </div>
+    <div className="animate-dashboard-in space-y-8 pb-8">
+      {/* Page header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <RadioTower size={14} className="text-slate-400" />
+            Live Trading Desk
+          </p>
+          <h1 className="mt-1 text-2xl font-black text-slate-950 dark:text-white tracking-tight">
+            FX Desk Pro
+          </h1>
         </div>
+        <div className="flex items-center gap-3">
+          {error && (
+            <span className="text-xs font-bold text-rose-500 bg-rose-500/10 rounded-lg px-3 py-1 border border-rose-500/10">
+              Error: {error}
+            </span>
+          )}
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+            Updated {formatUpdatedAt(lastLoadedAt)}
+          </span>
+        </div>
+      </div>
 
-        {error && (
-          <div className="mt-4 rounded-lg border border-amber-300/70 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
-            {error}
-          </div>
-        )}
-      </section>
-
-      {/* 2. XAUUSD AI Advisor Card */}
+      {/* TOP SECTION: Large AI Recommendation Hero Card */}
       <XauusdAiAdvisorCard 
         data={aiRecommendation} 
         loading={isLoading} 
         refreshTrigger={lastLoadedAt ? lastLoadedAt.getTime() : 0} 
+        tradingSession={systemHealth?.tradingSession}
       />
 
-      {/* AI Analytics Card */}
-      <AiAnalyticsCard 
-        data={aiAnalytics} 
-        loading={isLoading} 
-      />
-
-      {/* 3. Weighted Consensus Summary grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {opportunities.map((pair) => (
-          <div key={pair.pair} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-[#0B1220]/90">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-white/5">
-              <span className="text-base font-bold text-slate-900 dark:text-white">{pair.pair}</span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Updated {formatTime(pair.lastUpdated)}
-              </span>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">BUY Weight / %</p>
-                <p className="mt-1 text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
-                  {pair.buyWeight.toFixed(1)} ({pair.buyConfidence}%)
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">SELL Weight / %</p>
-                <p className="mt-1 text-sm font-extrabold text-rose-600 dark:text-rose-400">
-                  {pair.sellWeight.toFixed(1)} ({pair.sellConfidence}%)
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Active BUY Signals</p>
-                <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-200">
-                  {pair.buySignalsCount || 0}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Active SELL Signals</p>
-                <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-200">
-                  {pair.sellSignalsCount || 0}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 border-t border-slate-100 pt-3 dark:border-white/5 flex items-center justify-between text-xs text-slate-555 dark:text-slate-455">
-              <span>Total Active Signals:</span>
-              <span className="font-extrabold text-slate-800 dark:text-slate-200">{pair.signalCount}</span>
-            </div>
-          </div>
-        ))}
-        {opportunities.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-slate-200 bg-white/80 p-6 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-[#0B1220]/90">
-            No active weighted consensus data.
-          </div>
-        )}
-      </div>
-
-      {/* 4. Market Status Widget */}
-      <section className="rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220]/90 dark:shadow-black/10">
-        <div className="border-b border-slate-200 p-4 dark:border-white/10">
-          <h2 className="text-base font-semibold text-slate-950 dark:text-white flex items-center gap-2">
-            Market Status
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 divide-y divide-slate-200 dark:divide-white/10 sm:grid-cols-5 sm:divide-x sm:divide-y-0 text-sm">
-          <div className="p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Current Gold Price</p>
-            <p className="mt-2 text-lg font-black text-slate-950 dark:text-white">
-              {systemHealth?.priceFeeds?.xauusdPrice ? `$${systemHealth.priceFeeds.xauusdPrice.toFixed(2)}` : "--"}
-            </p>
-          </div>
-          <div className="p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">AI Advisor Status</p>
-            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
-              {aiRecommendation?.status === "offline" ? "OFFLINE" : aiRecommendation?.status === "pending" ? "PENDING" : "ONLINE"}
-            </p>
-          </div>
-          <div className="p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Telegram Status</p>
-            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
-              {systemHealth?.telegram?.status === "CONNECTED" ? "CONNECTED" : "DISCONNECTED"}
-            </p>
-          </div>
-          <div className="p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Price Feed Status</p>
-            <div className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-350 space-y-1">
-              <div className="flex justify-between">
-                <span>Yahoo:</span>
-                <span className="font-extrabold">{systemHealth?.priceFeeds?.yahoo?.status || "UNKNOWN"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Binance:</span>
-                <span className="font-extrabold">{systemHealth?.priceFeeds?.binance?.status || "UNKNOWN"}</span>
-              </div>
-            </div>
-          </div>
-          <div className="p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Trading Session</p>
-            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
-              {systemHealth?.tradingSession?.active ? "ACTIVE" : "INACTIVE"}
-            </p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-              {systemHealth?.tradingSession?.start || "17:30"} - {systemHealth?.tradingSession?.end || "21:30"} IST
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Active Opportunities Table */}
-      <section className="rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-[#0B1220]/90 dark:shadow-black/10">
-        <div className="flex flex-col gap-2 border-b border-slate-200 p-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+      {/* SECOND SECTION: Active Opportunities Table */}
+      <section className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm dark:border-white/10 dark:bg-[#0B1220]/90">
+        <div className="flex flex-col gap-2 border-b border-slate-200 p-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="inline-flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-              <Activity size={18} className="text-blue-500 dark:text-sky-300" />
-              Active Opportunities Table
+            <h2 className="inline-flex items-center gap-2 text-base font-black text-slate-950 dark:text-white tracking-tight">
+              <Activity size={16} className="text-slate-400 dark:text-slate-500" />
+              Active Opportunities
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {formatConsensusSummary(consensusPairs)}
             </p>
           </div>
-          <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <RefreshCw size={15} />
-            Realtime push with {fallbackRefreshMs / 1000}s fallback
+          <p className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+            <RefreshCw size={12} />
+            Consensus Feed
           </p>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left text-sm">
+          <table className="w-full min-w-[980px] text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-widest text-slate-500 dark:border-white/10 dark:text-slate-500">
-                <th className="px-4 py-3 font-semibold">Pair</th>
-                <th className="px-4 py-3 font-semibold">Direction</th>
-                <th className="px-4 py-3 font-semibold">Confidence</th>
-                <th className="px-4 py-3 font-semibold">Buy / Sell Weight</th>
-                <th className="px-4 py-3 font-semibold">Signals</th>
-                <th className="px-4 py-3 font-semibold">Freshness</th>
-                <th className="px-4 py-3 font-semibold">BUY Zones</th>
-                <th className="px-4 py-3 font-semibold">SELL Zones</th>
-                <th className="px-4 py-3 font-semibold">Last Updated</th>
+              <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-400 dark:border-white/10 dark:text-slate-500 font-bold">
+                <th className="px-5 py-3.5 font-bold">Pair</th>
+                <th className="px-5 py-3.5 font-bold">Direction</th>
+                <th className="px-5 py-3.5 font-bold font-bold">Confidence</th>
+                <th className="px-5 py-3.5 font-bold">Weight Split</th>
+                <th className="px-5 py-3.5 font-bold">Signals</th>
+                <th className="px-5 py-3.5 font-bold">Age</th>
+                <th className="px-5 py-3.5 font-bold">BUY Zones</th>
+                <th className="px-5 py-3.5 font-bold">SELL Zones</th>
+                <th className="px-5 py-3.5 font-bold">Last Signal</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-white/10">
+            <tbody className="divide-y divide-slate-200 dark:divide-white/10 font-semibold text-slate-700 dark:text-slate-350">
               {isLoading ? (
                 [0, 1, 2, 3].map((row) => <OpportunitySkeleton key={row} />)
               ) : opportunities.length > 0 ? (
@@ -427,7 +289,7 @@ function Dashboard() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={9} className="px-5 py-12 text-center text-slate-400 dark:text-slate-550 italic font-bold">
                     No active fresh opportunities right now.
                   </td>
                 </tr>
@@ -436,38 +298,104 @@ function Dashboard() {
           </table>
         </div>
       </section>
+
+      {/* THIRD SECTION: Three compact status cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 1. Gold Price Card */}
+        <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
+          <div className="flex justify-between items-start">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Gold Price</p>
+            <TrendingUp size={16} className="text-slate-400 dark:text-slate-500" />
+          </div>
+          <div>
+            <p className="text-3xl font-black text-slate-955 dark:text-white leading-none">
+              {systemHealth?.priceFeeds?.xauusdPrice ? `$${systemHealth.priceFeeds.xauusdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "--"}
+            </p>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">XAUUSD Live Consensus</span>
+          </div>
+        </div>
+
+        {/* 2. Trading Session Card */}
+        <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
+          <div className="flex justify-between items-start">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Trading Session</p>
+            <Clock3 size={16} className="text-slate-400 dark:text-slate-500" />
+          </div>
+          <div>
+            <p className={`text-3xl font-black leading-none ${systemHealth?.tradingSession?.active ? "text-emerald-500" : "text-slate-400 dark:text-slate-500"}`}>
+              {systemHealth?.tradingSession?.active ? "Active" : "Inactive"}
+            </p>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">
+              Overlap: {systemHealth?.tradingSession?.start || "17:30"}–{systemHealth?.tradingSession?.end || "21:30"} IST
+            </span>
+          </div>
+        </div>
+
+        {/* 3. Today's Summary Card */}
+        <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
+          <div className="flex justify-between items-start">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Today's Summary</p>
+            <Activity size={16} className="text-slate-400 dark:text-slate-500" />
+          </div>
+          <div>
+            <div className="flex justify-between items-baseline">
+              <p className="text-2xl font-black text-slate-950 dark:text-white leading-none">
+                {aiAnalytics?.currentlyOpen ?? 0} <span className="text-xs font-normal text-slate-400">Open</span>
+                {" / "}
+                {aiAnalytics?.winRate !== null && aiAnalytics?.closedToday !== undefined 
+                  ? Math.round((aiAnalytics.winRate / 100) * aiAnalytics.closedToday) 
+                  : 0}
+                <span className="text-xs font-normal text-slate-400"> W</span>
+              </p>
+              
+              <span className={`text-sm font-black ${
+                (aiAnalytics?.simulationEquityCurve && aiAnalytics.simulationEquityCurve.length > 0 
+                  ? aiAnalytics.simulationEquityCurve[aiAnalytics.simulationEquityCurve.length - 1] - 10000 
+                  : 0) >= 0 
+                    ? "text-emerald-500" 
+                    : "text-rose-500"
+              }`}>
+                {aiAnalytics?.simulationEquityCurve && aiAnalytics.simulationEquityCurve.length > 0 
+                  ? (aiAnalytics.simulationEquityCurve[aiAnalytics.simulationEquityCurve.length - 1] - 10000 >= 0 ? "+" : "") + (aiAnalytics.simulationEquityCurve[aiAnalytics.simulationEquityCurve.length - 1] - 10000).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+                  : "$0"}
+              </span>
+            </div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">Closed Today: {aiAnalytics?.closedToday ?? 0}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 function OpportunityRow({ opportunity }) {
   return (
-    <tr className="align-top text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/[0.035]">
-      <td className="px-4 py-4 font-bold text-slate-950 dark:text-white">
+    <tr className="align-top text-slate-650 hover:bg-slate-55/30 dark:text-slate-350 dark:hover:bg-white/[0.02] transition-all duration-150">
+      <td className="px-5 py-5 font-black text-slate-950 dark:text-white text-sm">
         {opportunity.pair}
       </td>
-      <td className="px-4 py-4">
+      <td className="px-5 py-5">
         <DirectionBadge direction={opportunity.marketDirection} />
       </td>
-      <td className="px-4 py-4">
-        <DirectionalConfidence opportunity={opportunity} />
+      <td className="px-5 py-5">
+        <ConfidenceBadge opportunity={opportunity} />
       </td>
-      <td className="px-4 py-4">
+      <td className="px-5 py-5">
         <WeightSplit opportunity={opportunity} />
       </td>
-      <td className="px-4 py-4 font-semibold text-slate-900 dark:text-slate-100">
+      <td className="px-5 py-5 font-extrabold text-slate-900 dark:text-white text-sm">
         {opportunity.signalCount}
       </td>
-      <td className="px-4 py-4">
-        <FreshnessBadge freshnessLevel={opportunity.freshnessLevel} />
+      <td className="px-5 py-5">
+        <AgeBadge lastUpdated={opportunity.lastUpdated} />
       </td>
-      <td className="px-4 py-4">
+      <td className="px-5 py-5">
         <DirectionalZones direction="BUY" zones={opportunity.buyZones} />
       </td>
-      <td className="px-4 py-4">
+      <td className="px-5 py-5">
         <DirectionalZones direction="SELL" zones={opportunity.sellZones} />
       </td>
-      <td className="px-4 py-4 text-slate-500 dark:text-slate-400">
+      <td className="px-5 py-5 text-slate-400 dark:text-slate-500 font-bold">
         {formatTime(opportunity.lastUpdated)}
       </td>
     </tr>
@@ -477,12 +405,12 @@ function OpportunityRow({ opportunity }) {
 function DirectionalZones({ direction, zones }) {
   const tone =
     direction === "BUY"
-      ? "text-emerald-700 dark:text-emerald-300"
-      : "text-rose-700 dark:text-rose-300";
+      ? "text-emerald-600 dark:text-emerald-400"
+      : "text-rose-600 dark:text-rose-455";
 
   return (
-    <div className="min-w-[9rem] space-y-1 text-xs">
-      <p className={`font-bold ${tone}`}>{direction}</p>
+    <div className="min-w-[9rem] space-y-1 text-[11px] font-semibold">
+      <p className={`font-black uppercase tracking-wider ${tone}`}>{direction}</p>
       <ZoneLine label="Entry" zone={zones?.entryZone} />
       <ZoneLine label="TP" zone={zones?.tpZone} />
       <ZoneLine label="SL" zone={zones?.slZone} />
@@ -492,9 +420,9 @@ function DirectionalZones({ direction, zones }) {
 
 function ZoneLine({ label, zone }) {
   return (
-    <p className="flex justify-between gap-3 text-slate-600 dark:text-slate-300">
+    <p className="flex justify-between gap-3 text-slate-500 dark:text-slate-400">
       <span className="text-slate-400 dark:text-slate-500">{label}</span>
-      <span className="font-semibold text-slate-800 dark:text-slate-100">{formatZone(zone)}</span>
+      <span className="font-extrabold text-slate-800 dark:text-slate-200">{formatZone(zone)}</span>
     </p>
   );
 }
@@ -509,66 +437,64 @@ function DirectionBadge({ direction }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold ${
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-[11px] font-extrabold tracking-wide ${
         directionStyles[safeDirection] || directionStyles.NEUTRAL
       }`}
     >
-      <Icon size={13} />
+      <Icon size={12} />
       {safeDirection}
     </span>
   );
 }
 
-function FreshnessBadge({ freshnessLevel }) {
+function AgeBadge({ lastUpdated }) {
+  const label = getAgeLabel(lastUpdated);
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-semibold ${
-        freshnessStyles[freshnessLevel] || freshnessStyles.STALE
-      }`}
-    >
-      <Clock3 size={13} />
-      {freshnessLevel || "STALE"}
+    <span className="inline-flex items-center gap-1 rounded bg-slate-50 border border-slate-200/50 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:border-white/5 dark:bg-white/[0.02] dark:text-slate-455">
+      <Clock3 size={11} className="text-slate-450" />
+      {label}
     </span>
   );
 }
 
-function DirectionalConfidence({ opportunity }) {
+function ConfidenceBadge({ opportunity }) {
+  const direction = (opportunity.marketDirection || "NEUTRAL").toUpperCase();
+  const val = direction.includes("BUY") 
+    ? Number(opportunity.buyConfidence) 
+    : direction.includes("SELL") 
+    ? Number(opportunity.sellConfidence) 
+    : Math.max(Number(opportunity.buyConfidence) || 0, Number(opportunity.sellConfidence) || 0);
+
+  const conf = val || 0;
+  let colorClass = "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-white/10";
+  if (conf >= 75) colorClass = "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20";
+  else if (conf >= 50) colorClass = "bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/20";
+  else if (conf >= 30) colorClass = "bg-yellow-500/10 text-yellow-500 dark:text-yellow-400 border-yellow-500/20";
+
   return (
-    <div className="min-w-[9rem] space-y-2">
-      <ConfidenceMeter
-        label="BUY"
-        value={Number(opportunity.buyConfidence) || 0}
-        colorClass="bg-emerald-500 dark:bg-emerald-400"
-        textClass="text-emerald-700 dark:text-emerald-300"
-      />
-      <ConfidenceMeter
-        label="SELL"
-        value={Number(opportunity.sellConfidence) || 0}
-        colorClass="bg-rose-500 dark:bg-rose-400"
-        textClass="text-rose-700 dark:text-rose-300"
-      />
-    </div>
+    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-extrabold ${colorClass}`}>
+      {conf}%
+    </span>
   );
 }
 
-function ConfidenceMeter({ label, value, colorClass, textClass }) {
-  const safeValue = Math.min(Math.max(Number(value) || 0, 0), 100);
-
-  return (
-    <div>
-      <div className="flex justify-between gap-3 text-xs font-bold">
-        <span className={textClass}>{label}</span>
-        <span className="text-slate-900 dark:text-slate-100">{safeValue}%</span>
-      </div>
-      <span className="mt-1 block h-2 w-full min-w-24 rounded-full bg-slate-200 dark:bg-slate-800">
-        <span
-          className={`block h-2 rounded-full ${colorClass}`}
-          style={{ width: `${safeValue}%` }}
-        ></span>
-      </span>
-    </div>
-  );
+function getAgeLabel(value) {
+  if (!value) return "--";
+  try {
+    const diffMs = Date.now() - new Date(value).getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHrs = Math.floor(diffMin / 60);
+    if (diffSec < 60) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    return `${Math.floor(diffHrs / 24)}d ago`;
+  } catch {
+    return "--";
+  }
 }
+
+
 
 function WeightSplit({ opportunity }) {
   const total =
@@ -592,15 +518,6 @@ function WeightSplit({ opportunity }) {
   );
 }
 
-function SummaryStat({ label, value }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.035]">
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-lg font-bold text-slate-950 dark:text-white">{value}</p>
-    </div>
-  );
-}
-
 function OpportunitySkeleton() {
   return (
     <tr>
@@ -614,52 +531,6 @@ function OpportunitySkeleton() {
       ))}
     </tr>
   );
-}
-
-function buildSummary(opportunities, marketOverview) {
-  const overviewPairCount = Number(marketOverview?.pairCount);
-  const overviewSignalCount = Number(marketOverview?.signalCount);
-  const pairCount = Number.isFinite(overviewPairCount)
-    ? overviewPairCount
-    : opportunities.length;
-  const signalCount = Number.isFinite(overviewSignalCount)
-    ? overviewSignalCount
-    : opportunities.reduce((sum, opportunity) => sum + opportunity.signalCount, 0);
-  const marketBias = marketOverview?.marketBias || getMarketBias(opportunities);
-  const top = marketOverview?.strongestOpportunity || opportunities[0];
-
-  if (opportunities.length === 0) {
-    return {
-      pairCount,
-      signalCount,
-      marketBias,
-      text: "No fresh active opportunities are available right now. The engine is still listening and will surface pairs when live consensus appears.",
-    };
-  }
-
-  return {
-    pairCount,
-    signalCount,
-    marketBias,
-    text: `${top.pair} is currently the strongest live setup: ${top.marketDirection}, BUY confidence ${top.buyConfidence || 0}%, SELL confidence ${top.sellConfidence || 0}%, ${top.signalCount} active signals. This is live Telegram consensus, not a prediction.`,
-  };
-}
-
-function getMarketBias(opportunities) {
-  const buyWeight = opportunities.reduce(
-    (sum, opportunity) => sum + Number(opportunity.buyWeight || 0),
-    0
-  );
-  const sellWeight = opportunities.reduce(
-    (sum, opportunity) => sum + Number(opportunity.sellWeight || 0),
-    0
-  );
-
-  if (buyWeight === sellWeight) {
-    return "NEUTRAL";
-  }
-
-  return buyWeight > sellWeight ? "BUY" : "SELL";
 }
 
 function formatConsensusSummary(consensusPairs) {

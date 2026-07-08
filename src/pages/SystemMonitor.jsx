@@ -5,37 +5,25 @@ import {
   Database,
   RefreshCw,
   Server,
-  AlertCircle,
-  BarChart3,
-  ArrowUpRight,
-  ArrowDownRight,
-  Compass,
-  ShieldCheck
+  AlertCircle
 } from "lucide-react";
 import { fetchWithCredentials } from "../services/apiClient";
 
 function SystemMonitor() {
   const [health, setHealth] = useState(null);
-  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchSystemData = () => {
     setRefreshing(true);
-    Promise.all([
-      fetchWithCredentials("/system/health").then(async (res) => {
+    fetchWithCredentials("/system/health")
+      .then(async (res) => {
         if (!res.ok) throw new Error("Failed to load system health");
         return res.json();
-      }),
-      fetchWithCredentials("/system/metrics").then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load metrics");
-        return res.json();
       })
-    ])
-      .then(([healthData, metricsData]) => {
+      .then((healthData) => {
         setHealth(healthData);
-        setMetrics(metricsData);
         setError(null);
       })
       .catch((err) => {
@@ -48,7 +36,9 @@ function SystemMonitor() {
   };
 
   useEffect(() => {
-    fetchSystemData();
+    setTimeout(() => {
+      fetchSystemData();
+    }, 0);
     const interval = setInterval(fetchSystemData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -230,9 +220,12 @@ function SystemMonitor() {
           {/* Background Task States */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Active Background Services</h3>
-            <div className="mt-4 divide-y divide-slate-100 dark:divide-white/5">
+            <div className="mt-4 divide-y divide-slate-100 dark:divide-white/5 text-sm">
               <div className="flex items-center justify-between py-3">
-                <span className="font-bold text-slate-800 dark:text-white">Telegram Ingestion listener</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-white block">Telegram Ingestion listener</span>
+                  <span className="text-xs text-slate-400">Dynamic polling VIP channels feed</span>
+                </div>
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                   health.activeServices.telegramListener ? "bg-blue-500/10 text-blue-500" : "bg-slate-500/10 text-slate-500"
                 }`}>
@@ -240,97 +233,40 @@ function SystemMonitor() {
                 </span>
               </div>
               <div className="flex items-center justify-between py-3">
-                <span className="font-bold text-slate-800 dark:text-white">Keep-Alive self pinger scheduler</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-white block">MT5 Bridge Sync Gateway</span>
+                  <span className="text-xs text-slate-400">Port 5001 local WebSocket bridge server</span>
+                </div>
                 <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500">
                   ACTIVE
                 </span>
               </div>
               <div className="flex items-center justify-between py-3">
-                <span className="font-bold text-slate-800 dark:text-white">Market Price Cache Aggregator</span>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-white block">Gemini Connection Client</span>
+                  <span className="text-xs text-slate-400">Generative model gemini-2.5-flash context advisor</span>
+                </div>
+                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-500">
+                  ONLINE
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-white block">Pipeline Inflow Queue</span>
+                  <span className="text-xs text-slate-400">Concurrency: 2 handlers | Capacity: 500 slots</span>
+                </div>
+                <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500">
+                  IDLE
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-white block">Market Price Cache Aggregator</span>
+                  <span className="text-xs text-slate-400">Yahoo and Binance price history sync</span>
+                </div>
                 <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500">
                   ACTIVE
                 </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Merged Daily Metrics & Outcomes Dashboard */}
-      {metrics && (
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          {/* Daily Activity Metrics */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <Compass className="text-blue-500" size={20} />
-              Daily Activity Metrics
-            </h3>
-            <div className="mt-4 space-y-3.5 text-sm">
-              <div className="flex justify-between border-b border-slate-100 pb-2.5 dark:border-white/5">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">Raw Messages Received</span>
-                <span className="text-slate-850 dark:text-slate-200 font-bold">
-                  {metrics.dailyMetrics.rawMessagesToday}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2.5 dark:border-white/5">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">Signals Parsed Today</span>
-                <span className="text-blue-500 font-bold">
-                  {metrics.dailyMetrics.signalsParsedToday}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2.5 dark:border-white/5">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">Promotions Filtered</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold">
-                  {metrics.dailyMetrics.promotionsFiltered}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2.5 dark:border-white/5">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">Updates & Results Filtered</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold">
-                  {metrics.dailyMetrics.resultsFiltered}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2.5 dark:border-white/5">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">Active Opportunities</span>
-                <span className="text-emerald-500 font-bold">
-                  {metrics.dailyMetrics.activeOpportunities}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">Notifications Dispatched</span>
-                <span className="text-indigo-500 font-bold">
-                  {metrics.dailyMetrics.notificationsSent}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Real Trade Outcomes */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <ShieldCheck className="text-emerald-500" size={20} />
-              Real Trade Outcomes Today
-            </h3>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-emerald-500/10 p-3.5 border border-emerald-500/15 text-center">
-                <ArrowUpRight className="text-emerald-500 mx-auto" size={20} />
-                <span className="mt-1.5 block text-xs font-bold text-emerald-500/85 uppercase">Full TPs</span>
-                <p className="mt-1 text-2xl font-bold text-emerald-500">{metrics.tradeMetrics.fullTpToday}</p>
-              </div>
-              <div className="rounded-xl bg-blue-500/10 p-3.5 border border-blue-500/15 text-center">
-                <ArrowUpRight className="text-blue-500 mx-auto" size={20} />
-                <span className="mt-1.5 block text-xs font-bold text-blue-500/85 uppercase">Partial TPs</span>
-                <p className="mt-1 text-2xl font-bold text-blue-500">{metrics.tradeMetrics.partialTpToday}</p>
-              </div>
-              <div className="rounded-xl bg-rose-500/10 p-3.5 border border-rose-500/15 text-center">
-                <ArrowDownRight className="text-rose-500 mx-auto" size={20} />
-                <span className="mt-1.5 block text-xs font-bold text-rose-500/85 uppercase">SL Hits</span>
-                <p className="mt-1 text-2xl font-bold text-rose-500">{metrics.tradeMetrics.slHitToday}</p>
-              </div>
-              <div className="rounded-xl bg-slate-500/10 p-3.5 border border-slate-500/15 text-center">
-                <Compass className="text-slate-400 mx-auto" size={20} />
-                <span className="mt-1.5 block text-xs font-bold text-slate-400/85 uppercase">Expired</span>
-                <p className="mt-1 text-2xl font-bold text-slate-400 dark:text-slate-200">{metrics.tradeMetrics.expiredToday}</p>
               </div>
             </div>
           </div>
