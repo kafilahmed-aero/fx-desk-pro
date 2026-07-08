@@ -666,6 +666,86 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
       }
     }
 
+    // ==================================================
+    // INSTITUTIONAL SESSION MARKET STRUCTURE CALCULATIONS (Phase 1.1)
+    // ==================================================
+    const startOfTodayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const startOfYesterdayUtc = startOfTodayUtc - 24 * 60 * 60 * 1000;
+
+    const yesterdayPrices = [];
+    const asianPrices = [];
+    const londonPrices = [];
+    const nyPrices = [];
+
+    if (priceHistory && priceHistory.length > 0) {
+      priceHistory.forEach(item => {
+        if (typeof item.price !== "number" || Number.isNaN(item.price)) return;
+        const ts = item.timestamp;
+        const tDate = new Date(ts);
+        const hour = tDate.getUTCHours();
+
+        // Yesterday vs Today
+        if (ts >= startOfYesterdayUtc && ts < startOfTodayUtc) {
+          yesterdayPrices.push(item.price);
+        }
+
+        // Asian session: 00:00 to 09:00 UTC
+        if (hour >= 0 && hour < 9) {
+          asianPrices.push(item.price);
+        }
+        // London session: 08:00 to 16:00 UTC
+        if (hour >= 8 && hour < 16) {
+          londonPrices.push(item.price);
+        }
+        // NY session: 13:00 to 21:00 UTC
+        if (hour >= 13 && hour < 21) {
+          nyPrices.push(item.price);
+        }
+      });
+    }
+
+    const pdh = yesterdayPrices.length > 0 ? Math.max(...yesterdayPrices) : null;
+    const pdl = yesterdayPrices.length > 0 ? Math.min(...yesterdayPrices) : null;
+
+    const asianHigh = asianPrices.length > 0 ? Math.max(...asianPrices) : null;
+    const asianLow = asianPrices.length > 0 ? Math.min(...asianPrices) : null;
+
+    const londonHigh = londonPrices.length > 0 ? Math.max(...londonPrices) : null;
+    const londonLow = londonPrices.length > 0 ? Math.min(...londonPrices) : null;
+
+    const nyHigh = nyPrices.length > 0 ? Math.max(...nyPrices) : null;
+    const nyLow = nyPrices.length > 0 ? Math.min(...nyPrices) : null;
+
+    // Premium/Discount Zone calculation relative to Today's High/Low
+    let premiumDiscount = "NEUTRAL";
+    let percentThroughRange = 50;
+    let distFromMidpoint = 0;
+    const midpoint = (high24h + low24h) / 2;
+
+    if (high24h > low24h && currentPrice !== null) {
+      percentThroughRange = ((currentPrice - low24h) / (high24h - low24h)) * 100;
+      distFromMidpoint = currentPrice - midpoint;
+      if (percentThroughRange > 60) {
+        premiumDiscount = "PREMIUM";
+      } else if (percentThroughRange < 40) {
+        premiumDiscount = "DISCOUNT";
+      } else {
+        premiumDiscount = "NEUTRAL";
+      }
+    }
+
+    // Helper for relative position
+    const getSessionRelation = (price, high, low) => {
+      if (price === null || high === null || low === null) return "Unavailable";
+      if (price > high) return `ABOVE (Distance to High: ${(price - high).toFixed(2)} USD)`;
+      if (price < low) return `BELOW (Distance to Low: ${(low - price).toFixed(2)} USD)`;
+      return `INSIDE (Dist to High: ${(high - price).toFixed(2)} USD, Dist to Low: ${(price - low).toFixed(2)} USD)`;
+    };
+
+    const asianRelation = getSessionRelation(currentPrice, asianHigh, asianLow);
+    const londonRelation = getSessionRelation(currentPrice, londonHigh, londonLow);
+    const nyRelation = getSessionRelation(currentPrice, nyHigh, nyLow);
+
     // Support and Resistance: recent swing highs, recent swing lows, and existing price clusters.
     const levels = [];
     entryClusters.forEach(c => { levels.push(c.min, c.max); });
@@ -1243,6 +1323,26 @@ SECTION 7: ADVANCED MARKET CONTEXT
 - Market Phase: ${marketPhase}
 - Market Bias: ${marketBias}
 - Distance to Entry Zone: ${distanceToEntry}
+
+=========================================
+SECTION 7.5: INSTITUTIONAL MARKET STRUCTURE
+=========================================
+- Previous Day High (PDH): ${pdh !== null ? pdh.toFixed(2) + " USD" : "N/A"}${pdh !== null && currentPrice !== null ? " (Distance: " + (pdh - currentPrice).toFixed(2) + " USD)" : ""}
+- Previous Day Low (PDL): ${pdl !== null ? pdl.toFixed(2) + " USD" : "N/A"}${pdl !== null && currentPrice !== null ? " (Distance: " + (currentPrice - pdl).toFixed(2) + " USD)" : ""}
+- Asian Session:
+  - High: ${asianHigh !== null ? asianHigh.toFixed(2) + " USD" : "N/A"}
+  - Low: ${asianLow !== null ? asianLow.toFixed(2) + " USD" : "N/A"}
+  - Position: ${asianRelation}
+- London Session:
+  - High: ${londonHigh !== null ? londonHigh.toFixed(2) + " USD" : "N/A"}
+  - Low: ${londonLow !== null ? londonLow.toFixed(2) + " USD" : "N/A"}
+  - Position: ${londonRelation}
+- New York Session:
+  - High: ${nyHigh !== null ? nyHigh.toFixed(2) + " USD" : "N/A"}
+  - Low: ${nyLow !== null ? nyLow.toFixed(2) + " USD" : "N/A"}
+  - Position: ${nyRelation}
+- Daily Midpoint (50%): ${midpoint !== null ? midpoint.toFixed(2) + " USD" : "N/A"}${distFromMidpoint !== null ? " (Distance: " + distFromMidpoint.toFixed(2) + " USD)" : ""}
+- Premium / Discount Rating: ${premiumDiscount} (${percentThroughRange.toFixed(1)}% through today's range)
 
 =========================================
 SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
