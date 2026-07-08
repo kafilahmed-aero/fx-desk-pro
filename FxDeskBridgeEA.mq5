@@ -608,17 +608,17 @@ void ExecuteOpenOrder(string json) {
                           "\"spread\":" + DoubleToString(spread, 5) + "," +
                           "\"latencyMs\":120}";
          SendEvent(payload);
-         Print("MT5 Bridge: Order filled ticket: ", ticket, " price: ", fillPrice);
+         Print("MT5 Bridge: Order filled ticket: ", ticket, " price: ", fillPrice, " retcode: ", ret, " LastError: ", GetLastError());
       } else {
          string reason = GetRetcodeDescription(ret);
          SendTradeFailed(recId, reason, ret);
-         Print("MT5 Bridge: Order opening execution failed: ", reason);
+         Print("MT5 Bridge: Order opening execution failed: ", reason, " retcode: ", ret, " LastError: ", GetLastError());
       }
    } else {
       uint ret = g_trade.ResultRetcode();
       string reason = GetRetcodeDescription(ret);
       SendTradeFailed(recId, reason, ret);
-      Print("MT5 Bridge: Order opening dispatch failed: ", reason);
+      Print("MT5 Bridge: Order opening dispatch failed: ", reason, " retcode: ", ret, " LastError: ", GetLastError());
    }
    Print("TRACE: Leaving ExecuteOpenOrder");
 }
@@ -664,10 +664,10 @@ void ExecuteCloseOrder(string json) {
                        "\"exitTime\":\"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\"," +
                        "\"reason\":\"MANUAL\"}";
       SendEvent(payload);
-      Print("MT5 Bridge: Order closed ticket: ", ticket, " price: ", exitPrice);
+      Print("MT5 Bridge: Order closed ticket: ", ticket, " price: ", exitPrice, " retcode: ", g_trade.ResultRetcode(), " LastError: ", GetLastError());
    } else {
       uint ret = g_trade.ResultRetcode();
-      Print("MT5 Bridge: Failed to close order ", recId, " (retcode: ", ret, ")");
+      Print("MT5 Bridge: Failed to close order ", recId, " (retcode: ", ret, ") LastError: ", GetLastError());
       SendTradeFailed(recId, "Failed to Close Position", ret);
    }
    Print("TRACE: Leaving ExecuteCloseOrder");
@@ -695,10 +695,10 @@ void ExecuteModifySLTP(string json) {
                        "\"sl\":" + DoubleToString(sl, 5) + "," +
                        "\"tp\":" + DoubleToString(tp, 5) + "}";
       SendEvent(payload);
-      Print("MT5 Bridge: Modified ticket: ", ticket, " SL: ", sl, " TP: ", tp);
+      Print("MT5 Bridge: Modified ticket: ", ticket, " SL: ", sl, " TP: ", tp, " retcode: ", g_trade.ResultRetcode(), " LastError: ", GetLastError());
    } else {
       uint ret = g_trade.ResultRetcode();
-      Print("MT5 Bridge: Failed to modify ticket ", ticket, " (retcode: ", ret, ")");
+      Print("MT5 Bridge: Failed to modify ticket ", ticket, " (retcode: ", ret, ") LastError: ", GetLastError());
       SendTradeFailed(recId, "Failed to Modify stops", ret);
    }
    Print("TRACE: Leaving ExecuteModifySLTP");
