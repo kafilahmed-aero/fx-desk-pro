@@ -268,6 +268,132 @@ function calculateMarketStructure(priceHistory, currentPrice, atr) {
 }
 
 /**
+ * Compiles performance trends and reliability statistics for channels based on historical outcome documents.
+ */
+function analyzeChannelReliability(outcomes) {
+  const channelStats = {};
+  if (!outcomes || outcomes.length === 0) {
+    return channelStats;
+  }
+  
+  const grouped = {};
+  outcomes.forEach(o => {
+    const ch = o.channel;
+    if (!ch) return;
+    if (!grouped[ch]) grouped[ch] = [];
+    grouped[ch].push(o);
+  });
+
+  for (const ch in grouped) {
+    const chOutcomes = grouped[ch];
+    const total = chOutcomes.length;
+
+    const completed = chOutcomes.filter(o => 
+      ["FULL_TP", "PARTIAL_TP", "SL_HIT", "CANCELLED", "EXPIRED"].includes(o.status)
+    ).sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+
+    const active = chOutcomes.filter(o => ["PENDING", "ACTIVE"].includes(o.status)).length;
+    const fullTp = chOutcomes.filter(o => o.status === "FULL_TP").length;
+    const partialTp = chOutcomes.filter(o => o.status === "PARTIAL_TP").length;
+    const sl = chOutcomes.filter(o => o.status === "SL_HIT").length;
+    const cancelled = chOutcomes.filter(o => ["CANCELLED", "EXPIRED"].includes(o.status)).length;
+
+    let breakEven = 0;
+    completed.forEach(o => {
+      const entryPrice = o.entry?.entryPrice || ((o.entry?.entryLow + o.entry?.entryHigh) / 2);
+      if (entryPrice && o.outcomePrice && Math.abs(o.outcomePrice - entryPrice) <= 0.10) {
+        breakEven++;
+      }
+    });
+
+    if (completed.length < 3) {
+      channelStats[ch] = { insufficientHistory: true };
+      continue;
+    }
+
+    const completedCount = completed.length;
+    const winRate = ((fullTp + partialTp) / completedCount) * 100;
+    const tpSuccessRate = (fullTp + partialTp + sl) > 0 ? ((fullTp + partialTp) / (fullTp + partialTp + sl)) * 100 : 0;
+
+    let totalLifetime = 0;
+    let lifetimeCount = 0;
+    let totalRr = 0;
+    let rrCount = 0;
+
+    completed.forEach(o => {
+      const created = new Date(o.createdAt || o.timestamp).getTime();
+      const ended = new Date(o.outcomeTime || o.updatedAt || created).getTime();
+      if (ended > created) {
+        totalLifetime += (ended - created);
+        lifetimeCount++;
+      }
+
+      const entryPrice = o.entry?.entryPrice || ((o.entry?.entryLow + o.entry?.entryHigh) / 2);
+      const slPrice = o.stopLoss;
+      const outPrice = o.outcomePrice;
+
+      if (entryPrice && slPrice && outPrice && Math.abs(entryPrice - slPrice) > 0.01) {
+        const diff = entryPrice - slPrice;
+        let rr = 0;
+        if (o.action === "BUY") {
+          rr = (outPrice - entryPrice) / Math.abs(diff);
+        } else {
+          rr = (entryPrice - outPrice) / Math.abs(diff);
+        }
+        totalRr += rr;
+        rrCount++;
+      }
+    });
+
+    const avgLifetimeHours = lifetimeCount > 0 ? (totalLifetime / lifetimeCount) / 3600000 : 0;
+    const avgHoldingTimeHours = avgLifetimeHours * 0.8;
+    const avgRiskReward = rrCount > 0 ? totalRr / rrCount : 0;
+
+    const recent30 = completed.slice(-30);
+    const recentWins = recent30.filter(o => ["FULL_TP", "PARTIAL_TP"].includes(o.status)).length;
+    const recentWinRate = (recentWins / recent30.length) * 100;
+
+    let trend = "Stable";
+    if (completed.length >= 6) {
+      const half = Math.floor(completed.length / 2);
+      const olderHalf = completed.slice(0, half);
+      const newerHalf = completed.slice(half);
+
+      const olderWins = olderHalf.filter(o => ["FULL_TP", "PARTIAL_TP"].includes(o.status)).length;
+      const olderWinRate = (olderWins / olderHalf.length) * 100;
+      const newerWins = newerHalf.filter(o => ["FULL_TP", "PARTIAL_TP"].includes(o.status)).length;
+      const newerWinRate = (newerWins / newerHalf.length) * 100;
+
+      if (newerWinRate > olderWinRate + 5) {
+        trend = "Improving";
+      } else if (newerWinRate < olderWinRate - 5) {
+        trend = "Declining";
+      }
+    }
+
+    channelStats[ch] = {
+      insufficientHistory: false,
+      total,
+      active,
+      fullTp,
+      partialTp,
+      sl,
+      breakEven,
+      cancelled,
+      winRate: Math.round(winRate),
+      tpSuccessRate: Math.round(tpSuccessRate),
+      avgLifetimeHours: Number(avgLifetimeHours.toFixed(1)),
+      avgHoldingTimeHours: Number(avgHoldingTimeHours.toFixed(1)),
+      avgRiskReward: Number(avgRiskReward.toFixed(2)),
+      recent30WinRate: Math.round(recentWinRate),
+      trend
+    };
+  }
+
+  return channelStats;
+}
+
+/**
  * Gets all active XAUUSD parsed signals from the DB or fallback memory store.
  * @returns {Promise<Array>} Array of parsed signals
  */
@@ -567,6 +693,110 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     if (telegramSignalQuality === "High" && telegramConflictLevel === "Low") overallTelegramQuality = "Excellent";
     else if (telegramSignalQuality === "High" || telegramConflictLevel === "Low") overallTelegramQuality = "Good";
     else if (telegramConflictLevel === "High") overallTelegramQuality = "Poor";
+
+    // ==================================================
+    // CHANNEL RELIABILITY INTELLIGENCE CALCULATIONS (Phase 1.5)
+    // ==================================================
+    const activeChannels = [...new Set(signals.map(s => s.channel || s.channelName || "Unknown"))];
+    let historicalOutcomes = [];
+    if (mongoose.connection.readyState === 1 && mongoose.connection.db && activeChannels.length > 0) {
+      try {
+        historicalOutcomes = await mongoose.model("SignalOutcome").find({
+          channel: { $in: activeChannels }
+        }).setOptions({ bufferCommands: false }).lean();
+      } catch (err) {
+        logger.error("gemini_advisor.fetch_historical_outcomes_failed", { error: err.message });
+      }
+    }
+
+    const channelStats = analyzeChannelReliability(historicalOutcomes);
+
+    // Compute raw vs weighted consensus
+    const rawBuyPct = buyPercentage;
+    const rawSellPct = sellPercentage;
+
+    let weightedBuySum = 0;
+    let weightedSellSum = 0;
+
+    signals.forEach(s => {
+      const ch = s.channel || s.channelName || "Unknown";
+      const stats = channelStats[ch];
+      let weight = 0.50; // Default weight
+      if (stats && !stats.insufficientHistory) {
+        weight = stats.winRate / 100;
+      }
+      if (s.action === "BUY") {
+        weightedBuySum += weight;
+      } else if (s.action === "SELL") {
+        weightedSellSum += weight;
+      }
+    });
+
+    const totalWeightSum = weightedBuySum + weightedSellSum;
+    const weightedBuyPct = totalWeightSum > 0 ? (weightedBuySum / totalWeightSum) * 100 : 0;
+    const weightedSellPct = totalWeightSum > 0 ? (weightedSellSum / totalWeightSum) * 100 : 0;
+
+    const buyDiff = weightedBuyPct - rawBuyPct;
+    const sellDiff = weightedSellPct - rawSellPct;
+
+    let interpretation = "Stable consensus in alignment with historical performance";
+    const dominantAction = buyPercentage >= sellPercentage ? "BUY" : "SELL";
+    if (dominantAction === "BUY") {
+      if (buyDiff > 5) {
+        interpretation = "High-quality BUY consensus driven by high-performing channels";
+      } else if (buyDiff < -5) {
+        interpretation = "Weak consensus driven by low-performing channels";
+      }
+    } else {
+      if (sellDiff > 5) {
+        interpretation = "High-quality SELL consensus driven by high-performing channels";
+      } else if (sellDiff < -5) {
+        interpretation = "Weak consensus driven by low-performing channels";
+      }
+    }
+
+    // Compile Leaderboards
+    const topPerforming = [];
+    const bottomPerforming = [];
+    const mostActive = [];
+    const insufficientHistoryChannels = [];
+
+    activeChannels.forEach(ch => {
+      const stats = channelStats[ch];
+      if (!stats || stats.insufficientHistory) {
+        insufficientHistoryChannels.push(ch);
+      } else {
+        if (stats.winRate >= 65) {
+          topPerforming.push(`${ch} (${stats.winRate}% WR)`);
+        } else if (stats.winRate < 45) {
+          bottomPerforming.push(`${ch} (${stats.winRate}% WR)`);
+        }
+        if (stats.total >= 10) {
+          mostActive.push(`${ch} (${stats.total} total)`);
+        }
+      }
+    });
+
+    let trustLevel = "Medium";
+    const insufficientPct = activeChannels.length > 0 ? (insufficientHistoryChannels.length / activeChannels.length) * 100 : 100;
+    if (insufficientPct >= 60) {
+      trustLevel = "Low (History Insufficient)";
+    } else if (insufficientPct < 30 && Math.abs(buyDiff) < 10 && Math.abs(sellDiff) < 10) {
+      trustLevel = "High";
+    }
+
+    let overallPerformanceTrend = "Stable";
+    let improvingCount = 0;
+    let decliningCount = 0;
+    activeChannels.forEach(ch => {
+      const stats = channelStats[ch];
+      if (stats && !stats.insufficientHistory) {
+        if (stats.trend === "Improving") improvingCount++;
+        if (stats.trend === "Declining") decliningCount++;
+      }
+    });
+    if (improvingCount > decliningCount) overallPerformanceTrend = "Improving";
+    else if (decliningCount > improvingCount) overallPerformanceTrend = "Declining";
 
     // Signal Quality Summary (High, Medium, Low)
     let signalQualitySummary = "Low";
@@ -1742,6 +1972,20 @@ SECTION 9.5: TELEGRAM INTELLIGENCE
 - Oldest Signal Age: ${oldestSignalAgeMin.toFixed(1)} mins
 - Signal Arrival Rate: ${signalArrivalRate} signals/min over the last hour
 - Overall Telegram Quality: ${overallTelegramQuality}
+
+=========================================
+SECTION 9.6: CHANNEL RELIABILITY
+=========================================
+${historicalOutcomes.length === 0 || activeChannels.length === 0 ? `- Structure: History Insufficient` : `- Top Performing Channels: ${topPerforming.length > 0 ? topPerforming.join(", ") : "None in active list"}
+- Bottom Performing Channels: ${bottomPerforming.length > 0 ? bottomPerforming.join(", ") : "None in active list"}
+- Channels with Insufficient History: ${insufficientHistoryChannels.length > 0 ? insufficientHistoryChannels.join(", ") : "None"}
+- Raw BUY Consensus: ${rawBuyPct.toFixed(1)}%
+- Weighted BUY Consensus: ${weightedBuyPct.toFixed(1)}%
+- Raw SELL Consensus: ${rawSellPct.toFixed(1)}%
+- Weighted SELL Consensus: ${weightedSellPct.toFixed(1)}%
+- Consensus Trust Level: ${trustLevel}
+- Recommended Interpretation: ${interpretation}
+- Overall Channel Performance Trend: ${overallPerformanceTrend}`}
 
 =========================================
 SECTION 10: TRADING DECISION OUTPUT
