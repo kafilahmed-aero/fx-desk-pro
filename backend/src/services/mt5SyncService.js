@@ -300,10 +300,11 @@ export function startMt5SyncService() {
       const asciiStr = buffer.toString("utf8");
 
       console.log("========================================");
-      console.log("BACKEND TRANSPORT DIAGNOSTICS");
-      console.log("Timestamp:", new Date().toISOString());
-      console.log("HEX Content:\n" + hexStr);
-      console.log("ASCII Content:\n" + asciiStr);
+      console.log("HANDSHAKE TRANSMISSION");
+      console.log("========================================");
+      console.log("\nTimestamp: " + new Date().toISOString());
+      console.log("\nASCII Payload:\n" + asciiStr);
+      console.log("\nHEX Payload:\n" + hexStr);
 
       socket.once("drain", () => console.log("BACKEND SOCKET EVENT: drain"));
       socket.once("finish", () => console.log("BACKEND SOCKET EVENT: finish"));
@@ -311,10 +312,11 @@ export function startMt5SyncService() {
       socket.once("error", (err) => console.log("BACKEND SOCKET EVENT: error (" + err.message + ")"));
 
       const writeResult = originalWrite.apply(this, arguments);
-      console.log("socket.write() returned:", writeResult);
-      console.log("socket.bytesWritten immediately after write:", socket.bytesWritten);
-      console.log("socket.destroyed is false after write:", socket.destroyed === false);
-      console.log("========================================");
+      console.log("\nsocket.write() return value: " + writeResult);
+      console.log("\nsocket.bytesWritten: " + socket.bytesWritten);
+      console.log("\nsocket.destroyed: " + socket.destroyed);
+      console.log("\nsocket.writable: " + socket.writable);
+      console.log("\n========================================");
 
       return writeResult;
     };

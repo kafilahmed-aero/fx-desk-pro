@@ -321,8 +321,17 @@ void ConnectToBridge() {
       uchar buf[];
       ArrayResize(buf, 4096);
       ResetLastError();
+      
+      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - SocketIsReadable(): ", SocketIsReadable(g_socket));
+      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - ArraySize(buffer): ", ArraySize(buf));
+      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - Requested max length: 4096");
+      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - Requested timeout: 5000");
+
       int res = SocketRead(g_socket, buf, 4096, 5000);
       int err = GetLastError();
+      
+      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_AFTER - SocketRead() return value: ", res);
+      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_AFTER - GetLastError(): ", err);
       
       if(res > 0) {
          handshakeResponse = CharArrayToString(buf, 0, res);
