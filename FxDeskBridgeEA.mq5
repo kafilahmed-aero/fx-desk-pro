@@ -191,41 +191,80 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
       }
    }
    
-   if(res <= 0) return "";
-   
-   // Data successfully read, update last received timestamp
-   g_last_received_time = TimeCurrent();
-   
-   // Check if it's a WebSocket text frame (Opcode 0x81)
-   if(buf[0] == 0x81) {
-      int payload_len = buf[1] & 0x7F;
-      int data_offset = 2;
-      
-      if(payload_len == 126) {
-         payload_len = (buf[2] << 8) | buf[3];
-         data_offset = 4;
-      } else if(payload_len == 127) {
-         data_offset = 10;
-      }
-      
-      // If masked
-      bool masked = (buf[1] & 0x80) != 0;
-      uchar mask[4];
-      if(masked) {
-         for(int i=0; i<4; i++) mask[i] = buf[data_offset++];
-      }
-      
-      uchar decoded[];
-      ArrayResize(decoded, payload_len);
-      for(int i=0; i<payload_len; i++) {
-         uchar c = buf[data_offset + i];
-         if(masked) c = c ^ mask[i % 4];
-         decoded[i] = c;
-      }
-      return CharArrayToString(decoded, 0, payload_len);
-   }
-   
-   return CharArrayToString(buf, 0, res);
+    if(res <= 0) return "";
+    
+    // Data successfully read, update last received timestamp
+    g_last_received_time = TimeCurrent();
+    
+    int buf_size = ArraySize(buf);
+    
+    // 1. Never access buf[0] unless buf_size >= 1
+    if(buf_size < 1) {
+       Print("Incomplete WebSocket frame - waiting for more bytes");
+       return "";
+    }
+    
+    // Check if it's a WebSocket text frame (Opcode 0x81)
+    if(buf[0] == 0x81) {
+       // 2. Never access buf[1] unless buf_size >= 2
+       if(buf_size < 2) {
+          Print("Incomplete WebSocket frame - waiting for more bytes");
+          return "";
+       }
+       
+       int payload_len = buf[1] & 0x7F;
+       int data_offset = 2;
+       
+       if(payload_len == 126) {
+          // 3. Never access extended payload bytes (buf[2], buf[3]) unless they exist
+          if(buf_size < 4) {
+             Print("Incomplete WebSocket frame - waiting for more bytes");
+             return "";
+          }
+          payload_len = (buf[2] << 8) | buf[3];
+          data_offset = 4;
+       } else if(payload_len == 127) {
+          // Extended 8-byte payload length needs data_offset to be at least 10
+          if(buf_size < 10) {
+             Print("Incomplete WebSocket frame - waiting for more bytes");
+             return "";
+          }
+          payload_len = (int)buf[9]; // index 9 is the last byte of the 8-byte length
+          data_offset = 10;
+       }
+       
+       // If masked
+       bool masked = (buf[1] & 0x80) != 0;
+       uchar mask[4];
+       if(masked) {
+          // 4. Never access mask bytes unless they exist
+          if(buf_size < data_offset + 4) {
+             Print("Incomplete WebSocket frame - waiting for more bytes");
+             return "";
+          }
+          for(int i=0; i<4; i++) {
+             mask[i] = buf[data_offset + i];
+          }
+          data_offset += 4;
+       }
+       
+       // 5. Never access payload bytes unless the complete payload has already been received
+       if(buf_size < data_offset + payload_len) {
+          Print("Incomplete WebSocket frame - waiting for more bytes");
+          return "";
+       }
+       
+       uchar decoded[];
+       ArrayResize(decoded, payload_len);
+       for(int i=0; i<payload_len; i++) {
+          uchar c = buf[data_offset + i];
+          if(masked) c = c ^ mask[i % 4];
+          decoded[i] = c;
+       }
+       return CharArrayToString(decoded, 0, payload_len);
+    }
+    
+    return CharArrayToString(buf, 0, res);
 }
 
 //--- Send data through WebSocket frame
