@@ -187,6 +187,7 @@ bool SocketWriteData(string data) {
 
 //--- Disconnect WebSocket connection
 void SocketDisconnect() {
+   Print("MT5 Bridge: SocketDisconnect() called.");
    if(g_socket != INVALID_HANDLE) {
       SocketClose(g_socket);
       g_socket = INVALID_HANDLE;
@@ -600,30 +601,53 @@ void ProcessInboundMessage(string json) {
    }
 }
 
+//--- Helper to format deinitialization reasons
+string GetDeinitReasonDescription(int reason) {
+   switch(reason) {
+      case REASON_PROGRAM: return "REASON_PROGRAM (0) - ExpertAdvisor stopped by calling ExpertRemove()";
+      case REASON_REMOVE: return "REASON_REMOVE (1) - Program removed from chart";
+      case REASON_RECOMPILE: return "REASON_RECOMPILE (2) - Program recompiled";
+      case REASON_CHARTCHANGE: return "REASON_CHARTCHANGE (3) - Symbol or timeframe changed";
+      case REASON_CHARTCLOSE: return "REASON_CHARTCLOSE (4) - Chart closed";
+      case REASON_PARAMETERS: return "REASON_PARAMETERS (5) - Parameters changed by user";
+      case REASON_ACCOUNT: return "REASON_ACCOUNT (6) - Account changed";
+      case REASON_TEMPLATE: return "REASON_TEMPLATE (7) - Template applied";
+      case REASON_INITFAILED: return "REASON_INITFAILED (8) - OnInit() failed";
+      case REASON_CLOSE: return "REASON_CLOSE (9) - Terminal closed";
+      default: return "Unknown reason: " + IntegerToString(reason);
+   }
+}
+
 //--- EA Initialization
 int OnInit() {
-   Print("MT5 Bridge: Initializing FxDeskBridgeEA...");
+   Print("MT5 Bridge: OnInit() started. Initializing FxDeskBridgeEA...");
    
    // Set timer for network tasks (1 second resolution)
    EventSetTimer(1);
    
    ConnectToBridge();
    
+   Print("MT5 Bridge: OnInit() completed. Return: INIT_SUCCEEDED");
    return(INIT_SUCCEEDED);
 }
 
 //--- EA Deinitialization
 void OnDeinit(const int reason) {
-   Print("MT5 Bridge: Deinitializing EA. Reason Code: ", reason);
+   string reasonDesc = GetDeinitReasonDescription(reason);
+   Print("MT5 Bridge: OnDeinit() started. Reason Code: ", reason, " (", reasonDesc, ")");
    EventKillTimer();
    SocketDisconnect();
+   Print("MT5 Bridge: OnDeinit() completed.");
 }
 
 //--- EA Timer loop for Heartbeat & Reconnection
 void OnTimer() {
+   Print("MT5 Bridge: OnTimer() loop tick. g_connected: ", g_connected);
+   
    // Reconnection loop using linear/exponential retry logic
    if(!g_connected) {
       if(TimeCurrent() - g_last_reconnect_attempt >= g_current_reconnect_delay) {
+         Print("MT5 Bridge: OnTimer() - Initiating reconnection attempt...");
          ConnectToBridge();
       }
       return;
@@ -631,7 +655,7 @@ void OnTimer() {
    
    // Check for dead socket via heartbeat timeout (InpHeartbeatInterval * 2)
    if(g_connected && TimeCurrent() - g_last_received_time >= InpHeartbeatInterval * 2) {
-      Print("MT5 Bridge: Heartbeat timeout. Dead socket detected. Disconnecting...");
+      Print("MT5 Bridge: OnTimer() - Heartbeat timeout. Dead socket detected. Disconnecting...");
       SocketDisconnect();
       
       // Heartbeat timeout disconnect: increase reconnect delay (exponential backoff capped at 60 seconds)
@@ -643,10 +667,11 @@ void OnTimer() {
    // Heartbeat loop
    if(TimeCurrent() - g_last_heartbeat >= InpHeartbeatInterval) {
       string pingPayload = "{\"event\":\"PING\"}";
+      Print("MT5 Bridge: OnTimer() - Sending PING heartbeat...");
       if(SocketWriteData(pingPayload)) {
          g_last_heartbeat = TimeCurrent();
       } else {
-         Print("MT5 Bridge: Connection lost. Reconnecting...");
+         Print("MT5 Bridge: OnTimer() - Heartbeat write failed. Connection lost. Reconnecting...");
          SocketDisconnect();
       }
    }
@@ -654,12 +679,14 @@ void OnTimer() {
    // Check for incoming WebSocket messages
    string msg = SocketReadData();
    if(msg != "") {
+      Print("MT5 Bridge: OnTimer() - Message received: ", msg);
       ProcessInboundMessage(msg);
    }
    
    // Send periodic Account Metrics every 30 seconds
    static datetime last_summary = 0;
    if(TimeCurrent() - last_summary >= 30) {
+      Print("MT5 Bridge: OnTimer() - Sending periodic account summary...");
       SendAccountSummary();
       last_summary = TimeCurrent();
    }
@@ -667,10 +694,12 @@ void OnTimer() {
 
 //--- EA Tick handler
 void OnTick() {
+   Print("MT5 Bridge: OnTick() received. g_connected: ", g_connected);
    // If connected, read inbound frames immediately on tick for ultra-low latency execution
    if(g_connected) {
       string msg = SocketReadData();
       if(msg != "") {
+         Print("MT5 Bridge: OnTick() - Message received: ", msg);
          ProcessInboundMessage(msg);
       }
    }
