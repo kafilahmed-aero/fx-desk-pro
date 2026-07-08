@@ -36,6 +36,9 @@ export function updatePriceCacheAndHistory(pair, priceInfo) {
 }
 
 const SYMBOL_MAP = {
+  // Macro Indicators
+  "DXY": { symbol: "DX-Y.NYB", provider: "yahoo" },
+  "US10Y": { symbol: "^TNX", provider: "yahoo" },
   // Metals
   "XAUUSD": { symbol: "GC=F", provider: "yahoo" },
   "XAGUSD": { symbol: "SI=F", provider: "yahoo" },

@@ -103,6 +103,65 @@ function getPriceAtOffset(history, offsetMinutes, currentPrice) {
 }
 
 /**
+ * Helper to compute price trends and momentum for macro indicators
+ */
+function calculateCrossMarketMetrics(pair, currentPrice, priceHistory) {
+  if (currentPrice === null || !priceHistory || priceHistory.length === 0) {
+    return null;
+  }
+
+  const price5m = getPriceAtOffset(priceHistory, 5, currentPrice);
+  const price15m = getPriceAtOffset(priceHistory, 15, currentPrice);
+  const price30m = getPriceAtOffset(priceHistory, 30, currentPrice);
+  const price60m = getPriceAtOffset(priceHistory, 60, currentPrice);
+
+  const change5m = currentPrice - price5m;
+  const change15m = currentPrice - price15m;
+  const change30m = currentPrice - price30m;
+  const change60m = currentPrice - price60m;
+
+  const momentumScore = (change5m * 0.4) + (change15m * 0.3) + (change30m * 0.2) + (change60m * 0.1);
+  let momentumDirection = "Neutral";
+  let momentumStrength = "Weak";
+
+  const thresholdScale = currentPrice > 1000 ? 1.0 : (currentPrice > 50 ? 0.05 : 0.01);
+
+  if (Math.abs(momentumScore) > 0.15 * thresholdScale) {
+    momentumDirection = momentumScore > 0 ? "Bullish" : "Bearish";
+    const absScore = Math.abs(momentumScore);
+    if (absScore > 3.0 * thresholdScale) momentumStrength = "Strong";
+    else if (absScore > 1.0 * thresholdScale) momentumStrength = "Moderate";
+    else momentumStrength = "Weak";
+  }
+
+  let trendDirection = "Neutral";
+  let trendStrength = "Weak";
+  if (priceHistory.length >= 5) {
+    const oldPrice = priceHistory[0].price;
+    const netChange = currentPrice - oldPrice;
+    const absChange = Math.abs(netChange);
+    
+    if (absChange > 2.0 * thresholdScale) {
+      trendDirection = netChange > 0 ? "Bullish" : "Bearish";
+      if (absChange > 6.0 * thresholdScale) trendStrength = "Strong";
+      else trendStrength = "Moderate";
+    }
+  }
+
+  return {
+    current: currentPrice,
+    change5m,
+    change15m,
+    change30m,
+    change60m,
+    trendDirection,
+    trendStrength,
+    momentumDirection,
+    momentumStrength
+  };
+}
+
+/**
  * Gets all active XAUUSD parsed signals from the DB or fallback memory store.
  * @returns {Promise<Array>} Array of parsed signals
  */
@@ -151,9 +210,23 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     const currentPrice = priceInfo ? priceInfo.price : null;
     const signals = await getActiveXauusdSignals();
 
+    // Fetch DXY and US10Y prices & history for cross-market context
+    let dxyPrice = null;
+    let us10yPrice = null;
+    try {
+      const dxyInfo = await getCurrentPrice("DXY");
+      dxyPrice = dxyInfo ? dxyInfo.price : null;
+      const us10yInfo = await getCurrentPrice("US10Y");
+      us10yPrice = us10yInfo ? us10yInfo.price : null;
+    } catch (e) {
+      logger.warn("gemini_advisor.fetch_macro_failed", { error: e.message });
+    }
+
     // Query historical price from internal PriceIngestionService memory history buffer
     // NEVER query direct external Yahoo/Binance APIs from here.
     const priceHistory = getPriceHistory("XAUUSD");
+    const dxyHistory = getPriceHistory("DXY");
+    const us10yHistory = getPriceHistory("US10Y");
 
     let newsContext = { highImpactEvents: [], goldNews: [] };
     try {
@@ -745,6 +818,58 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     const asianRelation = getSessionRelation(currentPrice, asianHigh, asianLow);
     const londonRelation = getSessionRelation(currentPrice, londonHigh, londonLow);
     const nyRelation = getSessionRelation(currentPrice, nyHigh, nyLow);
+
+    // ==================================================
+    // CROSS-MARKET INTELLIGENCE CALCULATIONS (Phase 1.2)
+    // ==================================================
+    const dxyStats = calculateCrossMarketMetrics("DXY", dxyPrice, dxyHistory);
+    const us10yStats = calculateCrossMarketMetrics("US10Y", us10yPrice, us10yHistory);
+
+    let dxyCorrelation = "Neutral cross-market conditions";
+    let yieldAlignment = "Neutral cross-market conditions";
+    let macroAlignment = "Neutral/Mixed Macro Conditions";
+
+    if (dxyStats && momentumDirection !== "Neutral") {
+      const goldBull = momentumDirection === "Bullish";
+      const dxyBull = dxyStats.momentumDirection === "Bullish";
+      const dxyBear = dxyStats.momentumDirection === "Bearish";
+
+      if (goldBull && dxyBear) {
+        dxyCorrelation = "Gold rising while DXY falling";
+      } else if (!goldBull && dxyBull) {
+        dxyCorrelation = "Gold falling while DXY rising";
+      } else if (goldBull && dxyBull) {
+        dxyCorrelation = "Gold rising despite strong DXY";
+      } else if (!goldBull && dxyBear) {
+        dxyCorrelation = "Gold and DXY diverging";
+      }
+    }
+
+    if (us10yStats && momentumDirection !== "Neutral") {
+      const goldBull = momentumDirection === "Bullish";
+      const yieldBull = us10yStats.momentumDirection === "Bullish";
+      const yieldBear = us10yStats.momentumDirection === "Bearish";
+
+      if (yieldBull && !goldBull) {
+        yieldAlignment = "Gold weakening with rising yields";
+      } else if (yieldBear && goldBull) {
+        yieldAlignment = "Gold strengthening with falling yields";
+      }
+    }
+
+    if (dxyStats && us10yStats && momentumDirection !== "Neutral") {
+      const goldBull = momentumDirection === "Bullish";
+      const dxyBear = dxyStats.momentumDirection === "Bearish";
+      const yieldBear = us10yStats.momentumDirection === "Bearish";
+      const dxyBull = dxyStats.momentumDirection === "Bullish";
+      const yieldBull = us10yStats.momentumDirection === "Bullish";
+
+      if (goldBull && dxyBear && yieldBear) {
+        macroAlignment = "Perfect Bullish Macro Alignment";
+      } else if (!goldBull && dxyBull && yieldBull) {
+        macroAlignment = "Perfect Bearish Macro Alignment";
+      }
+    }
 
     // Support and Resistance: recent swing highs, recent swing lows, and existing price clusters.
     const levels = [];
@@ -1343,6 +1468,22 @@ SECTION 7.5: INSTITUTIONAL MARKET STRUCTURE
   - Position: ${nyRelation}
 - Daily Midpoint (50%): ${midpoint !== null ? midpoint.toFixed(2) + " USD" : "N/A"}${distFromMidpoint !== null ? " (Distance: " + distFromMidpoint.toFixed(2) + " USD)" : ""}
 - Premium / Discount Rating: ${premiumDiscount} (${percentThroughRange.toFixed(1)}% through today's range)
+
+=========================================
+SECTION 7.6: CROSS MARKET INTELLIGENCE
+=========================================
+- DXY (US Dollar Index):
+  - Current Price: ${dxyStats !== null ? dxyStats.current.toFixed(2) : "Unavailable"}
+  - Trend: ${dxyStats !== null ? dxyStats.trendDirection + " (" + dxyStats.trendStrength + ")" : "Unavailable"}
+  - Momentum: ${dxyStats !== null ? dxyStats.momentumDirection + " (" + dxyStats.momentumStrength + ")" : "Unavailable"}
+- US10Y (US 10-Year Treasury Yield):
+  - Current Yield: ${us10yStats !== null ? us10yStats.current.toFixed(3) + "%" : "Unavailable"}
+  - Trend: ${us10yStats !== null ? us10yStats.trendDirection + " (" + us10yStats.trendStrength + ")" : "Unavailable"}
+  - Momentum: ${us10yStats !== null ? us10yStats.momentumDirection + " (" + us10yStats.momentumStrength + ")" : "Unavailable"}
+- Macro Correlations & Alignments:
+  - Gold vs DXY: ${dxyCorrelation}
+  - Gold vs US10Y: ${yieldAlignment}
+  - Overall Macro Alignment: ${macroAlignment}
 
 =========================================
 SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
