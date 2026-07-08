@@ -6,8 +6,15 @@ import { getParsedSignals } from "./parsedSignalStore.js";
 import { getCurrentPrice, getPriceHistory } from "./priceIngestionService.js";
 import { getXauusdNewsContext } from "./xauusdNewsService.js";
 import { saveNewAiRecommendationOutcome } from "./signalOutcomeStore.js";
-import { getMultiTimeframeContext } from "./multiTimeframeIntelligenceService.js";
+import { getMultiTimeframeContext, buildCandles } from "./multiTimeframeIntelligenceService.js";
 import { logger } from "../utils/logger.js";
+
+// Persistent module-level state for market regime stability (Phase 1.6)
+const regimeState = {
+  confirmedRegime: "Range",
+  regimeLogs: new Map(), // completedTimestamp -> rawRegime
+  lastCheckedTimestamp: null
+};
 
 // Configurable clustering tolerances
 export const ENTRY_CLUSTER_TOLERANCE = 2.0;
@@ -269,6 +276,7 @@ function calculateMarketStructure(priceHistory, currentPrice, atr) {
 
 /**
  * Compiles performance trends and reliability statistics for channels based on historical outcome documents.
+ * Integrates smooth confidence factors based on trade count.
  */
 function analyzeChannelReliability(outcomes) {
   const channelStats = {};
@@ -306,13 +314,31 @@ function analyzeChannelReliability(outcomes) {
       }
     });
 
-    if (completed.length < 3) {
-      channelStats[ch] = { insufficientHistory: true };
-      continue;
+    const completedCount = completed.length;
+    
+    // User-facing confidence categories (Very Low, Low, Medium, High, Very High)
+    let confidenceLevel = "Very Low";
+    if (completedCount < 5) confidenceLevel = "Very Low";
+    else if (completedCount <= 15) confidenceLevel = "Low";
+    else if (completedCount <= 30) confidenceLevel = "Medium";
+    else if (completedCount <= 75) confidenceLevel = "High";
+    else confidenceLevel = "Very High";
+
+    // Smooth confidence factor formula: prevents abrupt weighting jumps when count increases slightly
+    let confidenceFactor = 0.20;
+    if (completedCount < 5) {
+      confidenceFactor = 0.10 + (completedCount / 5) * 0.10;
+    } else if (completedCount < 15) {
+      confidenceFactor = 0.20 + ((completedCount - 5) / 10) * 0.20;
+    } else if (completedCount < 30) {
+      confidenceFactor = 0.40 + ((completedCount - 15) / 15) * 0.20;
+    } else if (completedCount < 75) {
+      confidenceFactor = 0.60 + ((completedCount - 30) / 45) * 0.20;
+    } else {
+      confidenceFactor = Math.min(1.00, 0.80 + ((completedCount - 75) / 75) * 0.20);
     }
 
-    const completedCount = completed.length;
-    const winRate = ((fullTp + partialTp) / completedCount) * 100;
+    const winRate = completedCount > 0 ? ((fullTp + partialTp) / completedCount) * 100 : 50;
     const tpSuccessRate = (fullTp + partialTp + sl) > 0 ? ((fullTp + partialTp) / (fullTp + partialTp + sl)) * 100 : 0;
 
     let totalLifetime = 0;
@@ -372,7 +398,10 @@ function analyzeChannelReliability(outcomes) {
     }
 
     channelStats[ch] = {
-      insufficientHistory: false,
+      insufficientHistory: completedCount < 5,
+      completedTrades: completedCount,
+      confidenceLevel,
+      confidenceFactor,
       total,
       active,
       fullTp,
@@ -466,6 +495,9 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     } catch (newsErr) {
       logger.warn("gemini_advisor.fetch_news_failed", { error: newsErr.message });
     }
+
+    // Fetch Multi-Timeframe Context early (Phase 1.6)
+    const mtfContext = getMultiTimeframeContext("XAUUSD");
 
     // Calculate Signal Intelligence Metrics
     const now = new Date();
@@ -722,8 +754,10 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
       const ch = s.channel || s.channelName || "Unknown";
       const stats = channelStats[ch];
       let weight = 0.50; // Default weight
-      if (stats && !stats.insufficientHistory) {
-        weight = stats.winRate / 100;
+      if (stats) {
+        weight = (stats.winRate / 100) * stats.confidenceFactor;
+      } else {
+        weight = 0.05; // No history at all - default to Very Low confidence weight (50% * 0.10)
       }
       if (s.action === "BUY") {
         weightedBuySum += weight;
@@ -760,21 +794,31 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     const bottomPerforming = [];
     const mostActive = [];
     const insufficientHistoryChannels = [];
+    const channelDetails = [];
 
     activeChannels.forEach(ch => {
       const stats = channelStats[ch];
       if (!stats || stats.insufficientHistory) {
-        insufficientHistoryChannels.push(ch);
+        const count = stats ? stats.completedTrades : 0;
+        insufficientHistoryChannels.push(`${ch} (${count} completed trades - Low Statistical Confidence)`);
       } else {
         if (stats.winRate >= 65) {
-          topPerforming.push(`${ch} (${stats.winRate}% WR)`);
+          topPerforming.push(`${ch} (${stats.winRate}% WR, ${stats.completedTrades} trades, ${stats.confidenceLevel} Confidence)`);
         } else if (stats.winRate < 45) {
-          bottomPerforming.push(`${ch} (${stats.winRate}% WR)`);
+          bottomPerforming.push(`${ch} (${stats.winRate}% WR, ${stats.completedTrades} trades, ${stats.confidenceLevel} Confidence)`);
         }
         if (stats.total >= 10) {
           mostActive.push(`${ch} (${stats.total} total)`);
         }
       }
+      
+      const completedCount = stats ? (stats.completedTrades || 0) : 0;
+      const wr = stats ? (stats.winRate || 0) : 50;
+      const confLevel = stats ? stats.confidenceLevel : "Very Low";
+      const confFactor = stats ? stats.confidenceFactor : 0.10;
+      const confText = completedCount < 5 ? "Low Statistical Confidence" : confLevel;
+      const weight = ((wr / 100) * confFactor).toFixed(2);
+      channelDetails.push(`- Channel: ${ch} | Completed Trades: ${completedCount} | Win Rate: ${wr}% | Confidence: ${confText} | Effective Weight: ${weight}`);
     });
 
     let trustLevel = "Medium";
@@ -1445,8 +1489,7 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
       ? tpClusters.map(c => `- Cluster of ${c.count} signals aligning Take Profit (TP) levels between ${c.min.toFixed(2)} and ${c.max.toFixed(2)} (width: ${(c.max - c.min).toFixed(2)})`).join("\n")
       : "No significant Take Profit (TP) clusters identified.";
 
-    // Fetch and format Multi-Timeframe Context
-    const mtfContext = getMultiTimeframeContext("XAUUSD");
+    // Format Multi-Timeframe Context (already fetched early)
 
     const formatMtfTimeframeBlock = (name, data) => {
       if (!data || data.status === "INSUFFICIENT_HISTORY") {
@@ -1688,6 +1731,23 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
     if (conflicts.length > 0) {
       marketConflictSummary = `Major market conflicts detected: ${conflicts.join("; ")}.`;
     }
+
+    // Call Phase 1.6 Market Regime detection and scoring
+    const regimeData = calculateMarketRegimeAndScores(
+      priceHistory,
+      currentPrice,
+      atr,
+      mtfContext,
+      momentumScore,
+      momentumDirection,
+      volatilityLevel,
+      trendStrength,
+      marketPhase,
+      directionAgreement,
+      buyPercentage,
+      sellPercentage,
+      structure
+    );
 
     // 4. Build prompt incorporating structured indicator blocks in the approved sequence
     const prompt = `You are a professional financial trading advisor specializing in Gold (XAUUSD).
@@ -1931,6 +1991,16 @@ ${structure !== null ? `- Latest Swing High: ${structure.latestHigh.toFixed(2)} 
 - Change of Character: ${structure.choch}
 - Structure Summary: Price is in a ${structure.strength} ${structure.currentStructure} layout with ${structure.bos} and ${structure.choch}.` : `- Structure: Structure unavailable`}
 
+====================================
+MARKET REGIME
+====================================
+Current Regime: ${regimeData.overallRegime}
+Regime Confidence: ${regimeData.regimeConfidence}%
+Trend Quality: ${regimeData.trendQuality}
+Volatility State: ${regimeData.volatilityState}
+Momentum Quality: ${regimeData.momentumQuality}
+Recommended Trading Environment: ${regimeData.recommendedEnv}
+
 =========================================
 SECTION 8: MACROECONOMIC HIGH-IMPACT EVENTS & MARKET NEWS
 =========================================
@@ -1976,7 +2046,9 @@ SECTION 9.5: TELEGRAM INTELLIGENCE
 =========================================
 SECTION 9.6: CHANNEL RELIABILITY
 =========================================
-${historicalOutcomes.length === 0 || activeChannels.length === 0 ? `- Structure: History Insufficient` : `- Top Performing Channels: ${topPerforming.length > 0 ? topPerforming.join(", ") : "None in active list"}
+${historicalOutcomes.length === 0 || activeChannels.length === 0 ? `- Structure: History Insufficient` : `- Channel Details:
+${channelDetails.join("\n")}
+- Top Performing Channels: ${topPerforming.length > 0 ? topPerforming.join(", ") : "None in active list"}
 - Bottom Performing Channels: ${bottomPerforming.length > 0 ? bottomPerforming.join(", ") : "None in active list"}
 - Channels with Insufficient History: ${insufficientHistoryChannels.length > 0 ? insufficientHistoryChannels.join(", ") : "None"}
 - Raw BUY Consensus: ${rawBuyPct.toFixed(1)}%
@@ -2246,4 +2318,317 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       message: "Gemini recommendation unavailable"
     };
   }
+}
+
+
+
+/**
+ * Calculates Market Regime and Component Scores (Phase 1.6)
+ */
+function calculateMarketRegimeAndScores(
+  priceHistory,
+  currentPrice,
+  atr,
+  mtfContext,
+  momentumScore,
+  momentumDirection,
+  volatilityLevel,
+  trendStrength,
+  marketPhase,
+  directionAgreement,
+  buyPercentage,
+  sellPercentage,
+  structure
+) {
+  // Check for insufficient information
+  const hasInsufficientData = !priceHistory || priceHistory.length < 5 || currentPrice === null || !mtfContext;
+  if (hasInsufficientData) {
+    return {
+      trendStrengthScore: 0,
+      volatilityScore: 0,
+      atrExpansionScore: 0,
+      swingConsistencyScore: 0,
+      marketStructureScore: 0,
+      momentumScoreVal: 0,
+      overallRegime: "Regime Unknown",
+      regimeConfidence: 0,
+      trendQuality: "Weak/Choppy",
+      volatilityState: "Moderate",
+      momentumQuality: "Weak/Neutral",
+      recommendedEnv: "Caution / Stand Aside (Regime Unknown)"
+    };
+  }
+
+  // 1. Trend Strength Score (0 to 100)
+  const tfTrends = [];
+  ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+    const data = mtfContext[tf];
+    if (data && data.status === "OK" && data.trendScore !== null) {
+      tfTrends.push(Math.abs(data.trendScore));
+    }
+  });
+  const avgTfTrendScore = tfTrends.length > 0 ? Math.round(tfTrends.reduce((s, v) => s + v, 0) / tfTrends.length) : 0;
+
+  // 2. Volatility Score (0 to 100)
+  const tfVols = [];
+  ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+    const data = mtfContext[tf];
+    if (data && data.status === "OK") {
+      if (data.volatility === "High") tfVols.push(100);
+      else if (data.volatility === "Medium") tfVols.push(50);
+      else tfVols.push(10);
+    }
+  });
+  const avgTfVolatilityScore = tfVols.length > 0 ? Math.round(tfVols.reduce((s, v) => s + v, 0) / tfVols.length) : 50;
+
+  // 3. ATR Expansion Score (0 to 100)
+  const tfAtrExpansions = [];
+  ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+    const data = mtfContext[tf];
+    if (data && data.status === "OK" && data.ATR > 0 && data.volatilityValue !== null) {
+      const ratio = data.volatilityValue / data.ATR; // typical is ~0.8-1.0
+      const score = Math.max(0, Math.min(100, Math.round(ratio * 60)));
+      tfAtrExpansions.push(score);
+    }
+  });
+  const atrExpansionScore = tfAtrExpansions.length > 0 ? Math.round(tfAtrExpansions.reduce((s, v) => s + v, 0) / tfAtrExpansions.length) : 50;
+
+  // 4. Swing Consistency Score (0 to 100)
+  let swingConsistencyScore = 50;
+  if (structure) {
+    let baseScore = 50;
+    if (structure.strength === "Strong") baseScore = 90;
+    else if (structure.strength === "Moderate") baseScore = 65;
+    else baseScore = 35;
+
+    if (structure.currentStructure === "Bullish Structure" || structure.currentStructure === "Bearish Structure") {
+      baseScore += 10;
+    } else if (structure.currentStructure === "Transition") {
+      baseScore -= 15;
+    }
+    if (structure.bos && structure.bos !== "No confirmed BOS") {
+      baseScore += 10;
+    }
+    swingConsistencyScore = Math.max(10, Math.min(100, baseScore));
+  }
+
+  // 5. Market Structure Score (0 to 100)
+  let marketStructureScore = 50;
+  if (structure) {
+    let score = 50;
+    if (structure.currentStructure === "Bullish Structure" || structure.currentStructure === "Bearish Structure") {
+      score = 80;
+    } else if (structure.currentStructure === "Range") {
+      score = 40;
+    } else if (structure.currentStructure === "Transition") {
+      score = 30;
+    }
+
+    if (structure.strength === "Strong") score += 15;
+    else if (structure.strength === "Moderate") score += 5;
+    else score -= 10;
+
+    if (structure.bos && structure.bos !== "No confirmed BOS") score += 10;
+    if (structure.choch && structure.choch !== "No CHoCH") score -= 5;
+
+    marketStructureScore = Math.max(10, Math.min(100, score));
+  }
+
+  // 6. Momentum Score (0 to 100)
+  const tfMoms = [];
+  ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+    const data = mtfContext[tf];
+    if (data && data.status === "OK" && data.momentumScore !== null) {
+      tfMoms.push(Math.abs(data.momentumScore));
+    }
+  });
+  const mainMomScore = Math.min(100, Math.round((Math.abs(momentumScore || 0) / 3.0) * 100));
+  const avgTfMomScore = tfMoms.length > 0 ? (tfMoms.reduce((s, v) => s + v, 0) / tfMoms.length) : 50;
+  const finalMomentumScore = Math.round((mainMomScore + avgTfMomScore) / 2);
+
+  // === REGIME CLASSIFICATION ALGORITHM ===
+  let rawRegime = "Range";
+  
+  const isBreakout = (structure && structure.bos && structure.bos !== "No confirmed BOS") || 
+                     (mtfContext["5m"]?.marketPhase === "Breakout" || mtfContext["15m"]?.marketPhase === "Breakout");
+                     
+  const isReversal = (structure && structure.choch && structure.choch !== "No CHoCH") ||
+                     (mtfContext["5m"]?.marketPhase === "Reversal" || mtfContext["15m"]?.marketPhase === "Reversal");
+                     
+  const isPullback = (mtfContext["5m"]?.marketPhase === "Pullback" || mtfContext["15m"]?.marketPhase === "Pullback");
+
+  const isCompression = volatilityLevel === "Low" || (avgTfVolatilityScore < 30 && atrExpansionScore < 35);
+  
+  const isExpansion = volatilityLevel === "High" && atrExpansionScore > 70;
+  
+  const isStrongTrend = avgTfTrendScore > 70 && trendStrength === "Strong";
+  
+  const isWeakTrend = trendStrength === "Weak" && momentumDirection !== "Neutral";
+  
+  const isTrending = trendStrength === "Moderate" || (avgTfTrendScore > 40 && momentumDirection !== "Neutral");
+
+  const isHighVolatilityRange = (marketPhase === "Ranging" || avgTfTrendScore < 35) && volatilityLevel === "High";
+
+  if (isBreakout) {
+    rawRegime = "Breakout";
+  } else if (isReversal) {
+    rawRegime = "Reversal Candidate";
+  } else if (isPullback) {
+    rawRegime = "Pullback";
+  } else if (isStrongTrend) {
+    rawRegime = "Strong Trend";
+  } else if (isCompression) {
+    rawRegime = "Compression";
+  } else if (isExpansion) {
+    rawRegime = "Expansion";
+  } else if (isHighVolatilityRange) {
+    rawRegime = "High Volatility Range";
+  } else if (isTrending) {
+    rawRegime = "Trending";
+  } else if (isWeakTrend) {
+    rawRegime = "Weak Trend";
+  } else {
+    rawRegime = "Range";
+  }
+
+  // === REGIME STABILITY LOGIC ===
+  // Identify completed 1-minute candle to drive stability transition
+  const ticks = getPriceHistory("XAUUSD");
+  const candles1m = buildCandles(ticks, 1);
+  const completedTimestamp = candles1m.length >= 2 ? candles1m[candles1m.length - 2].timestamp : null;
+
+  let overallRegime = rawRegime;
+
+  if (rawRegime === "Regime Unknown") {
+    regimeState.confirmedRegime = "Regime Unknown";
+    overallRegime = "Regime Unknown";
+  } else if (completedTimestamp) {
+    // Record current rawRegime for this completed candle timestamp
+    if (regimeState.lastCheckedTimestamp !== completedTimestamp) {
+      regimeState.regimeLogs.set(completedTimestamp, rawRegime);
+      regimeState.lastCheckedTimestamp = completedTimestamp;
+      
+      // Keep only last 20 logs to avoid unbounded growth
+      if (regimeState.regimeLogs.size > 20) {
+        const sortedKeys = Array.from(regimeState.regimeLogs.keys()).sort((a, b) => a - b);
+        while (regimeState.regimeLogs.size > 20) {
+          regimeState.regimeLogs.delete(sortedKeys.shift());
+        }
+      }
+    } else {
+      // Overwrite the rawRegime value with the latest calculated rawRegime for the same candle
+      regimeState.regimeLogs.set(completedTimestamp, rawRegime);
+    }
+    
+    // Fetch logs of last 3 completed candles
+    const logs = Array.from(regimeState.regimeLogs.entries())
+      .sort((a, b) => b[0] - a[0]) // newest first
+      .slice(0, 3);
+      
+    if (logs.length >= 3) {
+      const firstRegimeVal = logs[0][1];
+      const allSame = logs.every(log => log[1] === firstRegimeVal);
+      if (allSame) {
+        regimeState.confirmedRegime = firstRegimeVal;
+      }
+      overallRegime = regimeState.confirmedRegime;
+    } else {
+      // Not enough candles recorded yet, allow rawRegime to pass through
+      regimeState.confirmedRegime = rawRegime;
+      overallRegime = rawRegime;
+    }
+  } else {
+    // If candles are missing, fall back directly
+    regimeState.confirmedRegime = rawRegime;
+    overallRegime = rawRegime;
+  }
+
+  // Calculate Regime Confidence (0 to 100)
+  const tfCoverages = [];
+  ["1m", "5m", "15m", "1h", "4h"].forEach(tf => {
+    const data = mtfContext[tf];
+    if (data) {
+      tfCoverages.push(data.historyCoverage || 0);
+    }
+  });
+  const avgCoverage = tfCoverages.length > 0 ? (tfCoverages.reduce((s, v) => s + v, 0) / tfCoverages.length) : 50;
+  
+  let alignmentBonus = 10;
+  if (momentumDirection !== "Neutral" && directionAgreement.includes(momentumDirection)) {
+    alignmentBonus += 15;
+  } else if (momentumDirection !== "Neutral" && !directionAgreement.includes(momentumDirection) && directionAgreement !== "Neutral") {
+    alignmentBonus -= 15;
+  }
+  const regimeConfidence = Math.max(10, Math.min(100, Math.round(avgCoverage * 0.8 + alignmentBonus)));
+
+  // Trend Quality text
+  let trendQuality = "Choppy/Neutral";
+  if (avgTfTrendScore >= 75) {
+    trendQuality = `Strong ${momentumDirection !== "Neutral" ? momentumDirection : "Directional"}`;
+  } else if (avgTfTrendScore >= 40) {
+    trendQuality = `Moderate ${momentumDirection !== "Neutral" ? momentumDirection : "Directional"}`;
+  } else {
+    trendQuality = "Weak/Choppy";
+  }
+
+  // Volatility State text
+  let volatilityState = "Moderate";
+  if (volatilityLevel === "High") {
+    volatilityState = "High (Expansion)";
+  } else if (volatilityLevel === "Low") {
+    volatilityState = "Low (Compression)";
+  } else {
+    volatilityState = "Moderate (Stable)";
+  }
+
+  // Momentum Quality text
+  let momentumQuality = "Weak/Neutral";
+  if (finalMomentumScore >= 75) {
+    momentumQuality = `Strong ${momentumDirection}`;
+  } else if (finalMomentumScore >= 40) {
+    momentumQuality = `Moderate ${momentumDirection}`;
+  } else {
+    momentumQuality = "Weak/Neutral";
+  }
+
+  // Recommended Trading Environment text
+  let recommendedEnv = "Conservative Trading Mode";
+  if (overallRegime === "Strong Trend") {
+    recommendedEnv = "Excellent Trend Following Conditions";
+  } else if (overallRegime === "Trending") {
+    recommendedEnv = "Good Trend Following Conditions";
+  } else if (overallRegime === "Weak Trend") {
+    recommendedEnv = "Selective Scalping / Tight Targets";
+  } else if (overallRegime === "Range") {
+    recommendedEnv = "High Probability Range Trading";
+  } else if (overallRegime === "High Volatility Range") {
+    recommendedEnv = "Wide Range Trading / Volatility Scalping";
+  } else if (overallRegime === "Compression") {
+    recommendedEnv = "Poor Breakout Conditions / Compression";
+  } else if (overallRegime === "Expansion") {
+    recommendedEnv = "Momentum Acceleration / Breakout Riding";
+  } else if (overallRegime === "Breakout") {
+    recommendedEnv = "High Probability Breakout Conditions";
+  } else if (overallRegime === "Pullback") {
+    recommendedEnv = "Discount/Premium Pullback Buy/Sell";
+  } else if (overallRegime === "Reversal Candidate") {
+    recommendedEnv = "Potential Trend Reversal / Reversal Scaling";
+  } else if (overallRegime === "Regime Unknown") {
+    recommendedEnv = "Caution / Stand Aside (Regime Unknown)";
+  }
+
+  return {
+    trendStrengthScore: avgTfTrendScore,
+    volatilityScore: avgTfVolatilityScore,
+    atrExpansionScore,
+    swingConsistencyScore,
+    marketStructureScore,
+    momentumScoreVal: finalMomentumScore,
+    overallRegime,
+    regimeConfidence,
+    trendQuality,
+    volatilityState,
+    momentumQuality,
+    recommendedEnv
+  };
 }
