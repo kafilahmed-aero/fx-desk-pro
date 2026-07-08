@@ -72,12 +72,17 @@ string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
    if(g_socket == INVALID_HANDLE) return "";
    if(checkConnected && !g_connected) return "";
    
-   uchar buf[];
-   ArrayResize(buf, 4096);
-   // Set timeout to prevent UI freeze (acting as non-blocking read)
    ResetLastError();
-   int res = SocketRead(g_socket, buf, 4096, timeout_ms);
+   uint bytesAvailable = SocketIsReadable(g_socket);
+   if(bytesAvailable == 0) return "";
+   
+   uchar buf[];
+   ArrayResize(buf, bytesAvailable);
+   ResetLastError();
+   int res = SocketRead(g_socket, buf, bytesAvailable, timeout_ms);
    int err = GetLastError();
+   
+   Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC - bytesAvailable: ", bytesAvailable, ", requestedLength: ", bytesAvailable, ", SocketRead return: ", res, ", GetLastError(): ", err);
    
    if(!checkConnected) {
       Print("MT5 Bridge: DIAGNOSTIC - Handshake SocketRead returned: ", res, ", GetLastError(): ", err);
@@ -318,30 +323,7 @@ void ConnectToBridge() {
    
    string handshakeResponse = "";
    if(data_ready) {
-      uchar buf[];
-      ArrayResize(buf, 4096);
-      ResetLastError();
-      
-      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - SocketIsReadable(): ", SocketIsReadable(g_socket));
-      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - ArraySize(buffer): ", ArraySize(buf));
-      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - Requested max length: 4096");
-      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_BEFORE - Requested timeout: 5000");
-
-      int res = SocketRead(g_socket, buf, 4096, 5000);
-      int err = GetLastError();
-      
-      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_AFTER - SocketRead() return value: ", res);
-      Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC_AFTER - GetLastError(): ", err);
-      
-      if(res > 0) {
-         handshakeResponse = CharArrayToString(buf, 0, res);
-      }
-      
-      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - Elapsed wait time: ", elapsed, " ms");
-      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - Bytes reported by SocketIsReadable(): ", bytes_avail);
-      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - SocketRead() return value: ", res);
-      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - GetLastError(): ", err);
-      Print("MT5 Bridge: HANDSHAKE DIAGNOSTIC - First 200 characters: ", StringSubstr(handshakeResponse, 0, 200));
+      handshakeResponse = SocketReadData(false, 5000);
    } else {
       Print("Handshake timeout: no readable data.");
    }
