@@ -405,7 +405,7 @@ void ConnectToBridge() {
    g_last_reconnect_attempt = TimeCurrent();
    
    ResetLastError();
-   uint socketFlags = isSecure ? 1 : 0; // 1 = SOCKET_SECURE
+   uint socketFlags = 0; // 0 = SOCKET_DEFAULT
    g_socket = SocketCreate(socketFlags);
    int createErr = GetLastError();
    Print("MT5 Bridge: DIAGNOSTIC - SocketCreate() handle value: ", g_socket, ", GetLastError() immediately after: ", createErr);
