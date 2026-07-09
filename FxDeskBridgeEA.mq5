@@ -37,6 +37,10 @@ CSymbolInfo    g_symbol;
 CPositionInfo  g_pos_info;
 COrderInfo     g_order_info;
 
+//--- Global accumulation buffer for incoming WebSocket frames
+uchar          g_receive_buffer[];
+int            g_receive_buffer_len = 0;
+
 //--- Helper functions for JSON parsing/generating
 string GetJsonValue(string json, string key) {
    string search = "\"" + key + "\":";
@@ -67,245 +71,264 @@ string GetJsonValue(string json, string key) {
    }
 }
 
-//--- WebSocket framing and parsing helper
-string SocketReadData(bool checkConnected = true, int timeout_ms = 1) {
-   if(g_socket == INVALID_HANDLE) return "";
-   if(checkConnected && !g_connected) return "";
+void AppendReceiveBuffer(const uchar &src[], int src_len) {
+   if(src_len <= 0) return;
+   int old_len = g_receive_buffer_len;
+   g_receive_buffer_len = old_len + src_len;
+   ArrayResize(g_receive_buffer, g_receive_buffer_len);
+   for(int i = 0; i < src_len; i++) {
+      g_receive_buffer[old_len + i] = src[i];
+   }
+}
+
+void ConsumeReceiveBuffer(int bytes_to_consume) {
+   if(bytes_to_consume <= 0) return;
+   if(bytes_to_consume >= g_receive_buffer_len) {
+      g_receive_buffer_len = 0;
+      ArrayResize(g_receive_buffer, 0);
+      return;
+   }
+   
+   int remaining = g_receive_buffer_len - bytes_to_consume;
+   for(int i = 0; i < remaining; i++) {
+      g_receive_buffer[i] = g_receive_buffer[bytes_to_consume + i];
+   }
+   g_receive_buffer_len = remaining;
+   ArrayResize(g_receive_buffer, remaining);
+}
+
+//--- WebSocket incoming frame processor (RFC6455 Compliant)
+void ProcessIncomingFrames() {
+   while(g_receive_buffer_len >= 2) {
+      uchar header1 = g_receive_buffer[0];
+      uchar header2 = g_receive_buffer[1];
+      
+      bool fin = (header1 & 0x80) != 0;
+      int opcode = header1 & 0x0F;
+      bool masked = (header2 & 0x80) != 0;
+      int payload_len = header2 & 0x7F;
+      
+      int data_offset = 2;
+      
+      if(payload_len == 126) {
+         if(g_receive_buffer_len < 4) break; // Incomplete header
+         payload_len = (g_receive_buffer[2] << 8) | g_receive_buffer[3];
+         data_offset = 4;
+      } else if(payload_len == 127) {
+         if(g_receive_buffer_len < 10) break; // Incomplete header
+         payload_len = 0;
+         for(int i = 0; i < 8; i++) {
+            payload_len = (payload_len << 8) | g_receive_buffer[2 + i];
+         }
+         data_offset = 10;
+      }
+      
+      if(masked) {
+         if(g_receive_buffer_len < data_offset + 4) break; // Incomplete header
+         data_offset += 4;
+      }
+      
+      if(g_receive_buffer_len < data_offset + payload_len) {
+         break; // Incomplete frame payload, wait for next TCP packet
+      }
+      
+      uchar payload[];
+      ArrayResize(payload, payload_len);
+      int mask_offset = data_offset - 4;
+      for(int i = 0; i < payload_len; i++) {
+         uchar c = g_receive_buffer[data_offset + i];
+         if(masked) {
+            c = c ^ g_receive_buffer[mask_offset + (i % 4)];
+         }
+         payload[i] = c;
+      }
+      
+      if(opcode == 0x01) { // Text frame
+         string decoded_payload = CharArrayToString(payload, 0, payload_len, CP_UTF8);
+         
+         static bool logged_first_server_frame = false;
+         if(!logged_first_server_frame) {
+            logged_first_server_frame = true;
+            Print("====================================");
+            Print("VERIFY FIRST SERVER FRAME");
+            Print("====================================");
+            Print("SERVER FRAME");
+            Print("Opcode: 0x01 (Text)");
+            Print("FIN: ", fin ? "true" : "false");
+            Print("MASK: ", masked ? "true" : "false");
+            Print("Payload Length: ", payload_len);
+            Print("Payload (UTF-8): ", decoded_payload);
+            Print("====================================");
+         }
+         
+         ProcessInboundMessage(decoded_payload);
+      } else if(opcode == 0x09) { // Ping
+         SendPong(payload, payload_len);
+      } else if(opcode == 0x0A) { // Pong
+         g_last_received_time = TimeCurrent();
+      } else if(opcode == 0x08) { // Close
+         Print("MT5 Bridge: Server initiated close.");
+         SocketDisconnect();
+         break;
+      }
+      
+      ConsumeReceiveBuffer(data_offset + payload_len);
+   }
+}
+
+//--- Polling socket stream (non-blocking)
+void PollSocket() {
+   if(g_socket == INVALID_HANDLE || !g_connected) return;
    
    ResetLastError();
    uint bytesAvailable = SocketIsReadable(g_socket);
-   if(bytesAvailable == 0) return "";
+   if(bytesAvailable > 0) {
+      uchar temp_buf[];
+      ArrayResize(temp_buf, bytesAvailable);
+      ResetLastError();
+      int bytesRead = SocketRead(g_socket, temp_buf, bytesAvailable, 1);
+      if(bytesRead > 0) {
+         AppendReceiveBuffer(temp_buf, bytesRead);
+         g_last_received_time = TimeCurrent();
+      }
+   }
    
-   uchar buf[];
-   ArrayResize(buf, bytesAvailable);
+   ProcessIncomingFrames();
+}
+
+void SendPong(const uchar &ping_payload[], int ping_len) {
+   if(g_socket == INVALID_HANDLE || !g_connected) return;
+   
+   uchar frame[];
+   int header_len = 6;
+   uchar mask[4] = {0x12, 0x34, 0x56, 0x78};
+   
+   ArrayResize(frame, header_len + ping_len);
+   frame[0] = 0x8A; // FIN + Pong frame
+   frame[1] = (uchar)(ping_len | 0x80); // Masked
+   frame[2] = mask[0];
+   frame[3] = mask[1];
+   frame[4] = mask[2];
+   frame[5] = mask[3];
+   
+   for(int i = 0; i < ping_len; i++) {
+      frame[header_len + i] = (uchar)(ping_payload[i] ^ mask[i % 4]);
+   }
+   
    ResetLastError();
-   int res = SocketRead(g_socket, buf, bytesAvailable, timeout_ms);
-   int err = GetLastError();
+   SocketSend(g_socket, frame, header_len + ping_len);
+}
+
+void SendClose(ushort code, string reason) {
+   if(g_socket == INVALID_HANDLE || !g_connected) return;
    
-   Print("MT5 Bridge: SOCKET_READ_DIAGNOSTIC - bytesAvailable: ", bytesAvailable, ", requestedLength: ", bytesAvailable, ", SocketRead return: ", res, ", GetLastError(): ", err);
+   uchar payload[];
+   int reason_len = StringToCharArray(reason, payload, 0, -1, CP_UTF8);
+   if(reason_len > 0) reason_len--; // Remove null terminator
    
-   if(checkConnected && res > 0) {
-      string hexStr = "";
-      for(int i = 0; i < res; i++) {
-         hexStr += StringFormat("0x%02X ", buf[i]);
-      }
-      string asciiStr = CharArrayToString(buf, 0, res);
-      
-      Print("====================");
-      Print("TOTAL BYTES READ: ", res);
-      Print("HEX DUMP: ", hexStr);
-      Print("ASCII DUMP:\n", asciiStr);
-      Print("FRAME SCAN");
-      
-      int currentOffset = 0;
-      int frameIndex = 1;
-      int bufSize = ArraySize(buf);
-      
-      while(currentOffset < bufSize) {
-         if(currentOffset + 2 > bufSize) {
-            break;
-         }
-         
-         uchar header1 = buf[currentOffset];
-         uchar header2 = buf[currentOffset + 1];
-         int opcode = header1 & 0x0F;
-         int payloadLength = header2 & 0x7F;
-         int data_offset = currentOffset + 2;
-         
-         if(payloadLength == 126) {
-            if(currentOffset + 4 > bufSize) {
-               break;
-            }
-            payloadLength = (buf[currentOffset + 2] << 8) | buf[currentOffset + 3];
-            data_offset = currentOffset + 4;
-         } else if(payloadLength == 127) {
-            if(currentOffset + 10 > bufSize) {
-               break;
-            }
-            payloadLength = (int)buf[currentOffset + 9];
-            data_offset = currentOffset + 10;
-         }
-         
-         bool masked = (header2 & 0x80) != 0;
-         if(masked) {
-            if(data_offset + 4 > bufSize) {
-               break;
-            }
-            data_offset += 4;
-         }
-         
-         Print("Frame ", frameIndex);
-         Print("Offset: ", currentOffset);
-         Print("Opcode: ", opcode);
-         Print("Payload Length: ", payloadLength);
-         
-         if(data_offset + payloadLength <= bufSize) {
-            string frameText = "";
-            uchar frameBuf[];
-            ArrayResize(frameBuf, payloadLength);
-            for(int i = 0; i < payloadLength; i++) {
-               frameBuf[i] = buf[data_offset + i];
-            }
-            frameText = CharArrayToString(frameBuf, 0, payloadLength);
-            Print("Payload JSON: ", frameText);
-         } else {
-            Print("Payload JSON: [INCOMPLETE]");
-         }
-         
-         currentOffset = data_offset + payloadLength;
-         
-         if(frameIndex == 1 && currentOffset < bufSize) {
-            Print("SECOND FRAME DETECTED");
-         }
-         
-         frameIndex++;
-      }
-      
-      if(frameIndex == 2) {
-         Print("ONLY ONE FRAME RECEIVED");
-      }
-      
-      Print("Remaining Bytes: ", bufSize - currentOffset);
-      Print("====================");
+   int payload_len = 2 + reason_len;
+   uchar frame[];
+   int header_len = 6;
+   uchar mask[4] = {0x12, 0x34, 0x56, 0x78};
+   
+   ArrayResize(frame, header_len + payload_len);
+   frame[0] = 0x88; // FIN + Close frame
+   frame[1] = (uchar)(payload_len | 0x80); // Masked
+   frame[2] = mask[0];
+   frame[3] = mask[1];
+   frame[4] = mask[2];
+   frame[5] = mask[3];
+   
+   uchar close_payload[];
+   ArrayResize(close_payload, payload_len);
+   close_payload[0] = (uchar)((code >> 8) & 0xFF);
+   close_payload[1] = (uchar)(code & 0xFF);
+   
+   for(int i = 0; i < reason_len; i++) {
+      close_payload[2 + i] = payload[i];
    }
    
-   if(!checkConnected) {
-      Print("MT5 Bridge: DIAGNOSTIC - Handshake SocketRead returned: ", res, ", GetLastError(): ", err);
-      if(res > 0) {
-         string hexStr = "";
-         for(int i = 0; i < res; i++) {
-            hexStr += StringFormat("0x%02X ", buf[i]);
-         }
-         Print("MT5 Bridge: DIAGNOSTIC - Hex bytes: ", hexStr);
-         
-         string asciiStr = CharArrayToString(buf, 0, res);
-         Print("MT5 Bridge: DIAGNOSTIC - ASCII text: \n", asciiStr);
-         
-         if(StringFind(asciiStr, "HTTP/1.1 101") == 0) {
-            Print("MT5 Bridge: DIAGNOSTIC - Starts with HTTP/1.1 101: YES");
-         } else if(buf[0] == 0x81) {
-            Print("MT5 Bridge: DIAGNOSTIC - Starts with 0x81: YES");
-         } else {
-            Print("MT5 Bridge: DIAGNOSTIC - Starts with something else (First byte: ", StringFormat("0x%02X", buf[0]), ")");
-         }
-      }
+   for(int i = 0; i < payload_len; i++) {
+      frame[header_len + i] = (uchar)(close_payload[i] ^ mask[i % 4]);
    }
    
-    if(res <= 0) return "";
-    
-    // Data successfully read, update last received timestamp
-    g_last_received_time = TimeCurrent();
-    
-    int buf_size = ArraySize(buf);
-    
-    // 1. Never access buf[0] unless buf_size >= 1
-    if(buf_size < 1) {
-       Print("Incomplete WebSocket frame - waiting for more bytes");
-       return "";
-    }
-    
-    // Check if it's a WebSocket text frame (Opcode 0x81)
-    if(buf[0] == 0x81) {
-       // 2. Never access buf[1] unless buf_size >= 2
-       if(buf_size < 2) {
-          Print("Incomplete WebSocket frame - waiting for more bytes");
-          return "";
-       }
-       
-       int payload_len = buf[1] & 0x7F;
-       int data_offset = 2;
-       
-       if(payload_len == 126) {
-          // 3. Never access extended payload bytes (buf[2], buf[3]) unless they exist
-          if(buf_size < 4) {
-             Print("Incomplete WebSocket frame - waiting for more bytes");
-             return "";
-          }
-          payload_len = (buf[2] << 8) | buf[3];
-          data_offset = 4;
-       } else if(payload_len == 127) {
-          // Extended 8-byte payload length needs data_offset to be at least 10
-          if(buf_size < 10) {
-             Print("Incomplete WebSocket frame - waiting for more bytes");
-             return "";
-          }
-          payload_len = (int)buf[9]; // index 9 is the last byte of the 8-byte length
-          data_offset = 10;
-       }
-       
-       // If masked
-       bool masked = (buf[1] & 0x80) != 0;
-       uchar mask[4];
-       if(masked) {
-          // 4. Never access mask bytes unless they exist
-          if(buf_size < data_offset + 4) {
-             Print("Incomplete WebSocket frame - waiting for more bytes");
-             return "";
-          }
-          for(int i=0; i<4; i++) {
-             mask[i] = buf[data_offset + i];
-          }
-          data_offset += 4;
-       }
-       
-       // 5. Never access payload bytes unless the complete payload has already been received
-       if(buf_size < data_offset + payload_len) {
-          Print("Incomplete WebSocket frame - waiting for more bytes");
-          return "";
-       }
-       
-       uchar decoded[];
-       ArrayResize(decoded, payload_len);
-       for(int i=0; i<payload_len; i++) {
-          uchar c = buf[data_offset + i];
-          if(masked) c = c ^ mask[i % 4];
-          decoded[i] = c;
-       }
-       return CharArrayToString(decoded, 0, payload_len);
-    }
-    
-    return CharArrayToString(buf, 0, res);
+   ResetLastError();
+   SocketSend(g_socket, frame, header_len + payload_len);
 }
 
 //--- Send data through WebSocket frame
 bool SocketWriteData(string data) {
    if(g_socket == INVALID_HANDLE || !g_connected) return false;
    
-   int len = StringLen(data);
    uchar payload[];
-   StringToCharArray(data, payload);
+   int payload_len = StringToCharArray(data, payload, 0, -1, CP_UTF8);
+   if(payload_len > 0) {
+      payload_len--; // Remove null terminator
+   } else {
+      payload_len = 0;
+   }
    
    uchar frame[];
-   ArrayResize(frame, 6 + len);
-   frame[0] = 0x81; // FIN + Text frame
-   
-   int header_len = 6;
+   int header_len = 0;
    uchar mask[4] = {0x12, 0x34, 0x56, 0x78}; // Simple static mask
    
-   if(len < 126) {
-      frame[1] = (uchar)(len | 0x80); // Mask bit set
+   if(payload_len < 126) {
+      header_len = 6;
+      ArrayResize(frame, header_len + payload_len);
+      frame[1] = (uchar)(payload_len | 0x80); // Mask bit set
       frame[2] = mask[0];
       frame[3] = mask[1];
       frame[4] = mask[2];
       frame[5] = mask[3];
-   } else {
+   } else if(payload_len < 65536) {
       header_len = 8;
-      ArrayResize(frame, 8 + len);
+      ArrayResize(frame, header_len + payload_len);
       frame[1] = (uchar)(126 | 0x80); // Mask bit set
-      frame[2] = (uchar)((len >> 8) & 0xFF);
-      frame[3] = (uchar)(len & 0xFF);
+      frame[2] = (uchar)((payload_len >> 8) & 0xFF);
+      frame[3] = (uchar)(payload_len & 0xFF);
       frame[4] = mask[0];
       frame[5] = mask[1];
       frame[6] = mask[2];
       frame[7] = mask[3];
+   } else {
+      header_len = 14;
+      ArrayResize(frame, header_len + payload_len);
+      frame[1] = (uchar)(127 | 0x80); // Mask bit set
+      frame[2] = 0; frame[3] = 0; frame[4] = 0; frame[5] = 0;
+      frame[6] = (uchar)((payload_len >> 24) & 0xFF);
+      frame[7] = (uchar)((payload_len >> 16) & 0xFF);
+      frame[8] = (uchar)((payload_len >> 8) & 0xFF);
+      frame[9] = (uchar)(payload_len & 0xFF);
+      frame[10] = mask[0];
+      frame[11] = mask[1];
+      frame[12] = mask[2];
+      frame[13] = mask[3];
    }
    
-   // Copy masked payload
-   for(int i=0; i<len; i++) {
+   frame[0] = 0x81; // FIN + Text frame
+   
+   for(int i = 0; i < payload_len; i++) {
       frame[header_len + i] = (uchar)(payload[i] ^ mask[i % 4]);
    }
    
-   int res = SocketSend(g_socket, frame, header_len + len);
+   // Temporary wire-level client verification logging (Problem 8)
+   static bool logged_first_client_frame = false;
+   if(!logged_first_client_frame) {
+      logged_first_client_frame = true;
+      Print("====================================");
+      Print("VERIFY FIRST CLIENT FRAME");
+      Print("====================================");
+      Print("CLIENT FRAME");
+      Print("Opcode: 0x01 (Text)");
+      Print("FIN: true");
+      Print("MASK: true");
+      Print("Payload Length: ", payload_len);
+      Print("Payload (UTF-8): ", data);
+      Print("====================================");
+   }
+   
+   ResetLastError();
+   int res = SocketSend(g_socket, frame, header_len + payload_len);
    return (res > 0);
 }
 
@@ -313,10 +336,16 @@ bool SocketWriteData(string data) {
 void SocketDisconnect() {
    Print("MT5 Bridge: SocketDisconnect() called.");
    if(g_socket != INVALID_HANDLE) {
+      if(g_connected) {
+         SendClose(1000, "Normal Closure");
+         Sleep(100);
+      }
       SocketClose(g_socket);
       g_socket = INVALID_HANDLE;
    }
    g_connected = false;
+   g_receive_buffer_len = 0;
+   ArrayResize(g_receive_buffer, 0);
 }
 
 //--- Send JSON Event
@@ -462,11 +491,11 @@ void ConnectToBridge() {
                            "User-Agent: FxDeskBridgeEA/2.0\r\n\r\n";
    
    uchar requestBytes[];
-   StringToCharArray(upgradeRequest, requestBytes);
+   StringToCharArray(upgradeRequest, requestBytes, 0, -1, CP_UTF8);
    ResetLastError();
-   SocketSend(g_socket, requestBytes, StringLen(upgradeRequest));
+   SocketSend(g_socket, requestBytes, ArraySize(requestBytes) - 1);
    
-   // Read handshake response
+   // Read handshake response directly (non-gated for secure/non-secure sockets)
    uchar handshakeBuf[];
    ArrayResize(handshakeBuf, 4096);
    ResetLastError();
@@ -474,11 +503,27 @@ void ConnectToBridge() {
    
    string handshakeResponse = "";
    if(bytesRead > 0) {
-      handshakeResponse = CharArrayToString(handshakeBuf, 0, bytesRead);
+      handshakeResponse = CharArrayToString(handshakeBuf, 0, bytesRead, CP_UTF8);
    }
    
    if(handshakeResponse != "") {
       HandleUpgradeHandshake(handshakeResponse);
+      
+      // Preserve any trailing bytes received with the HTTP 101 response (Problem 4)
+      int headerEndPos = StringFind(handshakeResponse, "\r\n\r\n");
+      if(headerEndPos >= 0) {
+         int bodyByteStart = headerEndPos + 4;
+         int extraBytes = bytesRead - bodyByteStart;
+         if(extraBytes > 0) {
+            uchar extraBuf[];
+            ArrayResize(extraBuf, extraBytes);
+            for(int i = 0; i < extraBytes; i++) {
+               extraBuf[i] = handshakeBuf[bodyByteStart + i];
+            }
+            AppendReceiveBuffer(extraBuf, extraBytes);
+            Print("MT5 Bridge: Handshake buffer contained extra bytes: ", extraBytes, ". Appended to receive queue.");
+         }
+      }
    } else {
       Print("MT5 Bridge: Upgrade handshake timed out.");
       SocketDisconnect();
@@ -874,12 +919,8 @@ void OnTimer() {
       }
    }
    
-   // Check for incoming WebSocket messages
-   string msg = SocketReadData();
-   if(msg != "") {
-      Print("MT5 Bridge: OnTimer() - Message received: ", msg);
-      ProcessInboundMessage(msg);
-   }
+   // Poll and process incoming WebSocket messages
+   PollSocket();
    
    // Send periodic Account Metrics every 30 seconds
    static datetime last_summary = 0;
@@ -892,14 +933,9 @@ void OnTimer() {
 
 //--- EA Tick handler
 void OnTick() {
-   Print("MT5 Bridge: OnTick() received. g_connected: ", g_connected);
    // If connected, read inbound frames immediately on tick for ultra-low latency execution
    if(g_connected) {
-      string msg = SocketReadData();
-      if(msg != "") {
-         Print("MT5 Bridge: OnTick() - Message received: ", msg);
-         ProcessInboundMessage(msg);
-      }
+      PollSocket();
    }
 }
 
