@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { config } from "../config/env.js";
 import { ParsedSignal } from "../models/parsedSignalModel.js";
 import { AiRecommendationSnapshot } from "../models/aiRecommendationSnapshotModel.js";
+import { callGeminiWithFallback } from "./aiModelManager.js";
 
 // Global cache to smooth weights across cycles
 let lastComputedWeights = null;
@@ -488,9 +489,9 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL", requestI
     }
 
     // 2. Fetch price, signals, and news context
-    const priceInfo = await getCurrentPrice("XAUUSD");
-    const currentPrice = priceInfo ? priceInfo.price : null;
-    const signals = await getActiveXauusdSignals();
+    const priceInfo = global.mockedPrice !== undefined ? null : await getCurrentPrice("XAUUSD");
+    const currentPrice = global.mockedPrice !== undefined ? global.mockedPrice : (priceInfo ? priceInfo.price : null);
+    const signals = global.mockedSignals !== undefined ? global.mockedSignals : await getActiveXauusdSignals();
 
     // Fetch DXY and US10Y prices & history for cross-market context
     let dxyPrice = null;
@@ -512,7 +513,7 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL", requestI
 
     let newsContext = { highImpactEvents: [], goldNews: [] };
     try {
-      newsContext = await getXauusdNewsContext();
+      newsContext = global.mockedNews !== undefined ? global.mockedNews : await getXauusdNewsContext();
     } catch (newsErr) {
       logger.warn("gemini_advisor.fetch_news_failed", { error: newsErr.message });
     }
@@ -1777,9 +1778,15 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL", requestI
 
     // Call Phase 1.7 Institutional Order Flow Intelligence
     const orderFlow = calculateOrderFlowIntelligence(priceHistory, currentPrice, structure);
+    if (global.mockedInstBias !== undefined && orderFlow) {
+      orderFlow.institutionalBias = global.mockedInstBias;
+    }
 
     // Call Phase 1.8 Multi-Asset Macro Intelligence
     const macroIntel = await calculateMacroIntelligence(priceHistory, currentPrice);
+    if (global.mockedMacroBias !== undefined && macroIntel) {
+      macroIntel.goldMacroBias = global.mockedMacroBias;
+    }
 
     // Calculate average TP target distance and pre-flight risk-reward ratio
     let averageTPDistance = 0;
@@ -1941,6 +1948,50 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL", requestI
     const compressedInstSummary = `Institutional Bias is ${orderFlow ? orderFlow.institutionalBias : "Neutral"}. Nearest active blocks: Bullish OB ${orderFlow?.nearestBullishOB ? `${orderFlow.nearestBullishOB.top.toFixed(2)}-${orderFlow.nearestBullishOB.bottom.toFixed(2)} (Str: ${orderFlow.nearestBullishOB.strengthScore})` : "None"} | Bearish OB ${orderFlow?.nearestBearishOB ? `${orderFlow.nearestBearishOB.top.toFixed(2)}-${orderFlow.nearestBearishOB.bottom.toFixed(2)} (Str: ${orderFlow.nearestBearishOB.strengthScore})` : "None"}. Nearest Bullish FVG range ${orderFlow?.nearestBullishFvg ? `${orderFlow.nearestBullishFvg.bottom.toFixed(2)}-${orderFlow.nearestBullishFvg.top.toFixed(2)}` : "None"}. lastSweepType: ${orderFlow?.liquidity?.lastSweepType || "None"}.`;
     const compressedSignalsText = signals.map(s => `[${s.action} @ ${s.entry || (s.entryRange ? s.entryRange.join("-") : "")}]`).slice(0, 8).join(", ") + (signals.length > 8 ? ` (+${signals.length - 8} more)` : "");
 
+    let decisionRulesStr = "";
+    if (global.useOriginalPrompt) {
+      decisionRulesStr = `You must adhere to the following professional Decision Matrix:
+1. Strong Direction (Score >75 or <25) + Excellent/Good Execution Environment → Execute BUY/SELL
+2. Strong Direction + Caution/Poor/Do Not Trade Execution Environment → HOLD
+3. Moderate Direction (Score 55-75 or 25-45) + Excellent/Good Execution Environment → Conservative BUY/SELL
+4. Moderate Direction + Caution/Poor/Do Not Trade Execution Environment → HOLD
+5. Weak Direction (Score 45-55) + Any Execution Environment → HOLD
+6. If Evidence Coverage falls below 60%, heavily prefer HOLD unless overwhelming directional evidence exists.
+
+CRITICAL TRADING SYSTEM RULES (EVIDENCE-ONLY REASONING):
+1. CITE SUPPLIED EVIDENCE: Every BUY, SELL, or HOLD recommendation must explicitly cite the evidence (signals, regime, order flow, macro yields/DXY, checklist results) that directly supports the decision.
+2. EVIDENCE-ONLY: Do not assume or guess missing indicators. If evidence is insufficient, return HOLD.
+3. NEVER INVENT: Never invent reasons, headlines, or macroeconomic events.
+4. EXPLAIN CONTRADICTIONS: Never contradict supplied evidence without explaining why inside the reasoning.
+5. QUALITY OVER FREQUENCY: Prioritize high-quality setups and discipline over transaction volume.
+6. FINAL CHECKLIST QUESTIONS: Before issuing a trade, answer internally:
+   - Is direction clear?
+   - Is institutional evidence aligned?
+   - Is macro aligned?
+   - Is market structure aligned?
+   - Is Telegram supporting?
+   - Is risk acceptable?
+   If ANY critical answer is NO, prefer HOLD.`;
+    } else {
+      decisionRulesStr = `Evaluate all evidence using a weighted scoring approach:
+1. HOLISTIC EVIDENCE: Evaluate all available evidence holistically. If BUY or SELL evidence is significantly stronger than opposing evidence, issue a trade recommendation with appropriately calibrated confidence instead of defaulting to HOLD.
+2. MISSING OPTIONAL INDICATORS: Missing optional indicators (e.g., DXY, US10Y, Silver) should NOT automatically reduce Evidence Coverage below the threshold or force a HOLD. Only missing core trading information (active signals, current price) should reduce confidence or force a HOLD.
+3. EXECUTION ENVIRONMENT IMPACT: Do not use execution environment to block trades unless it is "Do Not Trade". Instead, adjust your confidence:
+   - Excellent / Good -> no confidence penalty
+   - Caution -> reduce confidence score moderately (e.g. by 15 points)
+   - Poor -> significant confidence reduction (e.g. by 30 points)
+   - Do Not Trade -> automatically force HOLD
+4. NO HARD VETOS: Evaluate checklist indicators across five scales: Strongly Bullish, Bullish, Neutral, Bearish, or Strongly Bearish. Neutral evidence should lower confidence but should not automatically veto a trade. Only strong active contradictory evidence should justify HOLD.
+5. DELEGATION OF VOLUME: Do not suggest lot sizes, position sizing, or adjust execution volumes. Your response ends strictly at direction (BUY/SELL/HOLD), confidence, entry range, SL, TP, and reasoning.
+
+CRITICAL TRADING SYSTEM RULES (EVIDENCE-ONLY REASONING):
+1. CITE SUPPLIED EVIDENCE: Every BUY, SELL, or HOLD recommendation must explicitly cite the evidence (signals, regime, order flow, macro yields/DXY, checklist results) that directly supports the decision.
+2. EVIDENCE-ONLY: Do not assume or guess missing indicators. If evidence is insufficient, return HOLD.
+3. NEVER INVENT: Never invent reasons, headlines, or macroeconomic events.
+4. EXPLAIN CONTRADICTIONS: Never contradict supplied evidence without explaining why inside the reasoning.
+5. QUALITY OVER FREQUENCY: Prioritize high-quality setups and discipline over transaction volume.`;
+    }
+
     // Phase 2.2 Prompt Construction ordered by Priority Layer (Critical -> Important -> Supporting)
     const prompt = `You are a professional financial trading advisor specializing in Gold (XAUUSD).
 Analyze the market intelligence indicators, price clusters, active signals, recent high-impact macroeconomic events, gold market news, and multi-timeframe context to make a trading decision.
@@ -1982,28 +2033,7 @@ ${coverageData.optionalMissing.map(m => `  * ${m}`).join("\n") || "  * None"}
 ========================================
 FINAL DECISION MATRIX & CRITICAL RULES
 ========================================
-You must adhere to the following professional Decision Matrix:
-1. Strong Direction (Score >75 or <25) + Excellent/Good Execution Environment → Execute BUY/SELL
-2. Strong Direction + Caution/Poor/Do Not Trade Execution Environment → HOLD
-3. Moderate Direction (Score 55-75 or 25-45) + Excellent/Good Execution Environment → Conservative BUY/SELL
-4. Moderate Direction + Caution/Poor/Do Not Trade Execution Environment → HOLD
-5. Weak Direction (Score 45-55) + Any Execution Environment → HOLD
-6. If Evidence Coverage falls below 60%, heavily prefer HOLD unless overwhelming directional evidence exists.
-
-CRITICAL TRADING SYSTEM RULES (EVIDENCE-ONLY REASONING):
-1. CITE SUPPLIED EVIDENCE: Every BUY, SELL, or HOLD recommendation must explicitly cite the evidence (signals, regime, order flow, macro yields/DXY, checklist results) that directly supports the decision.
-2. EVIDENCE-ONLY: Do not assume or guess missing indicators. If evidence is insufficient, return HOLD.
-3. NEVER INVENT: Never invent reasons, headlines, or macroeconomic events.
-4. EXPLAIN CONTRADICTIONS: Never contradict supplied evidence without explaining why inside the reasoning.
-5. QUALITY OVER FREQUENCY: Prioritize high-quality setups and discipline over transaction volume.
-6. FINAL CHECKLIST QUESTIONS: Before issuing a trade, answer internally:
-   - Is direction clear?
-   - Is institutional evidence aligned?
-   - Is macro aligned?
-   - Is market structure aligned?
-    - Is Telegram supporting?
-   - Is risk acceptable?
-   If ANY critical answer is NO, prefer HOLD.
+${decisionRulesStr}
 
 ========================================
 SELF VALIDATION
@@ -2187,67 +2217,26 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
     recState.currentStageName = "Gemini request started";
     logStage(reqId, 5, "Gemini request started", true, startT);
 
-    // 5. Call Gemini API
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${config.geminiApiKey}`;
-    
-    logger.info("gemini_advisor.calling_api", { signalCount: signals.length, currentPrice });
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    if (response.status === 429) {
-      logger.warn("gemini_advisor.rate_limited");
-      logStage(reqId, 6, "Gemini HTTP response received", false, startT, "Rate limited (429)");
+    // 5. Call Gemini API via Centralized AI Model Manager with Fallback
+    let textResponse;
+    let finalModelUsed;
+    try {
+      const modelManagerRes = await callGeminiWithFallback(prompt, reqId, startT, logStage);
+      textResponse = modelManagerRes.textResponse;
+      finalModelUsed = modelManagerRes.modelUsed;
+      
+      // Stage 6: Gemini HTTP response received
+      recState.currentStageNum = 6;
+      recState.currentStageName = `Gemini HTTP response received (${finalModelUsed})`;
+      logStage(reqId, 6, `Gemini HTTP response received (${finalModelUsed})`, true, startT);
+    } catch (managerErr) {
+      logger.error("gemini_advisor.manager_error", { error: managerErr.message });
+      logStage(reqId, 6, "Gemini HTTP response received", false, startT, managerErr.message);
       return {
         status: "error",
         message: "Gemini recommendation unavailable"
       };
     }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error("gemini_advisor.api_error", { status: response.status, error: errorText });
-      logStage(reqId, 6, "Gemini HTTP response received", false, startT, `HTTP error ${response.status}: ${errorText}`);
-      return {
-        status: "error",
-        message: "Gemini recommendation unavailable"
-      };
-    }
-
-    const data = await response.json();
-    let textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!textResponse) {
-      logger.error("gemini_advisor.empty_response", { data });
-      logStage(reqId, 6, "Gemini HTTP response received", false, startT, "Empty candidates/response from Gemini API");
-      return {
-        status: "error",
-        message: "Gemini recommendation unavailable"
-      };
-    }
-
-    // Stage 6: Gemini HTTP response received
-    recState.currentStageNum = 6;
-    recState.currentStageName = "Gemini HTTP response received";
-    logStage(reqId, 6, "Gemini HTTP response received", true, startT);
 
     // Handle potential markdown wrapping
     textResponse = textResponse.trim();
@@ -2259,6 +2248,22 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
     let recommendation;
     try {
       recommendation = JSON.parse(textResponse);
+      
+      // Inject model manager diagnostic telemetry details
+      recommendation.responseSource = modelManagerRes.responseSource;
+      recommendation.geminiModel = modelManagerRes.modelUsed;
+      recommendation.requestId = modelManagerRes.requestId || reqId;
+      recommendation.generatedAt = modelManagerRes.generatedAt;
+      recommendation.latencyMs = modelManagerRes.latencyMs;
+      recommendation.fallbackCount = modelManagerRes.fallbackCount;
+
+      if (modelManagerRes.responseSource === "CACHE") {
+        recommendation.cacheAgeSeconds = modelManagerRes.cacheAgeSeconds;
+        recommendation.cacheExpired = modelManagerRes.cacheExpired;
+        recommendation.originalGeneratedAt = modelManagerRes.originalGeneratedAt;
+        recommendation.originalModel = modelManagerRes.originalModel;
+      }
+
       // Stage 7: Response parsed
       recState.currentStageNum = 7;
       recState.currentStageName = "Response parsed";
@@ -4702,15 +4707,17 @@ export function calculateExecutionEnvironment(params, weights) {
     reasonsToAvoid.push(`Elevated execution spread: ${currentSpread.toFixed(1)} pips`);
   }
 
-  let executionRating = "Excellent";
-  if (riskPenalty >= 50) {
-    executionRating = "Do Not Trade";
-  } else if (riskPenalty >= 35) {
-    executionRating = "Poor";
-  } else if (riskPenalty >= 20) {
-    executionRating = "Caution";
-  } else if (riskPenalty >= 8) {
-    executionRating = "Good";
+  let executionRating = global.mockedExecutionRating !== undefined ? global.mockedExecutionRating : "Excellent";
+  if (global.mockedExecutionRating === undefined) {
+    if (riskPenalty >= 50) {
+      executionRating = "Do Not Trade";
+    } else if (riskPenalty >= 35) {
+      executionRating = "Poor";
+    } else if (riskPenalty >= 20) {
+      executionRating = "Caution";
+    } else if (riskPenalty >= 8) {
+      executionRating = "Good";
+    }
   }
 
   return {

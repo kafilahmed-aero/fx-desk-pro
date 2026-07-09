@@ -7,6 +7,7 @@ import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
 import { AiDecisionValidation } from "../models/aiDecisionValidationModel.js";
 import { localValidations } from "../services/aiDecisionValidationService.js";
+import { getModelManagerDiagnostics } from "../services/aiModelManager.js";
 
 /**
  * Controller to fetch AI trade recommendation for XAUUSD.
@@ -76,7 +77,11 @@ export async function getLatestXauusdRecommendationController(req, res) {
       lastGenerationTime: state.lastGenerationTime,
       signalsUsed: state.signalsUsed || 0,
       newestSignalTime: state.newestSignalTime || null,
-      oldestSignalTime: state.oldestSignalTime || null
+      oldestSignalTime: state.oldestSignalTime || null,
+      stats: {
+        ...state.stats,
+        callsRemaining: 20 - state.stats.geminiCallsToday
+      }
     });
   } catch (err) {
     logger.error("api.get_latest_recommendation_failed", { error: err.message });
@@ -163,7 +168,8 @@ export async function getAiDiagnosticsController(req, res) {
         accuracyRate: holdAccuracyRate
       },
       latestPrompt: latestSample ? latestSample.fullPrompt : "No prompt sampled yet",
-      latestRawResponse: latestSample ? latestSample.rawResponse : "No response sampled yet"
+      latestRawResponse: latestSample ? latestSample.rawResponse : "No response sampled yet",
+      modelManager: getModelManagerDiagnostics()
     });
   } catch (err) {
     logger.error("api.get_ai_diagnostics_failed", { error: err.message });

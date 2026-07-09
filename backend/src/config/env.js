@@ -27,6 +27,12 @@ export const config = {
   nodeEnv,
   isProduction,
   geminiApiKey: process.env.GEMINI_API_KEY || "",
+  models: {
+    primary: process.env.PRIMARY_MODEL || "gemini-2.5-flash",
+    secondary: process.env.SECONDARY_MODEL || "gemini-2.5-flash-lite"
+  },
+  enableModelFallback: process.env.ENABLE_MODEL_FALLBACK !== "false",
+  enableModelTelemetry: process.env.ENABLE_MODEL_TELEMETRY !== "false",
   logLevel: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
   clientUrl: clientUrls[0],
   clientUrls,

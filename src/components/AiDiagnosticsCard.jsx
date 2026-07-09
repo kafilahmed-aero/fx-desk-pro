@@ -181,6 +181,72 @@ function AiDiagnosticsCard() {
         </div>
       </div>
 
+      {/* API Budget & Model Diagnostics Dashboard */}
+      <div className="mt-5 rounded-xl border border-slate-200 p-5 dark:border-white/5 bg-slate-50/[0.15]">
+        <h4 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 border-b border-slate-200/50 pb-2 dark:border-white/5 dark:text-slate-400 mb-3 flex items-center gap-1.5">
+          <Sparkles size={14} className="text-emerald-500" />
+          API Budget & Fallback Diagnostics
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Primary Model */}
+          <div className="rounded-xl border border-slate-200 bg-slate-100/30 p-3.5 dark:border-white/5 dark:bg-white/[0.01]">
+            <p className="text-[10px] uppercase font-bold text-slate-400">Primary (Gemini 2.5 Flash)</p>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs font-black text-slate-700 dark:text-slate-350">
+                Requests: {d.modelManager?.models?.["gemini-2.5-flash"]?.requestsToday || 0}
+              </span>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                d.modelManager?.models?.["gemini-2.5-flash"]?.status === "HEALTHY" ? "bg-emerald-500/10 text-emerald-500" :
+                d.modelManager?.models?.["gemini-2.5-flash"]?.status === "HALF_OPEN" ? "bg-amber-500/10 text-amber-500" :
+                d.modelManager?.models?.["gemini-2.5-flash"]?.status === "DEGRADED" ? "bg-blue-500/10 text-blue-500" :
+                "bg-rose-500/10 text-rose-500"
+              }`}>
+                {d.modelManager?.models?.["gemini-2.5-flash"]?.status || "HEALTHY"}
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 mt-2 font-bold">Success Rate: {d.modelManager?.models?.["gemini-2.5-flash"]?.successRate || "100"}%</p>
+          </div>
+
+          {/* Secondary Model */}
+          <div className="rounded-xl border border-slate-200 bg-slate-100/30 p-3.5 dark:border-white/5 dark:bg-white/[0.01]">
+            <p className="text-[10px] uppercase font-bold text-slate-400">Secondary (Gemini 2.5 Flash-Lite)</p>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs font-black text-slate-700 dark:text-slate-350">
+                Requests: {d.modelManager?.models?.["gemini-2.5-flash-lite"]?.requestsToday || 0}
+              </span>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                d.modelManager?.models?.["gemini-2.5-flash-lite"]?.status === "HEALTHY" ? "bg-emerald-500/10 text-emerald-500" :
+                d.modelManager?.models?.["gemini-2.5-flash-lite"]?.status === "HALF_OPEN" ? "bg-amber-500/10 text-amber-500" :
+                d.modelManager?.models?.["gemini-2.5-flash-lite"]?.status === "DEGRADED" ? "bg-blue-500/10 text-blue-500" :
+                "bg-rose-500/10 text-rose-500"
+              }`}>
+                {d.modelManager?.models?.["gemini-2.5-flash-lite"]?.status || "HEALTHY"}
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 mt-2 font-bold">Success Rate: {d.modelManager?.models?.["gemini-2.5-flash-lite"]?.successRate || "100"}%</p>
+          </div>
+
+          {/* Fallback Telemetry & Source */}
+          <div className="rounded-xl border border-slate-200 bg-slate-100/30 p-3.5 dark:border-white/5 dark:bg-white/[0.01]">
+            <p className="text-[10px] uppercase font-bold text-slate-400">Active Pipeline Routing</p>
+            <div className="mt-2 space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Total Fallbacks:</span>
+                <span className="font-black text-indigo-500">{d.modelManager?.fallbacksCount || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Cache Lookups:</span>
+                <span className="font-black text-purple-500">{d.modelManager?.cacheAccessCount || 0}</span>
+              </div>
+              <div className="flex justify-between mt-1 pt-1 border-t border-slate-200/50 dark:border-white/5">
+                <span className="text-slate-400">Active Source:</span>
+                <span className="font-black text-teal-500">{d.modelManager?.mostUsedModel || "GEMINI_FLASH"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Prompts and Response collapsible drawer */}
       <div className="mt-5 border-t border-slate-200/60 pt-4 dark:border-white/5 space-y-4">
         <h4 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-1.5 dark:text-slate-400">
