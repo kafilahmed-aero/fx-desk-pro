@@ -303,6 +303,32 @@ export function startMt5SyncService(server = null) {
       if (parsedUrl.pathname !== "/mt5" && parsedUrl.pathname !== "/") {
         return;
       }
+      
+      const token = parsedUrl.query?.token || "";
+      const headers = req.headers;
+      
+      console.log(`\n====================================
+WEBSOCKET UPGRADE RECEIVED
+====================================
+Timestamp: ${new Date().toISOString()}
+Remote IP: ${req.socket.remoteAddress}
+Request URL: ${req.url}
+Request Path: ${parsedUrl.pathname}
+Query String: ${url.parse(req.url).query || ""}
+
+Headers:
+- Host: ${headers['host'] || ""}
+- Upgrade: ${headers['upgrade'] || ""}
+- Connection: ${headers['connection'] || ""}
+- Sec-WebSocket-Key: ${headers['sec-websocket-key'] || ""}
+- Sec-WebSocket-Version: ${headers['sec-websocket-version'] || ""}
+- User-Agent: ${headers['user-agent'] || ""}
+- Origin: ${headers['origin'] || ""}
+- Authorization: ${headers['authorization'] || "Not Present"}
+
+Token extracted: ${token}
+====================================\n`);
+
       const state = {
         timestamp: new Date().toISOString(),
         remoteIp: req.socket.remoteAddress,
@@ -388,8 +414,17 @@ export function startMt5SyncService(server = null) {
           ws._handshakeState.authPassed = "YES";
           printHandshakeLog(ws._handshakeState);
         }
+        console.log(`\nAuthentication result: SUCCESS (Query Token Match)
+Upgrade accepted or rejected: ACCEPTED
+WEBSOCKET HANDSHAKE COMPLETED\n`);
       } else {
-        console.log("REJECTED BY: `if (token === authToken)` else block (Line 342)");
+        console.log(`\nAuthentication result: FAILED (Query Token Mismatch)
+Upgrade accepted or rejected: REJECTED
+If rejected:
+- exact reason: Invalid Query Token Mismatch
+- HTTP status: N/A (Websocket Close Frame)
+- close code: 4401\n`);
+        
         logger.warn("mt5_sync.auth_failed_invalid_query_token", { ip: req.socket.remoteAddress });
         if (ws._handshakeState) {
           ws._handshakeState.socketClosed = "YES";
@@ -404,7 +439,12 @@ export function startMt5SyncService(server = null) {
     // Set connection close timeout if registration fails
     const authTimeout = setTimeout(() => {
       if (!isAuthenticated) {
-        console.log("REJECTED BY: `authTimeout` timeout block (Line 358)");
+        console.log(`\nAuthentication result: FAILED (Authentication Timeout)
+Upgrade accepted or rejected: REJECTED
+If rejected:
+- exact reason: Authentication Timeout
+- HTTP status: N/A
+- close code: 4401\n`);
         logger.warn("mt5_sync.auth_failed_timeout", { ip: req.socket.remoteAddress });
         if (ws._handshakeState) {
           ws._handshakeState.socketClosed = "YES";
@@ -459,6 +499,12 @@ export function startMt5SyncService(server = null) {
             const isProduction = process.env.NODE_ENV === "production";
             // Allow protocol v1 only in local dev if not strictly overridden
             if (clientProtocol < SUPPORTED_PROTOCOL && isProduction) {
+              console.log(`\nAuthentication result: FAILED (Protocol Mismatch)
+Upgrade accepted or rejected: REJECTED
+If rejected:
+- exact reason: Protocol Version Mismatch (Client Protocol: ${clientProtocol})
+- HTTP status: N/A
+- close code: 4402\n`);
               logger.warn("mt5_sync.register_failed_protocol_mismatch", { accountId, clientProtocol });
               ws.send(JSON.stringify({ event: "REGISTER", status: "FAILED", reason: "Protocol Version Mismatch" }));
               ws.close(4402, "Protocol Version Mismatch");
@@ -466,6 +512,12 @@ export function startMt5SyncService(server = null) {
             }
 
             if (clientVersion < MIN_CLIENT_VERSION) {
+              console.log(`\nAuthentication result: FAILED (Client Version Outdated)
+Upgrade accepted or rejected: REJECTED
+If rejected:
+- exact reason: Client Version Outdated (Client Version: ${clientVersion})
+- HTTP status: N/A
+- close code: 4403\n`);
               logger.warn("mt5_sync.register_failed_version_outdated", { accountId, clientVersion });
               ws.send(JSON.stringify({ event: "REGISTER", status: "FAILED", reason: "Client Version Outdated" }));
               ws.close(4403, "Client Version Outdated");
@@ -547,9 +599,17 @@ export function startMt5SyncService(server = null) {
 
             ws.send(JSON.stringify(statePayload));
             logger.info("mt5_sync.state_recovery_sent", { accountId, activeOpportunitiesCount: activeOpportunities.length });
+            console.log(`\nAuthentication result: SUCCESS (REGISTER success for account ${accountId})
+Upgrade accepted or rejected: ACCEPTED
+WEBSOCKET HANDSHAKE COMPLETED\n`);
 
           } else {
-            console.log("REJECTED BY: `if (clientToken === authToken || isAuthenticated)` else block (Line 447)");
+            console.log(`\nAuthentication result: FAILED (REGISTER Token Mismatch)
+Upgrade accepted or rejected: REJECTED
+If rejected:
+- exact reason: Invalid Authentication Token (REGISTER mismatch)
+- HTTP status: N/A
+- close code: 4401\n`);
             logger.warn("mt5_sync.auth_failed_token_mismatch", { token: clientToken });
             if (ws._handshakeState) {
               ws._handshakeState.socketClosed = "YES";
