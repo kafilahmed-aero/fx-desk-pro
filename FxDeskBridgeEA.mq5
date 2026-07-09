@@ -432,6 +432,34 @@ void ConnectToBridge() {
       return;
    }
    
+   // Explicit TLS Handshake for secure sockets (Debug Phase D4 Improvement)
+   if(isSecure) {
+      uint handshakeStart = GetTickCount();
+      ResetLastError();
+      bool handshakeRes = SocketTlsHandshake(g_socket, host);
+      int handshakeErr = GetLastError();
+      uint handshakeElapsed = GetTickCount() - handshakeStart;
+      
+      Print("====================================");
+      Print("TLS HANDSHAKE");
+      Print("====================================");
+      Print("SocketTlsHandshake(): ", handshakeRes);
+      Print("Elapsed: ", handshakeElapsed, " ms");
+      Print("GetLastError(): ", handshakeErr);
+      Print("====================================");
+      
+      if(!handshakeRes) {
+         Print("MT5 Bridge: TLS Handshake failed. Socket Error Code: ", handshakeErr);
+         SocketClose(g_socket);
+         g_socket = INVALID_HANDLE;
+         
+         // Connection failed: increase reconnect delay (exponential backoff capped at 60 seconds)
+         g_current_reconnect_delay = g_current_reconnect_delay * 2;
+         if(g_current_reconnect_delay > 60) g_current_reconnect_delay = 60;
+         return;
+      }
+   }
+   
    // Log readability and writability immediately after connection
    uint isReadable = SocketIsReadable(g_socket);
    bool isWritable = SocketIsWritable(g_socket);
