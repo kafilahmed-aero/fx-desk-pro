@@ -149,6 +149,7 @@ void ProcessIncomingFrames() {
          static bool logged_first_server_frame = false;
          if(!logged_first_server_frame) {
             logged_first_server_frame = true;
+            Print("STAGE 6: First WebSocket frame received");
             Print("====================================");
             Print("VERIFY FIRST SERVER FRAME");
             Print("====================================");
@@ -370,12 +371,14 @@ void SendRegister() {
                     "\"eaVersion\":\"2.00\"," +
                     "\"protocolVersion\":2}";
    SendEvent(payload);
+   Print("STAGE 7: REGISTER sent");
    Print("MT5 Bridge: REGISTER packet sent for account: ", accountId);
 }
 
 //--- Parse WebSocket Upgrade handshake responses
 bool HandleUpgradeHandshake(string httpResponse) {
    if(StringFind(httpResponse, "HTTP/1.1 101") >= 0 || StringFind(httpResponse, "Sec-WebSocket-Accept") >= 0) {
+      Print("STAGE 4: HTTP 101 detected");
       g_connected = true;
       g_last_heartbeat = TimeCurrent();
       g_last_received_time = TimeCurrent();
@@ -460,6 +463,8 @@ void ConnectToBridge() {
       return;
    }
    
+   Print("STAGE 1: SocketConnect success");
+   
    // Explicit TLS Handshake for secure sockets (if secure)
    if(isSecure) {
       ResetLastError();
@@ -499,15 +504,18 @@ void ConnectToBridge() {
    uchar handshakeBuf[];
    ArrayResize(handshakeBuf, 4096);
    ResetLastError();
+   Print("STAGE 2: Begin HTTP handshake read");
    int bytesRead = SocketRead(g_socket, handshakeBuf, 4096, 5000);
    
    string handshakeResponse = "";
    if(bytesRead > 0) {
+      Print("STAGE 3: HTTP response received");
       handshakeResponse = CharArrayToString(handshakeBuf, 0, bytesRead, CP_UTF8);
    }
    
    if(handshakeResponse != "") {
       HandleUpgradeHandshake(handshakeResponse);
+      Print("STAGE 5: Switch to WebSocket parser");
       
       // Preserve any trailing bytes received with the HTTP 101 response (Problem 4)
       int headerEndPos = StringFind(handshakeResponse, "\r\n\r\n");
@@ -833,6 +841,7 @@ void ProcessInboundMessage(string json) {
    }
    
    if(eventVal == "REGISTER") {
+      Print("STAGE 8: REGISTER_ACK received");
       Print("TRACE 4: Dispatching REGISTER handler");
       Print("TRACE 5: REGISTER handler finished");
       Print("TRACE 6: Dispatch finished");
