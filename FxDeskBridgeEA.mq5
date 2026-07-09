@@ -431,38 +431,21 @@ void ConnectToBridge() {
       return;
    }
    
-   // Explicit TLS Handshake for secure sockets (Debug Phase D4 Improvement)
+   // Explicit TLS Handshake for secure sockets (if secure)
    if(isSecure) {
-      uint handshakeStart = GetTickCount();
       ResetLastError();
       bool handshakeRes = SocketTlsHandshake(g_socket, host);
       int handshakeErr = GetLastError();
-      uint handshakeElapsed = GetTickCount() - handshakeStart;
-      
-      Print("====================================");
-      Print("TLS HANDSHAKE");
-      Print("====================================");
-      Print("SocketTlsHandshake(): ", handshakeRes);
-      Print("Elapsed: ", handshakeElapsed, " ms");
-      Print("GetLastError(): ", handshakeErr);
-      Print("====================================");
-      
       if(!handshakeRes) {
          Print("MT5 Bridge: TLS Handshake failed. Socket Error Code: ", handshakeErr);
          SocketClose(g_socket);
          g_socket = INVALID_HANDLE;
          
-         // Connection failed: increase reconnect delay (exponential backoff capped at 60 seconds)
          g_current_reconnect_delay = g_current_reconnect_delay * 2;
          if(g_current_reconnect_delay > 60) g_current_reconnect_delay = 60;
          return;
       }
    }
-   
-   // Log readability and writability immediately after connection
-   uint isReadable = SocketIsReadable(g_socket);
-   bool isWritable = SocketIsWritable(g_socket);
-   Print("MT5 Bridge: DIAGNOSTIC - SocketIsReadable() returned bytes: ", isReadable, ", SocketIsWritable() returned: ", isWritable);
    
    // Send WebSocket Upgrade request
    string hostHeader = host;
@@ -478,76 +461,21 @@ void ConnectToBridge() {
                            "Sec-WebSocket-Version: 13\r\n" +
                            "User-Agent: FxDeskBridgeEA/2.0\r\n\r\n";
    
-    uchar requestBytes[];
-    int reqLen = StringToCharArray(upgradeRequest, requestBytes);
-    int expectedLen = StringLen(upgradeRequest);
-    
-    Print("====================================");
-    Print("HANDSHAKE DEBUG");
-    Print("====================================");
-    Print("Full HTTP Request:");
-    Print(upgradeRequest);
-    Print("Expected Length: ", expectedLen);
-    Print("Request Bytes Length: ", reqLen);
-    Print("Socket Handle: ", g_socket);
-    
-    ResetLastError();
-    int bytesSent = SocketSend(g_socket, requestBytes, expectedLen);
-    int lastErr = GetLastError();
-    
-    Print("SocketSend Returned: ", bytesSent);
-    Print("Bytes Sent: ", bytesSent);
-    Print("LastError: ", lastErr);
-    
-    string transmissionStatus = "FAILED";
-    if(bytesSent == expectedLen) {
-       transmissionStatus = "SUCCESS";
-    } else if(bytesSent > 0 && bytesSent < expectedLen) {
-       transmissionStatus = "PARTIAL";
-       Print("WARNING: Partial handshake transmission.");
-    }
-    Print("Transmission Status: ", transmissionStatus);
-    Print("====================================");
-   
-   // Handshake read polling logic with full diagnostics (Debug Phase D4)
-   Print("====================================");
-   Print("HANDSHAKE RECEIVE DIAGNOSTICS");
-   Print("====================================");
-   
+   uchar requestBytes[];
+   StringToCharArray(upgradeRequest, requestBytes);
    ResetLastError();
-   uint bytes_avail = SocketIsReadable(g_socket);
-   int last_err = GetLastError();
-   Print("SocketIsReadable() returned: ", bytes_avail);
-   Print("GetLastError() from SocketIsReadable: ", last_err);
+   SocketSend(g_socket, requestBytes, StringLen(upgradeRequest));
    
+   // Read handshake response
    uchar handshakeBuf[];
    ArrayResize(handshakeBuf, 4096);
-   
    ResetLastError();
    int bytesRead = SocketRead(g_socket, handshakeBuf, 4096, 5000);
-   int readErr = GetLastError();
-   
-   Print("SocketRead Returned: ", bytesRead);
-   Print("GetLastError() from SocketRead: ", readErr);
    
    string handshakeResponse = "";
    if(bytesRead > 0) {
-      ArrayResize(handshakeBuf, bytesRead);
-      string hexStr = "";
-      for(int i = 0; i < bytesRead; i++) {
-         hexStr += StringFormat("0x%02X ", handshakeBuf[i]);
-      }
       handshakeResponse = CharArrayToString(handshakeBuf, 0, bytesRead);
-      
-      Print("BytesAvailable: ", bytes_avail);
-      Print("Requested bytes: 4096");
-      Print("Actual bytes returned: ", bytesRead);
-      Print("Raw received bytes (hex): ", hexStr);
-      Print("Raw received ASCII:\n", handshakeResponse);
-   } else {
-      Print("WARNING: No bytes returned by SocketRead or error occurred.");
    }
-   Print("====================================");
    
    if(handshakeResponse != "") {
       HandleUpgradeHandshake(handshakeResponse);
@@ -555,7 +483,6 @@ void ConnectToBridge() {
       Print("MT5 Bridge: Upgrade handshake timed out.");
       SocketDisconnect();
       
-      // Handshake failed: increase reconnect delay (exponential backoff capped at 60 seconds)
       g_current_reconnect_delay = g_current_reconnect_delay * 2;
       if(g_current_reconnect_delay > 60) g_current_reconnect_delay = 60;
    }
