@@ -2140,7 +2140,21 @@ Produce your output as a single valid JSON object matching this schema:
     "short bullet-style explanation 1",
     "short bullet-style explanation 2",
     "short bullet-style explanation 3"
-  ]
+  ],
+  "explanation": {
+    "thesis": "string explaining the core directional thesis",
+    "bullishFactors": ["factor 1", "factor 2"],
+    "bearishFactors": ["factor 1", "factor 2"],
+    "risks": ["risk 1", "risk 2"],
+    "invalidation": "price level or trigger invalidating this setup",
+    "missingInformation": ["required information missing from input data"],
+    "whyNotBuy": "string reason preventing a BUY setup",
+    "whyNotSell": "string reason preventing a SELL setup",
+    "whyHold": "string reason why HOLD was selected",
+    "confidenceExplanation": "explanation for the confidence score",
+    "triggerHoldToBuy": "exact price level or condition that triggers entry to BUY from HOLD",
+    "triggerHoldToSell": "exact price level or condition that triggers entry to SELL from HOLD"
+  }
 }
 
 Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`json. Do not include any explanations or other text outside the JSON.`;
@@ -2396,6 +2410,31 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
     } catch (saveErr) {
       logger.error("gemini_advisor.save_outcome_failed", { error: saveErr.message });
     }
+
+    // Call AI Decision Validation log asynchronously
+    import("./aiDecisionValidationService.js").then((mod) => {
+      mod.logDecisionCycle(prompt, textResponse, recommendation, {
+        recommendationId: recResult.recommendationId,
+        currentPrice,
+        directionAgreement,
+        consensusStrength,
+        buyWeight: weightedBuySum,
+        sellWeight: weightedSellSum,
+        activeSignalsCount: totalActive,
+        telegramQuality: telegramSignalQuality,
+        momentumDirection,
+        institutionalBias: orderFlow ? orderFlow.institutionalBias : "Neutral",
+        macroAlignment: macroIntel ? macroIntel.macroAlignment : "Neutral",
+        volatilityLevel,
+        liquidityStatus: liqStatusStr,
+        newsContext,
+        generationTimeMs
+      }).catch(err => {
+        logger.error("gemini_advisor.validation_log_failed", { error: err.message });
+      });
+    }).catch((err) => {
+      logger.error("gemini_advisor.validation_import_failed", { error: err.message });
+    });
 
     // Capture intelligence snapshot for Phase 1.9 (Guaranteed safety via internal try/catch)
     try {

@@ -175,3 +175,11 @@ export async function getAiAnalyticsData(options = {}) {
     options
   );
 }
+
+export async function getAiDiagnosticsData(options = {}) {
+  return fetchJson(
+    "/ai/diagnostics",
+    "Failed to load AI diagnostics data",
+    options
+  );
+}

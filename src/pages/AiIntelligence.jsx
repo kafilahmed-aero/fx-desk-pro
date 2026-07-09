@@ -18,6 +18,7 @@ import {
   getWeightedConsensus
 } from "../services/signalService";
 import { fetchWithCredentials } from "../services/apiClient";
+import AiDiagnosticsCard from "../components/AiDiagnosticsCard";
 
 function AiIntelligence() {
   const [aiRecommendation, setAiRecommendation] = useState(null);
@@ -123,6 +124,11 @@ function AiIntelligence() {
           {error}
         </div>
       )}
+
+      {/* AI Diagnostics Card */}
+      <div className="mb-6">
+        <AiDiagnosticsCard />
+      </div>
 
       {/* Grid of Intelligence Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

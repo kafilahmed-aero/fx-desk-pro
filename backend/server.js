@@ -30,6 +30,10 @@ import {
   startMt5SyncService,
   stopMt5SyncService,
 } from "./src/services/mt5SyncService.js";
+import {
+  startOutcomeTracker,
+  stopOutcomeTracker,
+} from "./src/services/aiDecisionValidationService.js";
 
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
@@ -69,6 +73,7 @@ async function startServer() {
     stopPriceMonitoring();
     stopMt5SyncService();
     stopAiRecommendationScheduler();
+    stopOutcomeTracker();
     await stopTelegramListener();
     server.close(() => {
       logger.info("server.stopped");
@@ -88,6 +93,7 @@ async function initializeBackgroundServices(server) {
   startPriceMonitoring();
   startMt5SyncService(server);
   startAiRecommendationScheduler();
+  startOutcomeTracker();
   
   // Initial recommendation run after DB connection & price monitoring are established
   generateRecommendationIfNeeded("STARTUP").catch((err) => {
