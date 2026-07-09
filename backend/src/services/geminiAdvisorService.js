@@ -2405,6 +2405,26 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       decisionFlags: validationReview.flags
     };
 
+    let simulationMode = "PAPER";
+    let status = "PENDING";
+    try {
+      const { evaluateAutoTradePolicy } = await import("./aiAutoTradePolicyService.js");
+      const policy = await evaluateAutoTradePolicy(recResult, {
+        newsContext,
+        directionAgreement,
+        consensusStrength
+      });
+      if (policy.shouldExecute) {
+        simulationMode = "DEMO";
+        status = "ACTIVE";
+      }
+    } catch (err) {
+      logger.error("gemini_advisor.auto_trade_policy_failed", { error: err.message });
+    }
+
+    recResult.simulationMode = simulationMode;
+    recResult.status = status;
+
     try {
       await saveNewAiRecommendationOutcome(recResult);
     } catch (saveErr) {

@@ -111,6 +111,13 @@ export const config = {
     dailyLossLimitR: Number(process.env.PAPER_RISK_DAILY_LOSS_LIMIT_R) || 3,
     dailyProfitTargetR: Number(process.env.PAPER_RISK_DAILY_PROFIT_TARGET_R) || 6,
     slCooldownMinutes: Number(process.env.PAPER_RISK_SL_COOLDOWN_MINUTES) || 30
+  },
+  autoTrade: {
+    enabled: process.env.AUTO_TRADE_ENABLED !== "false", // Default to true unless explicitly disabled
+    minConfidence: Number(process.env.AUTO_TRADE_MIN_CONFIDENCE) || 75,
+    minTarget: Number(process.env.AUTO_TRADE_MIN_TARGET) || 5.0,
+    minRR: Number(process.env.AUTO_TRADE_MIN_RR) || 1.5,
+    lotSize: Number(process.env.AUTO_TRADE_LOT_SIZE) || 0.01
   }
 };
 

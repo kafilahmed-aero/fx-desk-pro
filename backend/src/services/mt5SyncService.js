@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import http from "http";
 import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.js";
 import { logger } from "../utils/logger.js";
+import { config } from "../config/env.js";
 
 // Global connection registry
 export const connectedClients = new Map(); // key: accountId / accountNumber, value: { ws, broker, server, accountNumber, lastSeen, connectedTime, eaVersion, protocolVersion }
@@ -100,7 +101,9 @@ export async function handleSendOpenOrder(doc) {
 
   // Map to direction volume entry and SL/TP configurations
   const direction = doc.direction === "BUY" ? "BUY" : "SELL";
-  const lot = 0.1; // Default volume for demo account execution
+  const lot = doc.simulationMode === "DEMO"
+    ? (config.autoTrade?.lotSize || 0.01)
+    : 0.1;
   
   // Decide target TP level (default lowRiskTp or moderateTp or highRiskTp)
   const tpPrice = doc.lowRiskTp || doc.moderateTp || doc.highRiskTp || null;

@@ -765,13 +765,13 @@ export async function saveNewAiRecommendationOutcome(rec) {
     riskReward: rec.riskReward,
     estimatedHoldingTime: rec.estimatedHoldingTime,
     tradeStyle: rec.tradeStyle,
-    status: "PENDING",
+    status: rec.status || "PENDING",
     hitTargets: [],
     triggerSource: rec.triggerSource || null,
     generationTimeMs: rec.generationTimeMs || null,
     expiresAt,
     // Simulation additions
-    simulationMode: "PAPER",
+    simulationMode: rec.simulationMode || "PAPER",
     aiSnapshot: {
       confidence: rec.confidence || null,
       tradeQuality: rec.tradeQuality || null,
