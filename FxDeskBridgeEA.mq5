@@ -482,30 +482,45 @@ void ConnectToBridge() {
     Print("Transmission Status: ", transmissionStatus);
     Print("====================================");
    
-   // Handshake read polling logic
-   uint start_time = GetTickCount();
-   uint timeout_limit = 5000;
-   uint elapsed = 0;
-   uint bytes_avail = 0;
-   bool data_ready = false;
+   // Handshake read polling logic with full diagnostics (Debug Phase D4)
+   Print("====================================");
+   Print("HANDSHAKE RECEIVE DIAGNOSTICS");
+   Print("====================================");
    
-   while(elapsed < timeout_limit) {
-      ResetLastError();
-      bytes_avail = SocketIsReadable(g_socket);
-      if(bytes_avail > 0) {
-         data_ready = true;
-         break;
-      }
-      Sleep(50);
-      elapsed = GetTickCount() - start_time;
-   }
+   ResetLastError();
+   uint bytes_avail = SocketIsReadable(g_socket);
+   int last_err = GetLastError();
+   Print("SocketIsReadable() returned: ", bytes_avail);
+   Print("GetLastError() from SocketIsReadable: ", last_err);
+   
+   uchar handshakeBuf[];
+   ArrayResize(handshakeBuf, 4096);
+   
+   ResetLastError();
+   int bytesRead = SocketRead(g_socket, handshakeBuf, 4096, 5000);
+   int readErr = GetLastError();
+   
+   Print("SocketRead Returned: ", bytesRead);
+   Print("GetLastError() from SocketRead: ", readErr);
    
    string handshakeResponse = "";
-   if(data_ready) {
-      handshakeResponse = SocketReadData(false, 5000);
+   if(bytesRead > 0) {
+      ArrayResize(handshakeBuf, bytesRead);
+      string hexStr = "";
+      for(int i = 0; i < bytesRead; i++) {
+         hexStr += StringFormat("0x%02X ", handshakeBuf[i]);
+      }
+      handshakeResponse = CharArrayToString(handshakeBuf, 0, bytesRead);
+      
+      Print("BytesAvailable: ", bytes_avail);
+      Print("Requested bytes: 4096");
+      Print("Actual bytes returned: ", bytesRead);
+      Print("Raw received bytes (hex): ", hexStr);
+      Print("Raw received ASCII:\n", handshakeResponse);
    } else {
-      Print("Handshake timeout: no readable data.");
+      Print("WARNING: No bytes returned by SocketRead or error occurred.");
    }
+   Print("====================================");
    
    if(handshakeResponse != "") {
       HandleUpgradeHandshake(handshakeResponse);
