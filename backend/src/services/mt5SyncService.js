@@ -283,6 +283,15 @@ export function startMt5SyncService(server = null) {
 
   const attachUpgradeLogger = (targetServer) => {
     targetServer.prependListener("upgrade", (req, socket, head) => {
+      socket._upgradedToWs = true;
+      console.log(`\n====================================
+HTTP UPGRADE EVENT FIRED
+====================================
+Timestamp: ${new Date().toISOString()}
+Remote IP: ${socket.remoteAddress}
+Request URL: ${req.url}
+====================================\n`);
+
       const parsedUrl = url.parse(req.url, true);
       if (parsedUrl.pathname !== "/mt5" && parsedUrl.pathname !== "/") {
         return; // Skip if it's some other endpoint
@@ -378,6 +387,83 @@ Token extracted: ${token}
 
       res.writeHead(426, { "Content-Type": "text/plain" });
       res.end("Upgrade Required");
+    });
+
+    httpServer.on("connection", (socket) => {
+      console.log(`\n====================================
+TCP CONNECTION ACCEPTED
+====================================
+Timestamp: ${new Date().toISOString()}
+Remote IP: ${socket.remoteAddress}
+Remote Port: ${socket.remotePort}
+====================================\n`);
+
+      let receivedBytes = 0;
+      let rawDataChunks = [];
+
+      socket.on("data", (chunk) => {
+        receivedBytes += chunk.length;
+        rawDataChunks.push(chunk);
+
+        const hexStr = chunk.toString("hex").match(/.{1,2}/g)?.join(" ") || "";
+        const asciiStr = chunk.toString("utf8");
+
+        console.log(`\n====================================
+RAW BYTES RECEIVED BEFORE HTTP PARSER
+====================================
+Timestamp: ${new Date().toISOString()}
+Bytes in chunk: ${chunk.length}
+Total bytes so far: ${receivedBytes}
+
+ASCII Payload:
+${asciiStr}
+
+HEX Payload:
+${hexStr}
+====================================\n`);
+      });
+
+      socket.on("close", (hadError) => {
+        if (!socket._upgradedToWs) {
+          console.log(`\n====================================
+TCP SOCKET CLOSED BEFORE UPGRADE
+====================================
+Timestamp: ${new Date().toISOString()}
+Total Bytes Received: ${receivedBytes}
+Had Error: ${hadError}
+====================================\n`);
+          if (receivedBytes === 0) {
+            console.log("TCP connected but zero application bytes received.");
+          } else {
+            const fullRawRequest = Buffer.concat(rawDataChunks).toString("utf8");
+            console.log(`\n====================================
+COMPLETE RAW HTTP REQUEST RECEIVED (NO UPGRADE)
+====================================
+${fullRawRequest}
+====================================\n`);
+          }
+        }
+      });
+
+      socket.on("error", (err) => {
+        console.log(`\n====================================
+TCP SOCKET/PARSER ERROR
+====================================
+Timestamp: ${new Date().toISOString()}
+Error Message: ${err.message}
+Error Code: ${err.code}
+====================================\n`);
+      });
+    });
+
+    httpServer.on("request", (req, res) => {
+      console.log(`\n====================================
+HTTP PARSER EMITTED "REQUEST" EVENT
+====================================
+Timestamp: ${new Date().toISOString()}
+Method: ${req.method}
+URL: ${req.url}
+====================================\n`);
     });
 
     wss = new WebSocketServer({ server: httpServer });
