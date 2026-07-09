@@ -451,10 +451,36 @@ void ConnectToBridge() {
                            "Sec-WebSocket-Version: 13\r\n" +
                            "User-Agent: FxDeskBridgeEA/2.0\r\n\r\n";
    
-   uchar requestBytes[];
-   StringToCharArray(upgradeRequest, requestBytes);
-   // Exclude the trailing null byte when sending raw characters
-   SocketSend(g_socket, requestBytes, StringLen(upgradeRequest));
+    uchar requestBytes[];
+    int reqLen = StringToCharArray(upgradeRequest, requestBytes);
+    int expectedLen = StringLen(upgradeRequest);
+    
+    Print("====================================");
+    Print("HANDSHAKE DEBUG");
+    Print("====================================");
+    Print("Full HTTP Request:");
+    Print(upgradeRequest);
+    Print("Expected Length: ", expectedLen);
+    Print("Request Bytes Length: ", reqLen);
+    Print("Socket Handle: ", g_socket);
+    
+    ResetLastError();
+    int bytesSent = SocketSend(g_socket, requestBytes, expectedLen);
+    int lastErr = GetLastError();
+    
+    Print("SocketSend Returned: ", bytesSent);
+    Print("Bytes Sent: ", bytesSent);
+    Print("LastError: ", lastErr);
+    
+    string transmissionStatus = "FAILED";
+    if(bytesSent == expectedLen) {
+       transmissionStatus = "SUCCESS";
+    } else if(bytesSent > 0 && bytesSent < expectedLen) {
+       transmissionStatus = "PARTIAL";
+       Print("WARNING: Partial handshake transmission.");
+    }
+    Print("Transmission Status: ", transmissionStatus);
+    Print("====================================");
    
    // Handshake read polling logic
    uint start_time = GetTickCount();
