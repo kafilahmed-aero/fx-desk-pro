@@ -438,12 +438,18 @@ void ConnectToBridge() {
    Print("MT5 Bridge: DIAGNOSTIC - SocketIsReadable() returned bytes: ", isReadable, ", SocketIsWritable() returned: ", isWritable);
    
    // Send WebSocket Upgrade request
+   string hostHeader = host;
+   if((isSecure && port != 443) || (!isSecure && port != 80)) {
+      hostHeader = host + ":" + IntegerToString(port);
+   }
+   
    string upgradeRequest = "GET " + path + "?token=" + InpAuthToken + " HTTP/1.1\r\n" +
-                           "Host: " + host + ":" + IntegerToString(port) + "\r\n" +
+                           "Host: " + hostHeader + "\r\n" +
                            "Upgrade: websocket\r\n" +
                            "Connection: Upgrade\r\n" +
                            "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n" +
-                           "Sec-WebSocket-Version: 13\r\n\r\n";
+                           "Sec-WebSocket-Version: 13\r\n" +
+                           "User-Agent: FxDeskBridgeEA/2.0\r\n\r\n";
    
    uchar requestBytes[];
    StringToCharArray(upgradeRequest, requestBytes);
