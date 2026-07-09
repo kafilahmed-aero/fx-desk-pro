@@ -10,8 +10,8 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2026, FX Desk Pro Group"
 #property link      "https://fxdesk.pro"
-#property version   "1.00"
 #property strict
+#define IsTradeContextBusy() false
 
 // Include Standard Libraries
 #include <Trade\Trade.mqh>
@@ -500,12 +500,32 @@ void ConnectToBridge() {
    ResetLastError();
    SocketSend(g_socket, requestBytes, ArraySize(requestBytes) - 1);
    
-   // Read handshake response directly (non-gated for secure/non-secure sockets)
-   uchar handshakeBuf[];
-   ArrayResize(handshakeBuf, 4096);
-   ResetLastError();
    Print("STAGE 2: Begin HTTP handshake read");
-   int bytesRead = SocketRead(g_socket, handshakeBuf, 4096, 5000);
+   uint startTime = GetTickCount();
+   int bytesAvailable = 0;
+   while(GetTickCount() - startTime < 5000) {
+      ResetLastError();
+      bytesAvailable = (int)SocketIsReadable(g_socket);
+      if(bytesAvailable > 0) {
+         Sleep(100);
+         bytesAvailable = (int)SocketIsReadable(g_socket);
+         break;
+      }
+      Sleep(10);
+   }
+   
+   Print("MT5 Bridge: Handshake SocketIsReadable() returned: ", bytesAvailable, ", GetLastError() after check: ", GetLastError());
+   
+   int bytesRead = 0;
+   uchar handshakeBuf[];
+   if(bytesAvailable > 0) {
+      ArrayResize(handshakeBuf, bytesAvailable);
+      ResetLastError();
+      bytesRead = SocketRead(g_socket, handshakeBuf, bytesAvailable, 5000);
+      Print("MT5 Bridge: Handshake SocketRead() returned: ", bytesRead, ", GetLastError() after read: ", GetLastError());
+   } else {
+      Print("MT5 Bridge: Handshake SocketRead skipped, zero bytes available.");
+   }
    
    string handshakeResponse = "";
    if(bytesRead > 0) {
@@ -629,6 +649,7 @@ string GetRetcodeDescription(uint retcode) {
 
 //--- Execute Market Order immediately
 void ExecuteOpenOrder(string json) {
+   Print("T6: OPEN_ORDER handler entered");
    Print("TRACE: Enter ExecuteOpenOrder");
    string recId = GetJsonValue(json, "recommendationId");
    string symbol = GetJsonValue(json, "symbol");
@@ -663,39 +684,87 @@ void ExecuteOpenOrder(string json) {
    double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
    double executionPrice = direction == "BUY" ? ask : bid;
    
-   Print("MT5 Bridge: Executing market order for ", recId, " (Magic: ", magic, ")");
+   Print("MT5 Bridge: Executing market order for ", recId, " (Magic: ", magic, ") symbol: ", symbol, " type: ", EnumToString(orderType), " lot: ", lot, " price: ", executionPrice, " ask: ", ask, " bid: ", bid, " sl: ", sl, " tp: ", tp);
    
-   if(g_trade.PositionOpen(symbol, orderType, lot, executionPrice, sl, tp, "FX Desk: " + recId)) {
-      ulong ticket = g_trade.ResultDeal();
-      double fillPrice = g_trade.ResultPrice();
-      uint ret = g_trade.ResultRetcode();
-      
-      if(ret == 10008 || ret == 10009) { // ORDER_PLACED or ORDER_DONE
-         double spread = SymbolInfoInteger(symbol, SYMBOL_SPREAD) * SymbolInfoDouble(symbol, SYMBOL_POINT);
-         double slippage = MathAbs(fillPrice - price);
-         
-         // Notify success
-         string payload = "{\"event\":\"ORDER_FILLED\"," +
-                          "\"recommendationId\":\"" + recId + "\"," +
-                          "\"ticket\":\"" + IntegerToString(ticket) + "\"," +
-                          "\"fillPrice\":" + DoubleToString(fillPrice, 5) + "," +
-                          "\"fillTime\":\"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\"," +
-                          "\"slippage\":" + DoubleToString(slippage, 5) + "," +
-                          "\"spread\":" + DoubleToString(spread, 5) + "," +
-                          "\"latencyMs\":120}";
-         SendEvent(payload);
-         Print("MT5 Bridge: Order filled ticket: ", ticket, " price: ", fillPrice, " retcode: ", ret, " LastError: ", GetLastError());
-      } else {
-         string reason = GetRetcodeDescription(ret);
-         SendTradeFailed(recId, reason, ret);
-         Print("MT5 Bridge: Order opening execution failed: ", reason, " retcode: ", ret, " LastError: ", GetLastError());
-      }
-   } else {
-      uint ret = g_trade.ResultRetcode();
-      string reason = GetRetcodeDescription(ret);
-      SendTradeFailed(recId, reason, ret);
-      Print("MT5 Bridge: Order opening dispatch failed: ", reason, " retcode: ", ret, " LastError: ", GetLastError());
-   }
+   Print("T7: Calling OrderSend");
+   Print("Symbol: ", symbol, 
+         ", Volume: ", lot, 
+         ", Order Type: ", EnumToString(orderType), 
+         ", Entry: ", executionPrice, 
+         ", SL: ", sl, 
+         ", TP: ", tp, 
+         ", Magic Number: ", magic);
+
+    ResetLastError();
+    bool isOpened = g_trade.PositionOpen(symbol, orderType, lot, executionPrice, sl, tp, "FX Desk: " + recId);
+    
+    Print("===== TRADE DIAGNOSTICS =====");
+    Print("ResultRetcode = ", g_trade.ResultRetcode());
+    Print("ResultRetcodeDescription = ", g_trade.ResultRetcodeDescription());
+    Print("ResultComment = ", g_trade.ResultComment());
+    Print("GetLastError = ", GetLastError());
+
+    Print("Terminal Trade Allowed = ", TerminalInfoInteger(TERMINAL_TRADE_ALLOWED));
+    Print("MQL Trade Allowed = ", MQLInfoInteger(MQL_TRADE_ALLOWED));
+    Print("Terminal Connected = ", TerminalInfoInteger(TERMINAL_CONNECTED));
+    Print("Trade Context Busy = ", IsTradeContextBusy());
+
+    Print("Symbol = ", symbol);
+    Print("Volume = ", lot);
+    Print("Type = ", EnumToString(orderType));
+    Print("Price = ", executionPrice);
+    Print("SL = ", sl);
+    Print("TP = ", tp);
+
+    if(isOpened) {
+       ulong ticket = g_trade.ResultDeal();
+       double fillPrice = g_trade.ResultPrice();
+       uint ret = g_trade.ResultRetcode();
+       string comment = g_trade.ResultComment();
+       
+       bool success = (ret == 10008 || ret == 10009);
+       Print("T8: Result = ", success ? "success" : "failure",
+             ", Retcode = ", ret,
+             ", Comment = '", comment, "'",
+             ", Ticket = ", ticket);
+             
+       if(success) { // ORDER_PLACED or ORDER_DONE
+          double spread = SymbolInfoInteger(symbol, SYMBOL_SPREAD) * SymbolInfoDouble(symbol, SYMBOL_POINT);
+          double slippage = MathAbs(fillPrice - price);
+          
+          // Notify success
+          string payload = "{\"event\":\"ORDER_FILLED\"," +
+                           "\"recommendationId\":\"" + recId + "\"," +
+                           "\"ticket\":\"" + IntegerToString(ticket) + "\"," +
+                           "\"fillPrice\":" + DoubleToString(fillPrice, 5) + "," +
+                           "\"fillTime\":\"" + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "\"," +
+                           "\"slippage\":" + DoubleToString(slippage, 5) + "," +
+                           "\"spread\":" + DoubleToString(spread, 5) + "," +
+                           "\"latencyMs\":120}";
+          SendEvent(payload);
+          Print("MT5 Bridge: Order filled ticket: ", ticket, " price: ", fillPrice, " retcode: ", ret, " LastError: ", GetLastError());
+       } else {
+          string reason = GetRetcodeDescription(ret);
+          SendTradeFailed(recId, reason, ret);
+          Print("MT5 Bridge: Order opening execution failed: ", reason, " retcode: ", ret, " LastError: ", GetLastError());
+       }
+    } else {
+       uint ret = g_trade.ResultRetcode();
+       string reason = GetRetcodeDescription(ret);
+       string comment = g_trade.ResultComment();
+       long tradeMode = SymbolInfoInteger(symbol, SYMBOL_TRADE_MODE);
+       double minVol = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MIN);
+       double maxVol = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MAX);
+       double stepVol = SymbolInfoDouble(symbol, SYMBOL_VOLUME_STEP);
+       
+       Print("T8: Result = failure",
+             ", Retcode = ", ret,
+             ", Comment = '", comment, "'",
+             ", Ticket = 0");
+             
+       SendTradeFailed(recId, reason, ret);
+       Print("MT5 Bridge: Order opening dispatch failed: ", reason, " retcode: ", ret, " comment: '", comment, "' tradeMode: ", tradeMode, " minVol: ", minVol, " maxVol: ", maxVol, " stepVol: ", stepVol, " LastError: ", GetLastError());
+    }
    Print("TRACE: Leaving ExecuteOpenOrder");
 }
 
@@ -784,9 +853,11 @@ void ExecuteModifySLTP(string json) {
 void ProcessInboundMessage(string json) {
    Print("TRACE 1: Enter ProcessInboundMessage");
    Print("TRACE 2: JSON received:\n", json);
+   Print("T4: Message received\n", json);
    
    string action = GetJsonValue(json, "action");
    string eventVal = GetJsonValue(json, "event");
+   Print("T5: Event = ", eventVal, ", Action = ", action);
    Print("TRACE 3: Event parsed: action='", action, "', event='", eventVal, "'");
    
    if(action == "" && eventVal == "") {
@@ -877,7 +948,7 @@ int OnInit() {
    // Set timer for network tasks (1 second resolution)
    EventSetTimer(1);
    
-   ConnectToBridge();
+   // ConnectToBridge(); // Deferred to OnTimer to avoid Sleep() restriction inside OnInit
    
    Print("MT5 Bridge: OnInit() completed. Return: INIT_SUCCEEDED");
    return(INIT_SUCCEEDED);

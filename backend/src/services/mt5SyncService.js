@@ -43,12 +43,27 @@ export function generateMagicNumber(recommendationId) {
 export function broadcastToEAs(msg, targetAccountId = null) {
   const payload = JSON.stringify(msg);
   let sentCount = 0;
+  
+  logger.info("DEBUG broadcastToEAs", {
+    connectedClientsSize: connectedClients.size,
+    targetAccountId,
+    clients: Array.from(connectedClients.keys()).map(k => ({
+      accountId: k,
+      readyState: connectedClients.get(k).ws ? connectedClients.get(k).ws.readyState : "no ws"
+    }))
+  });
 
   for (const [accountId, client] of connectedClients.entries()) {
     if (!targetAccountId || accountId === targetAccountId || client.accountNumber === targetAccountId) {
       if (client.ws && client.ws.readyState === 1) { // 1 = OPEN
         try {
+          if (msg.action === "OPEN_ORDER") {
+            logger.info("T2: Sending OPEN_ORDER", { payload });
+          }
           client.ws.send(payload);
+          if (msg.action === "OPEN_ORDER") {
+            logger.info("T3: OPEN_ORDER sent");
+          }
           sentCount++;
         } catch (err) {
           logger.error("mt5_sync.send_error", { accountId, error: err.message });
@@ -66,6 +81,7 @@ export function broadcastToEAs(msg, targetAccountId = null) {
  * Handles sending an open order command to connected EAs
  */
 export async function handleSendOpenOrder(doc) {
+  logger.info("T1: Preparing OPEN_ORDER");
   if (doc.executionState === "ORDER_SENT" || doc.executionState === "ORDER_ACCEPTED" || doc.executionState === "ORDER_FILLED" || doc.executionState === "POSITION_OPEN") {
     return;
   }

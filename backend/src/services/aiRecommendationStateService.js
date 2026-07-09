@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { config } from "../config/env.js";
 import { getXauusdRecommendation, getActiveXauusdSignals } from "./geminiAdvisorService.js";
 import { getXauusdNewsContext } from "./xauusdNewsService.js";
 import { getCurrentPrice } from "./priceIngestionService.js";
@@ -183,4 +184,123 @@ export async function generateRecommendationIfNeeded(triggerSource, triggerData)
   } finally {
     generationInProgress = false;
   }
+}
+
+let schedulerInterval = null;
+
+export async function runAiRecommendationCycle() {
+  logger.info("AI scheduler tick");
+  
+  if (generationInProgress) {
+    logger.info("Generation skipped: generation in progress");
+    return;
+  }
+  
+  const sessionActive = isAiTradingSessionActive();
+  logger.info(`Session active: ${sessionActive ? "YES" : "NO"}`);
+  
+  if (!sessionActive) {
+    logger.info("Generation skipped: outside session hours");
+    return;
+  }
+  
+  const recExists = Boolean(state.lastRecommendation);
+  logger.info(`Recommendation exists: ${recExists ? "YES" : "NO"}`);
+  
+  let shouldGenerate = false;
+  let reason = "";
+  
+  if (!recExists) {
+    shouldGenerate = true;
+    reason = "no recommendation exists";
+  } else {
+    const lastTime = state.lastGenerationTime ? new Date(state.lastGenerationTime).getTime() : 0;
+    const ageMinutes = (Date.now() - lastTime) / 60000;
+    const expirationMin = config.signalExpirationMinutes || 60;
+    const isExpired = ageMinutes >= expirationMin;
+    
+    if (isExpired) {
+      shouldGenerate = true;
+      reason = `recommendation expired (age: ${ageMinutes.toFixed(1)} mins, limit: ${expirationMin} mins)`;
+    }
+  }
+  
+  if (shouldGenerate) {
+    logger.info(`Generation started: ${reason}`);
+    generationInProgress = true;
+    try {
+      const activeSignals = await getActiveXauusdSignals();
+      const signalsString = JSON.stringify(activeSignals.map(s => ({
+        id: s._id || s.messageId,
+        state: s.signalState,
+        timestamp: s.timestamp
+      })));
+      const currentSignalHash = hashString(signalsString);
+      
+      let newsContext = { highImpactEvents: [], goldNews: [] };
+      try {
+        newsContext = await getXauusdNewsContext();
+      } catch (err) {
+        logger.warn("ai_state.scheduler_fetch_news_failed", { error: err.message });
+      }
+      const newsString = JSON.stringify(newsContext);
+      const currentNewsHash = hashString(newsString);
+      
+      const priceInfo = await getCurrentPrice("XAUUSD");
+      const currentPrice = priceInfo ? priceInfo.price : null;
+
+      const recommendation = await getXauusdRecommendation("SCHEDULER");
+      
+      if (recommendation && recommendation.status === "error") {
+        logger.info(`Generation finished: failed with error: ${recommendation.message}`);
+      } else {
+        state.lastRecommendation = recommendation;
+        state.lastGenerationTime = new Date().toISOString();
+        state.lastGoldPrice = currentPrice;
+        state.lastSignalHash = currentSignalHash;
+        state.lastNewsHash = currentNewsHash;
+        state.signalsUsed = activeSignals.length;
+        
+        if (activeSignals.length > 0) {
+          const times = activeSignals.map(s => new Date(s.timestamp || s.createdAt || Date.now()).getTime());
+          state.newestSignalTime = new Date(Math.max(...times)).toISOString();
+          state.oldestSignalTime = new Date(Math.min(...times)).toISOString();
+        } else {
+          state.newestSignalTime = null;
+          state.oldestSignalTime = null;
+        }
+        
+        logger.info("Generation finished: success");
+        
+        import("./aiRecommendationNotificationService.js").then((mod) => {
+          mod.sendAiRecommendationIfChanged(recommendation).catch((err) => {
+            logger.warn("ai_state.notification_trigger_failed", { error: err.message });
+          });
+        }).catch(() => {});
+      }
+    } catch (err) {
+      logger.error("Generation finished: failed with error", { error: err.message });
+    } finally {
+      generationInProgress = false;
+    }
+  } else {
+    logger.info("Generation skipped: current recommendation is still valid");
+  }
+}
+
+export function startAiRecommendationScheduler(intervalMs = 60000) {
+  if (schedulerInterval) return;
+  schedulerInterval = setInterval(runAiRecommendationCycle, intervalMs);
+  logger.info("AI scheduler started", { intervalMs });
+  runAiRecommendationCycle().catch((err) => {
+    logger.error("AI scheduler initial run failed", { error: err.message });
+  });
+}
+
+export function stopAiRecommendationScheduler() {
+  if (schedulerInterval) {
+    clearInterval(schedulerInterval);
+    schedulerInterval = null;
+  }
+  logger.info("AI scheduler stopped");
 }

@@ -3,7 +3,11 @@ import { createApp } from "./src/app.js";
 import { connectDatabase } from "./src/config/database.js";
 import { config } from "./src/config/env.js";
 import { getSessionCookieStartupLogDetails } from "./src/config/sessionCookie.js";
-import { generateRecommendationIfNeeded } from "./src/services/aiRecommendationStateService.js";
+import {
+  generateRecommendationIfNeeded,
+  startAiRecommendationScheduler,
+  stopAiRecommendationScheduler,
+} from "./src/services/aiRecommendationStateService.js";
 import {
   startTelegramListener,
   stopTelegramListener,
@@ -64,6 +68,7 @@ async function startServer() {
     stopMarketEngine();
     stopPriceMonitoring();
     stopMt5SyncService();
+    stopAiRecommendationScheduler();
     await stopTelegramListener();
     server.close(() => {
       logger.info("server.stopped");
@@ -82,6 +87,7 @@ async function initializeBackgroundServices(server) {
   startMarketEngine();
   startPriceMonitoring();
   startMt5SyncService(server);
+  startAiRecommendationScheduler();
   
   // Initial recommendation run after DB connection & price monitoring are established
   generateRecommendationIfNeeded("STARTUP").catch((err) => {
