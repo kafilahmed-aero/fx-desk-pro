@@ -25,6 +25,12 @@ async function runTests() {
   process.env.MT5_BRIDGE_AUTH_TOKEN = TEST_TOKEN;
   process.env.NODE_ENV = "production"; // enforce strict protocol validation
 
+  // Stub mongoose connection state (Issue 1)
+  Object.defineProperty(mongoose.connection, "readyState", {
+    get: () => 1,
+    configurable: true
+  });
+
   // 1. Mock DB outcomes list
   console.log("[Setup] Mocking AiRecommendationOutcome DB calls...");
   const originalFind = AiRecommendationOutcome.find;

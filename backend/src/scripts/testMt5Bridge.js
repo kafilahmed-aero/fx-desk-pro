@@ -133,6 +133,12 @@ function runScriptTest(scriptName) {
 async function runTests() {
   console.log("=== STARTING MT5 BRIDGE INTEGRATION TESTS ===");
 
+  // Stub mongoose connection state (Issue 1)
+  Object.defineProperty(mongoose.connection, "readyState", {
+    get: () => 1,
+    configurable: true
+  });
+
   // Start the service
   startMt5SyncService();
   console.log("WS server started on port", TEST_PORT);

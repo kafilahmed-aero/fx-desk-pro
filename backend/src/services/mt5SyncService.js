@@ -142,7 +142,7 @@ export async function handleSendCloseOrder(doc) {
 function startChangeStreamListener() {
   try {
     const db = mongoose.connection;
-    if (!db || db.readyState !== 1) {
+    if (!db || db.readyState !== 1 || !db.db) {
       logger.warn("mt5_sync.change_stream_skipped", { reason: "database_not_connected" });
       startFallbackPolling();
       return;
@@ -192,6 +192,22 @@ function startFallbackPolling() {
   logger.info("mt5_sync.fallback_polling_started");
   pollingInterval = setInterval(async () => {
     try {
+      // Check database state (Issue 1)
+      const dbState = mongoose.connection.readyState;
+      if (dbState !== 1) {
+        // Log info details to audit connection params
+        const conn = mongoose.connection;
+        const host = conn.host || "unknown-host";
+        const dbName = conn.name || "unknown-db";
+        logger.debug("mt5_sync.polling_skipped", { 
+          reason: "database_disconnected", 
+          readyState: dbState,
+          database: dbName,
+          host: host
+        });
+        return;
+      }
+
       // 1. Process WAITING -> ACTIVE -> ORDER_SENT
       const pendingOpen = await AiRecommendationOutcome.find({
         simulationMode: "DEMO",
@@ -272,38 +288,6 @@ export function startMt5SyncService(server = null) {
         return; // Skip if it's some other endpoint
       }
 
-      const originalWrite = socket.write;
-      socket.write = function(chunk, encoding, callback) {
-        let buffer;
-        if (Buffer.isBuffer(chunk)) {
-          buffer = chunk;
-        } else if (typeof chunk === "string") {
-          buffer = Buffer.from(chunk, encoding || "utf8");
-        } else {
-          buffer = Buffer.from(chunk);
-        }
-
-        const hexStr = buffer.toString("hex").match(/.{1,2}/g)?.join(" ") || "";
-        const asciiStr = buffer.toString("utf8");
-
-        console.log("========================================");
-        console.log("HANDSHAKE TRANSMISSION");
-        console.log("========================================");
-        console.log("\nTimestamp: " + new Date().toISOString());
-        console.log("\nASCII Payload:\n" + asciiStr);
-        console.log("\nHEX Payload:\n" + hexStr);
-        console.log("========================================");
-
-        return originalWrite.apply(this, arguments);
-      };
-    });
-
-    targetServer.on("upgrade", (req, socket, head) => {
-      const parsedUrl = url.parse(req.url, true);
-      if (parsedUrl.pathname !== "/mt5" && parsedUrl.pathname !== "/") {
-        return;
-      }
-      
       const token = parsedUrl.query?.token || "";
       const headers = req.headers;
       
@@ -343,6 +327,31 @@ Token extracted: ${token}
       };
       req._handshakeState = state;
       printHandshakeLog(state);
+
+      const originalWrite = socket.write;
+      socket.write = function(chunk, encoding, callback) {
+        let buffer;
+        if (Buffer.isBuffer(chunk)) {
+          buffer = chunk;
+        } else if (typeof chunk === "string") {
+          buffer = Buffer.from(chunk, encoding || "utf8");
+        } else {
+          buffer = Buffer.from(chunk);
+        }
+
+        const hexStr = buffer.toString("hex").match(/.{1,2}/g)?.join(" ") || "";
+        const asciiStr = buffer.toString("utf8");
+
+        console.log("========================================");
+        console.log("HANDSHAKE TRANSMISSION");
+        console.log("========================================");
+        console.log("\nTimestamp: " + new Date().toISOString());
+        console.log("\nASCII Payload:\n" + asciiStr);
+        console.log("\nHEX Payload:\n" + hexStr);
+        console.log("========================================");
+
+        return originalWrite.apply(this, arguments);
+      };
     });
   };
 
@@ -469,6 +478,12 @@ If rejected:
         if (eventType === "PING") {
           ws.send(JSON.stringify({ event: "PONG" }));
           if (clientInfo) clientInfo.lastSeen = Date.now();
+          return;
+        }
+
+        // Check database connection state for DB-interactive messages (Issue 1)
+        if (mongoose.connection.readyState !== 1) {
+          logger.warn("mt5_sync.message_skipped_database_disconnected", { event: eventType });
           return;
         }
 
@@ -994,7 +1009,7 @@ If rejected:
  * Stops the MT5 Bridge WebSocket Server and associated services
  */
 export function stopMt5SyncService() {
-  if (changeStream) {
+  if (changeStream && typeof changeStream.close === "function") {
     changeStream.close();
     changeStream = null;
   }

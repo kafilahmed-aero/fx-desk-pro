@@ -1,4 +1,5 @@
 import { WebSocket } from "ws";
+import mongoose from "mongoose";
 import {
   startMt5SyncService,
   stopMt5SyncService,
@@ -16,6 +17,12 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function runEndToEndVerification() {
   console.log("=== STARTING END-TO-END TRANSPORT VERIFICATION ===");
+
+  // Stub mongoose connection state (Issue 1)
+  Object.defineProperty(mongoose.connection, "readyState", {
+    get: () => 1,
+    configurable: true
+  });
 
   startMt5SyncService();
   console.log("WS server started on port", TEST_PORT);
