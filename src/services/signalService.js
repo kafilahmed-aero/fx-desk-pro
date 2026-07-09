@@ -161,11 +161,44 @@ function parseSsePayload(event, eventName) {
 }
 
 export async function getLatestXauusdRecommendation(options = {}) {
-  return fetchJson(
-    "/ai/xauusd/latest",
-    "Failed to load latest AI recommendation",
-    options
-  );
+  const fetchStartTime = Date.now();
+  try {
+    const response = await fetchJson(
+      "/ai/xauusd/latest",
+      "Failed to load latest AI recommendation",
+      options
+    );
+    const duration = Date.now() - fetchStartTime;
+    const reqId = response?.requestId || "UNKNOWN-REQUEST";
+    console.log(`
+==============================
+STAGE 12
+Component: AI Recommendation Pipeline
+Function: Frontend fetch completed
+Entered: YES
+Execution time: ${duration} ms
+Returned value: SUCCESS
+Request ID: ${reqId}
+Timestamp: ${new Date().toISOString()}
+Exception: None
+==============================`);
+    return response;
+  } catch (err) {
+    const duration = Date.now() - fetchStartTime;
+    console.error(`
+==============================
+STAGE 12
+Component: AI Recommendation Pipeline
+Function: Frontend fetch completed
+Entered: YES
+Execution time: ${duration} ms
+Returned value: FAILURE
+Request ID: UNKNOWN-REQUEST
+Timestamp: ${new Date().toISOString()}
+Exception: ${err.message}
+==============================`);
+    throw err;
+  }
 }
 
 export async function getAiAnalyticsData(options = {}) {

@@ -462,8 +462,21 @@ export async function getActiveXauusdSignals() {
  * based on active signals and current price.
  * @returns {Promise<Object>} Recommendation JSON or failure status object
  */
-export async function getXauusdRecommendation(triggerSource = "MANUAL") {
+export async function getXauusdRecommendation(triggerSource = "MANUAL", requestId = null, tickStartTime = null) {
+  const reqId = requestId || crypto.randomUUID();
+  const startT = tickStartTime || Date.now();
   const startTime = Date.now();
+  
+  const { logStage, getRecommendationState } = await import("./aiRecommendationStateService.js");
+  const recState = getRecommendationState();
+  recState.lastRequestId = reqId;
+
+  if (!recState.currentStageNum || recState.currentStageNum < 2) {
+    recState.currentStageNum = 2;
+    recState.currentStageName = "Recommendation generation started";
+    logStage(reqId, 2, "Recommendation generation started", true, startT);
+  }
+
   try {
     // 1. Check API Key
     if (!config.geminiApiKey) {
@@ -506,6 +519,11 @@ export async function getXauusdRecommendation(triggerSource = "MANUAL") {
 
     // Fetch Multi-Timeframe Context early (Phase 1.6)
     const mtfContext = getMultiTimeframeContext("XAUUSD");
+
+    // Stage 3: Signals collected
+    recState.currentStageNum = 3;
+    recState.currentStageName = "Signals collected";
+    logStage(reqId, 3, "Signals collected", true, startT);
 
     // Calculate Signal Intelligence Metrics
     const now = new Date();
@@ -2159,6 +2177,16 @@ Produce your output as a single valid JSON object matching this schema:
 
 Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`json. Do not include any explanations or other text outside the JSON.`;
 
+    // Stage 4: Prompt built
+    recState.currentStageNum = 4;
+    recState.currentStageName = "Prompt built";
+    logStage(reqId, 4, "Prompt built", true, startT);
+
+    // Stage 5: Gemini request started
+    recState.currentStageNum = 5;
+    recState.currentStageName = "Gemini request started";
+    logStage(reqId, 5, "Gemini request started", true, startT);
+
     // 5. Call Gemini API
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${config.geminiApiKey}`;
     
@@ -2187,6 +2215,7 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
 
     if (response.status === 429) {
       logger.warn("gemini_advisor.rate_limited");
+      logStage(reqId, 6, "Gemini HTTP response received", false, startT, "Rate limited (429)");
       return {
         status: "error",
         message: "Gemini recommendation unavailable"
@@ -2196,6 +2225,7 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
     if (!response.ok) {
       const errorText = await response.text();
       logger.error("gemini_advisor.api_error", { status: response.status, error: errorText });
+      logStage(reqId, 6, "Gemini HTTP response received", false, startT, `HTTP error ${response.status}: ${errorText}`);
       return {
         status: "error",
         message: "Gemini recommendation unavailable"
@@ -2207,11 +2237,17 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
 
     if (!textResponse) {
       logger.error("gemini_advisor.empty_response", { data });
+      logStage(reqId, 6, "Gemini HTTP response received", false, startT, "Empty candidates/response from Gemini API");
       return {
         status: "error",
         message: "Gemini recommendation unavailable"
       };
     }
+
+    // Stage 6: Gemini HTTP response received
+    recState.currentStageNum = 6;
+    recState.currentStageName = "Gemini HTTP response received";
+    logStage(reqId, 6, "Gemini HTTP response received", true, startT);
 
     // Handle potential markdown wrapping
     textResponse = textResponse.trim();
@@ -2220,7 +2256,17 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
     }
 
     // 6. Parse and Validate response
-    const recommendation = JSON.parse(textResponse);
+    let recommendation;
+    try {
+      recommendation = JSON.parse(textResponse);
+      // Stage 7: Response parsed
+      recState.currentStageNum = 7;
+      recState.currentStageName = "Response parsed";
+      logStage(reqId, 7, "Response parsed", true, startT);
+    } catch (parseErr) {
+      logStage(reqId, 7, "Response parsed", false, startT, `JSON parse error: ${parseErr.message}`);
+      throw parseErr;
+    }
 
     // Strict schema check
     if (
@@ -2374,6 +2420,11 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       flags: validationReview.flags
     });
 
+    // Stage 8: Recommendation validated
+    recState.currentStageNum = 8;
+    recState.currentStageName = "Recommendation validated";
+    logStage(reqId, 8, "Recommendation validated", true, startT);
+
     const generationTimeMs = Date.now() - startTime;
 
     const recResult = {
@@ -2427,8 +2478,13 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
 
     try {
       await saveNewAiRecommendationOutcome(recResult);
+      // Stage 9: Recommendation saved to MongoDB
+      recState.currentStageNum = 9;
+      recState.currentStageName = "Recommendation saved to MongoDB";
+      logStage(reqId, 9, "Recommendation saved to MongoDB", true, startT);
     } catch (saveErr) {
       logger.error("gemini_advisor.save_outcome_failed", { error: saveErr.message });
+      logStage(reqId, 9, "Recommendation saved to MongoDB", false, startT, `Save failed: ${saveErr.message}`);
     }
 
     // Call AI Decision Validation log asynchronously
@@ -2522,13 +2578,15 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       logger.error("gemini_advisor.capture_snapshot_failed", { error: analyticsErr.message });
     }
 
+    recResult.requestId = reqId;
     return recResult;
 
   } catch (err) {
     logger.error("gemini_advisor.execution_failed", { error: err.message });
     return {
       status: "error",
-      message: "Gemini recommendation unavailable"
+      message: "Gemini recommendation unavailable",
+      requestId: reqId
     };
   }
 }

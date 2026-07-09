@@ -1,5 +1,5 @@
 import { getXauusdRecommendation } from "../services/geminiAdvisorService.js";
-import { getLastRecommendation, getRecommendationState } from "../services/aiRecommendationStateService.js";
+import { getLastRecommendation, getRecommendationState, logStage } from "../services/aiRecommendationStateService.js";
 import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "../services/tradingSessionService.js";
 import { getXauusdNewsContext } from "../services/xauusdNewsService.js";
 import { getAiAnalytics } from "../services/aiAnalyticsService.js";
@@ -33,6 +33,7 @@ export async function getXauusdRecommendationController(req, res) {
  * Controller to fetch the latest cached AI trade recommendation for XAUUSD.
  */
 export async function getLatestXauusdRecommendationController(req, res) {
+  req.startTime = Date.now();
   try {
     const sessionActive = isAiTradingSessionActive();
     let hasOverride = false;
@@ -63,6 +64,12 @@ export async function getLatestXauusdRecommendationController(req, res) {
     }
 
     const state = getRecommendationState();
+    const reqId = recommendation.requestId || state.lastRequestId || "UNKNOWN-REQUEST";
+
+    // Stage 11: API endpoint returns recommendation
+    state.currentStageNum = 11;
+    state.currentStageName = "API endpoint returns recommendation";
+    logStage(reqId, 11, "API endpoint returns recommendation", true, req.startTime);
 
     return res.status(200).json({
       ...recommendation,
