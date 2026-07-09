@@ -337,6 +337,13 @@ Token extracted: ${token}
       req._handshakeState = state;
       printHandshakeLog(state);
 
+      socket.on("drain", () => {
+        console.log(`[INSTRUMENTATION] socket emitted "drain" event at ${new Date().toISOString()}`);
+      });
+      socket.on("error", (err) => {
+        console.log(`[INSTRUMENTATION] socket emitted "error" event: ${err.message} at ${new Date().toISOString()}`);
+      });
+
       const originalWrite = socket.write;
       socket.write = function(chunk, encoding, callback) {
         let buffer;
@@ -359,7 +366,9 @@ Token extracted: ${token}
         console.log("\nHEX Payload:\n" + hexStr);
         console.log("========================================");
 
-        return originalWrite.apply(this, arguments);
+        const writeRes = originalWrite.apply(this, arguments);
+        console.log(`[INSTRUMENTATION] socket.write() returned: ${writeRes}`);
+        return writeRes;
       };
     });
   };
