@@ -35,6 +35,7 @@ const state = {
 
 // Lock to prevent concurrent overlapping executions
 let generationInProgress = false;
+let schedulerInterval = null;
 
 /**
  * Computes MD5 hash of a serialized string
