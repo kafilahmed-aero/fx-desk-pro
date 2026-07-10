@@ -85,22 +85,77 @@ async function startServer() {
   process.on("SIGTERM", shutdown);
 }
 
-async function initializeBackgroundServices(server) {
-  startKeepAlive();
-  await connectDatabase();
-  await hydratePairStatesFromDb();
-  startMarketEngine();
-  startPriceMonitoring();
-  startMt5SyncService(server);
-  startAiRecommendationScheduler();
-  startOutcomeTracker();
-  
-  // Initial recommendation run after DB connection & price monitoring are established
-  generateRecommendationIfNeeded("STARTUP").catch((err) => {
-    logger.warn("server.initial_recommendation_failed", { error: err.message });
-  });
+export async function initializeBackgroundServices(server) {
+  // 1. Keep Alive
+  try {
+    startKeepAlive();
+  } catch (err) {
+    logger.error("Startup KeepAlive failed", { error: err.message });
+  }
 
-  await startTelegramListener();
+  // 2. Database Connection & Hydration
+  let dbConnected = false;
+  try {
+    const dbRes = await connectDatabase();
+    if (dbRes && dbRes.connected) {
+      dbConnected = true;
+      logger.info("STARTUP 1 Database Connected");
+    } else {
+      logger.error("STARTUP 1 Database Connected failed: connection response false");
+    }
+  } catch (err) {
+    logger.error("STARTUP 1 Database Connected failed with exception", { error: err.message });
+  }
+
+  if (dbConnected) {
+    try {
+      await hydratePairStatesFromDb();
+    } catch (err) {
+      logger.error("Startup database hydration failed", { error: err.message });
+    }
+  }
+
+  // 3. Price Scheduler, Market Engine, MT5 Sync
+  try {
+    startMarketEngine();
+    startPriceMonitoring();
+    startMt5SyncService(server);
+    logger.info("STARTUP 2 Price Scheduler Started");
+  } catch (err) {
+    logger.error("STARTUP 2 Price Scheduler Started failed", { error: err.message });
+  }
+
+  // 4. AI Recommendation Scheduler & Outcome Tracker
+  try {
+    if (global.mockSchedulerCrash) {
+      throw new Error("Mock Scheduler Crash");
+    }
+    startAiRecommendationScheduler();
+    startOutcomeTracker();
+    
+    // Initial recommendation run after DB connection & price monitoring are established
+    generateRecommendationIfNeeded("STARTUP").catch((err) => {
+      logger.warn("server.initial_recommendation_failed", { error: err.message });
+    });
+    
+    logger.info("STARTUP 3 AI Scheduler Started");
+  } catch (err) {
+    logger.error("STARTUP 3 AI Scheduler Started failed", { error: err.message });
+  }
+
+  // 5. Telegram Listener
+  try {
+    const telRes = await startTelegramListener();
+    if (telRes && telRes.started) {
+      logger.info("STARTUP 4 Telegram Listener Started");
+    } else {
+      logger.info("STARTUP 4 Telegram Listener Started skipped or failed", { reason: telRes?.error || "skipped" });
+    }
+  } catch (err) {
+    logger.error("STARTUP 4 Telegram Listener Started failed with exception", { error: err.message });
+  }
+
+  logger.info("STARTUP COMPLETE");
 }
 
 startServer().catch((error) => {

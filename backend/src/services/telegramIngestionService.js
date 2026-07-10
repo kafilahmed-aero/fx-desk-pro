@@ -80,6 +80,7 @@ export async function startTelegramListener() {
   try {
     const client = await connectTelegramWithSavedSession();
     logger.info("telegram.connected");
+    logger.info("STARTUP 5 Telegram Connected");
     lastStartupChannelReport = await validateStartupChannels();
     await runStartupBackfill(client);
 
@@ -90,6 +91,8 @@ export async function startTelegramListener() {
         });
       });
     }, config.telegram.pollIntervalMs);
+
+    logger.info("STARTUP 6 Polling Timer Registered");
 
     return {
       started: true,
