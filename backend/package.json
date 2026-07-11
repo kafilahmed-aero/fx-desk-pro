@@ -17,7 +17,8 @@
     "consensus:test": "node src/scripts/testConsensusSummary.js",
     "telegram:beta": "node src/scripts/liveBetaIngestion.js",
     "live:validate": "node src/scripts/liveStabilityValidation.js",
-    "test:startup": "node src/scripts/testStartupFaultTolerance.js"
+    "test:startup": "node src/scripts/testStartupFaultTolerance.js",
+    "test:reliability": "node src/scripts/testIngestionReliability.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

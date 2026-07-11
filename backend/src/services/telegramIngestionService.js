@@ -4,7 +4,7 @@ import {
   connectTelegramWithSavedSession,
   resolveTelegramChannelEntity,
 } from "./telegramService.js";
-import { storeRawMessage } from "./rawMessageStore.js";
+import { storeRawMessage, flushOfflineQueue, getQueuedMessagesCount } from "./rawMessageStore.js";
 import { enqueueRawMessageProcessing } from "./messageProcessingQueue.js";
 import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { classifyMessage } from "../parsers/noiseFilter.js";
@@ -100,6 +100,7 @@ export async function startTelegramListener() {
     };
   } catch (error) {
     listenerRunning = false;
+    ingestionMetrics.lastError = error.message;
     lastStartupChannelReport = createFailedStartupChannelReport(error.message);
     logStartupChannelReport(lastStartupChannelReport);
     logger.error("telegram.listener_start_failed", {
@@ -131,24 +132,29 @@ export async function stopTelegramListener() {
   logger.info("telegram.listener_stopped");
 }
 
-async function pollTelegramChannels() {
+export async function pollTelegramChannels() {
   if (pollingInProgress || !listenerRunning) {
     return;
   }
 
   pollingInProgress = true;
-  ingestionMetrics.pollCycles += 1;
-  ingestionMetrics.lastPollStartedAt = new Date().toISOString();
-  
-  logger.info("telegram.poll_cycle_started", {
-    pollCycles: ingestionMetrics.pollCycles,
-    timestamp: ingestionMetrics.lastPollStartedAt,
-  });
-
   const startedAt = Date.now();
   let success = false;
 
   try {
+    // Flush any offline queued messages (async, non-blocking)
+    flushOfflineQueue().catch((err) => {
+      logger.error("telegram.offline_flush_failed", { error: err.message });
+    });
+
+    ingestionMetrics.pollCycles += 1;
+    ingestionMetrics.lastPollStartedAt = new Date().toISOString();
+    
+    logger.info("telegram.poll_cycle_started", {
+      pollCycles: ingestionMetrics.pollCycles,
+      timestamp: ingestionMetrics.lastPollStartedAt,
+    });
+
     const client = await connectTelegramWithSavedSession();
 
     ingestionMetrics.channelsPolledSuccessfully = 0;
@@ -749,13 +755,18 @@ function scheduleReconnect() {
 }
 
 export function getTelegramIngestionMetrics() {
+  const client = getTelegramClient();
   return {
     listenerRunning,
     pollingInProgress,
+    connected: Boolean(client && client.connected),
     configuredChannels: config.telegram.channels.length,
     startupChannelReport: lastStartupChannelReport,
     pollIntervalMs: config.telegram.pollIntervalMs,
     pollLimit: config.telegram.pollLimit,
+    queuedMessagesCount: getQueuedMessagesCount(),
+    lastPollTime: ingestionMetrics.lastPollStartedAt,
+    lastReconnectTime: ingestionMetrics.lastReconnectAt,
     ...ingestionMetrics,
   };
 }
