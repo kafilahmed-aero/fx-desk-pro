@@ -2207,72 +2207,146 @@ Produce your output as a single valid JSON object matching this schema:
 
 Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`json. Do not include any explanations or other text outside the JSON.`;
 
-    // Stage 4: Prompt built
+    // Stage 4: Decision Engine evaluated
     recState.currentStageNum = 4;
-    recState.currentStageName = "Prompt built";
-    logStage(reqId, 4, "Prompt built", true, startT);
+    recState.currentStageName = "Decision Engine evaluated";
+    logStage(reqId, 4, "Decision Engine evaluated", true, startT);
 
-    // Stage 5: Gemini request started
-    recState.currentStageNum = 5;
-    recState.currentStageName = "Gemini request started";
-    logStage(reqId, 5, "Gemini request started", true, startT);
+    // Call the deterministic Decision Engine
+    const { evaluateMarketOpportunity } = await import("./decisionEngine.js");
+    const { canOpenTrade } = await import("./paperRiskManager.js");
 
-    // 5. Call Gemini API via Centralized AI Model Manager with Fallback
-    let textResponse;
-    let finalModelUsed;
-    let modelManagerRes;
-    try {
-      modelManagerRes = await callGeminiWithFallback(prompt, reqId, startT, logStage);
-      textResponse = modelManagerRes.textResponse;
-      finalModelUsed = modelManagerRes.modelUsed;
-      
-      // Stage 6: Gemini HTTP response received
-      recState.currentStageNum = 6;
-      recState.currentStageName = `Gemini HTTP response received (${finalModelUsed})`;
-      logStage(reqId, 6, `Gemini HTTP response received (${finalModelUsed})`, true, startT);
-    } catch (managerErr) {
-      logger.error("gemini_advisor.manager_error", { error: managerErr.message });
-      logStage(reqId, 6, "Gemini HTTP response received", false, startT, managerErr.message);
-      return {
-        status: "error",
-        message: "Gemini recommendation unavailable"
-      };
-    }
+    const riskCheck = await canOpenTrade("XAUUSD", new Date(), reqId).catch((err) => {
+      logger.warn("gemini_advisor.can_open_trade_check_failed", { error: err.message });
+      return { allowed: true };
+    });
 
-    // Handle potential markdown wrapping
-    textResponse = textResponse.trim();
-    if (textResponse.startsWith("```")) {
-      textResponse = textResponse.replace(/^```(?:json)?\n?|```$/g, "").trim();
-    }
+    let localRiskGrade = "LOW_RISK";
+    if (signals.length <= 1) localRiskGrade = "MEDIUM_RISK";
+    if (Math.min(buyCount, sellCount) > 0) localRiskGrade = "HIGH_RISK";
 
-    // 6. Parse and Validate response
-    let recommendation;
-    try {
-      recommendation = JSON.parse(textResponse);
-      
-      // Inject model manager diagnostic telemetry details
-      recommendation.responseSource = modelManagerRes.responseSource;
-      recommendation.geminiModel = modelManagerRes.modelUsed;
-      recommendation.requestId = modelManagerRes.requestId || reqId;
-      recommendation.generatedAt = modelManagerRes.generatedAt;
-      recommendation.latencyMs = modelManagerRes.latencyMs;
-      recommendation.fallbackCount = modelManagerRes.fallbackCount;
+    const decisionInputs = {
+      parsedSignals: signals,
+      pairState: {
+        direction: dominantDir,
+        liquidityStatus: orderFlow?.liquidity?.lastSweepType || "None",
+        valuationZone: premiumDiscount || "Discount",
+        nearestOrderBlock: orderFlow?.nearestBullishOB || orderFlow?.nearestBearishOB,
+        mtfTrend: mtfContext?.mtfTrend || "Neutral"
+      },
+      consensus: {
+        buyConfidence: buyPercentage,
+        sellConfidence: sellPercentage,
+        totalActive: totalActive
+      },
+      marketState: {
+        currentPrice: currentPrice,
+        volatility: volatilityLevel,
+        spread: currentSpread
+      },
+      riskAssessment: {
+        blocked: !riskCheck.allowed,
+        reason: riskCheck.reason,
+        riskGrade: localRiskGrade,
+        rrr: 1.5
+      },
+      marketContext: {
+        mtfTrend: mtfContext?.mtfTrend || "Neutral"
+      },
+      newsContext: newsContext
+    };
 
-      if (modelManagerRes.responseSource === "CACHE") {
-        recommendation.cacheAgeSeconds = modelManagerRes.cacheAgeSeconds;
-        recommendation.cacheExpired = modelManagerRes.cacheExpired;
-        recommendation.originalGeneratedAt = modelManagerRes.originalGeneratedAt;
-        recommendation.originalModel = modelManagerRes.originalModel;
+    const decisionResult = evaluateMarketOpportunity(decisionInputs);
+    logger.info("gemini_advisor.deterministic_decision_engine_evaluated", {
+      decision: decisionResult.decision,
+      grade: decisionResult.grade,
+      score: decisionResult.score
+    });
+
+    let recommendation = { ...decisionResult.recommendation };
+
+    // Inject base diagnostic telemetry details
+    recommendation.responseSource = "DECISION_ENGINE";
+    recommendation.requestId = reqId;
+    recommendation.generatedAt = new Date().toISOString();
+    recommendation.latencyMs = Date.now() - startTime;
+    recommendation.fallbackCount = 0;
+    recommendation.grade = decisionResult.grade;
+    recommendation.subsystemScores = decisionResult.subsystemScores;
+
+    let explanation = {
+      thesis: `Deterministic decision: ${decisionResult.decision}. Overall setup score: ${decisionResult.score}.`,
+      bullishFactors: decisionResult.reasons.filter(r => r.toLowerCase().includes("bullish") || r.toLowerCase().includes("buy")),
+      bearishFactors: decisionResult.reasons.filter(r => r.toLowerCase().includes("bearish") || r.toLowerCase().includes("sell")),
+      risks: decisionResult.warnings
+    };
+
+    recommendation.explanation = explanation;
+
+    // Call Gemini only for auxiliary explanation generation if API key is present
+    if (config.geminiApiKey) {
+      // Stage 5: Gemini request started (Auxiliary explanation generation)
+      recState.currentStageNum = 5;
+      recState.currentStageName = "Gemini request started (Explanation)";
+      logStage(reqId, 5, "Gemini request started (Explanation)", true, startT);
+
+      try {
+        const auxPrompt = `You are the auxiliary explanation service for FX Desk Pro.
+The deterministic Decision Engine has evaluated the market and produced the following trade setup:
+Pair: XAUUSD
+Direction: ${decisionResult.decision}
+Grade: ${decisionResult.grade}
+Score: ${decisionResult.score}
+Confidence: ${decisionResult.confidence}%
+Entry Min: ${decisionResult.recommendation.entryMin}
+Entry Max: ${decisionResult.recommendation.entryMax}
+Stop Loss: ${decisionResult.recommendation.sl}
+Take Profit: ${decisionResult.recommendation.tp}
+Reasons: ${decisionResult.reasons.join(", ")}
+Warnings: ${decisionResult.warnings.join(", ")}
+
+Generate a natural language explanation for this setup. Your response must be JSON containing:
+{
+  "explanation": {
+    "thesis": "string explaining the core directional thesis",
+    "bullishFactors": ["factor 1", "factor 2"],
+    "bearishFactors": ["factor 1", "factor 2"],
+    "risks": ["risk 1", "risk 2"]
+  }
+}
+Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`json.`;
+
+        const modelManagerRes = await callGeminiWithFallback(auxPrompt, reqId, startT, logStage);
+        let textResponse = modelManagerRes.textResponse.trim();
+        if (textResponse.startsWith("```")) {
+          textResponse = textResponse.replace(/^```(?:json)?\n?|```$/g, "").trim();
+        }
+        const auxResult = JSON.parse(textResponse);
+        if (auxResult.explanation) {
+          recommendation.explanation = {
+            ...explanation,
+            ...auxResult.explanation
+          };
+        }
+        
+        recommendation.responseSource = "HYBRID_ENGINE";
+        recommendation.geminiModel = modelManagerRes.modelUsed;
+        recommendation.latencyMs = Date.now() - startTime;
+        recommendation.fallbackCount = modelManagerRes.fallbackCount;
+        
+        // Stage 6: Gemini response received
+        recState.currentStageNum = 6;
+        recState.currentStageName = `Gemini HTTP response received (${modelManagerRes.modelUsed})`;
+        logStage(reqId, 6, `Gemini HTTP response received (${modelManagerRes.modelUsed})`, true, startT);
+      } catch (geminiErr) {
+        logger.warn("gemini_advisor.explanation_generation_failed", { error: geminiErr.message });
       }
-
-      // Stage 7: Response parsed
-      recState.currentStageNum = 7;
-      recState.currentStageName = "Response parsed";
-      logStage(reqId, 7, "Response parsed", true, startT);
-    } catch (parseErr) {
-      logStage(reqId, 7, "Response parsed", false, startT, `JSON parse error: ${parseErr.message}`);
-      throw parseErr;
     }
+
+    // Set stage to parsed
+    recState.currentStageNum = 7;
+    recState.currentStageName = "Response parsed";
+    logStage(reqId, 7, "Response parsed", true, startT);
 
     // Strict schema check
     if (
@@ -2459,7 +2533,10 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       consistencyScore: validationReview.score,
       validationResult: validationReview.validationResult,
       validationSummary: validationReview.validationSummary,
-      decisionFlags: validationReview.flags
+      decisionFlags: validationReview.flags,
+      grade: recommendation.grade || null,
+      subsystemScores: recommendation.subsystemScores || null,
+      marketContext: recommendation.marketContext || null
     };
 
     let simulationMode = "PAPER";

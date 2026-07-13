@@ -105,7 +105,7 @@ export async function sendAiRecommendationIfChanged(recommendation) {
 
   const updatedTime = formatTime(recommendation.lastGenerationTime);
 
-  const message = `🤖 XAUUSD AI ADVISOR UPDATE\n\n` +
+  const message = `🤖 XAUUSD DECISION ENGINE UPDATE\n\n` +
                   `Direction:\n${direction}\n\n` +
                   `Entry:\n${entry}\n\n` +
                   `SL:\n${sl}\n\n` +

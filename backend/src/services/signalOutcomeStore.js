@@ -684,6 +684,9 @@ export async function saveNewAiRecommendationOutcome(rec) {
                   recommendationVersion: nextVersion,
                   triggerSource: rec.triggerSource || null,
                   generationTimeMs: rec.generationTimeMs || null,
+                  grade: rec.grade || null,
+                  subsystemScores: rec.subsystemScores || null,
+                  marketContext: rec.marketContext || null,
                   lastCheckedAt: new Date()
                 }
               },
@@ -710,6 +713,9 @@ export async function saveNewAiRecommendationOutcome(rec) {
           item.recommendationVersion = nextVersion;
           item.triggerSource = rec.triggerSource || null;
           item.generationTimeMs = rec.generationTimeMs || null;
+          item.grade = rec.grade || null;
+          item.subsystemScores = rec.subsystemScores || null;
+          item.marketContext = rec.marketContext || null;
           item.updatedAt = new Date();
           localAiRecommendationOutcomes.set(item.recommendationId, item);
         }
@@ -770,6 +776,9 @@ export async function saveNewAiRecommendationOutcome(rec) {
     triggerSource: rec.triggerSource || null,
     generationTimeMs: rec.generationTimeMs || null,
     expiresAt,
+    grade: rec.grade || null,
+    subsystemScores: rec.subsystemScores || null,
+    marketContext: rec.marketContext || null,
     // Simulation additions
     simulationMode: rec.simulationMode || "PAPER",
     aiSnapshot: {

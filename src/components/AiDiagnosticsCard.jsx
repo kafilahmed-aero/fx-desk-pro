@@ -64,7 +64,7 @@ function AiDiagnosticsCard() {
       <div className="flex flex-col gap-4 border-b border-slate-200/70 pb-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-bold text-slate-950 dark:text-white flex items-center gap-2">
           <Activity className="text-teal-500" size={20} />
-          <span>🤖 AI Decision Validation & Diagnostics</span>
+          <span>🤖 Decision Validation & System Diagnostics</span>
         </h3>
         <button
           onClick={fetchDiagnostics}
@@ -190,7 +190,7 @@ function AiDiagnosticsCard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Primary Model */}
           <div className="rounded-xl border border-slate-200 bg-slate-100/30 p-3.5 dark:border-white/5 dark:bg-white/[0.01]">
-            <p className="text-[10px] uppercase font-bold text-slate-400">Primary (Gemini 2.5 Flash)</p>
+            <p className="text-[10px] uppercase font-bold text-slate-400">Primary (LLM Provider)</p>
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs font-black text-slate-700 dark:text-slate-350">
                 Requests: {d.modelManager?.models?.["gemini-2.5-flash"]?.requestsToday || 0}
@@ -209,7 +209,7 @@ function AiDiagnosticsCard() {
 
           {/* Secondary Model */}
           <div className="rounded-xl border border-slate-200 bg-slate-100/30 p-3.5 dark:border-white/5 dark:bg-white/[0.01]">
-            <p className="text-[10px] uppercase font-bold text-slate-400">Secondary (Gemini 2.5 Flash-Lite)</p>
+            <p className="text-[10px] uppercase font-bold text-slate-400">Secondary (LLM Provider)</p>
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs font-black text-slate-700 dark:text-slate-350">
                 Requests: {d.modelManager?.models?.["gemini-2.5-flash-lite"]?.requestsToday || 0}

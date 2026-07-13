@@ -165,7 +165,7 @@ export async function getLatestXauusdRecommendation(options = {}) {
   try {
     const response = await fetchJson(
       "/ai/xauusd/latest",
-      "Failed to load latest AI recommendation",
+      "Failed to load latest trading recommendation",
       options
     );
     const duration = Date.now() - fetchStartTime;

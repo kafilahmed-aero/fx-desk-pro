@@ -236,6 +236,18 @@ const aiRecommendationOutcomeSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    grade: {
+      type: String,
+      default: null,
+    },
+    subsystemScores: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    marketContext: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   {
     collection: "aiRecommendationOutcomes",

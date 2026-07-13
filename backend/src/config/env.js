@@ -126,6 +126,65 @@ const rawConfig = {
     minTarget: Number(process.env.AUTO_TRADE_MIN_TARGET) || 5.0,
     minRR: Number(process.env.AUTO_TRADE_MIN_RR) || 1.5,
     lotSize: Number(process.env.AUTO_TRADE_LOT_SIZE) || 0.01
+  },
+  decisionEngine: {
+    weights: {
+      consensus: 35,
+      marketIntelligence: 40,
+      risk: 15,
+      rrr: 10
+    },
+    thresholds: {
+      gradeA: 90,
+      gradeB: 80,
+      gradeC: 70
+    },
+    warningPenalty: 5,
+    maximumPenalty: 20,
+    policies: {
+      blockMarketClosed: true,
+      blockSpreadBlocked: true,
+      blockExtremeVolatility: true
+    }
+  },
+  marketIntelligence: {
+    weights: {
+      trend: 25,
+      structure: 20,
+      supportResistance: 15,
+      session: 15,
+      volatility: 15,
+      spread: 10
+    },
+    thresholds: {
+      gradeA: 90,
+      gradeB: 80,
+      gradeC: 70
+    }
+  },
+  smartEntry: {
+    minimumRR: 1.5,
+    preferredRR: 2.0,
+    excellentRR: 3.0,
+    maximumTpTravelBeforeReject: 0.8,
+    maximumSpreadMultiplier: 2.0,
+    minimumEntryDistance: 1.0,
+    maximumEntryDistance: 10.0
+  },
+  tradeLifecycle: {
+    breakEvenTriggerPoints: 100.0,
+    breakEvenOffsetPoints: 10.0,
+    trailDistancePoints: 150.0,
+    trailStepPoints: 20.0,
+    partialProfitStages: [
+      { triggerRR: 1, closePercent: 30 },
+      { triggerRR: 2, closePercent: 30 },
+      { triggerRR: 3, closePercent: 40 }
+    ],
+    maximumTradeDurationMin: 120,
+    minimumProgressPoints: 20.0,
+    marketExitThreshold: 50,
+    emergencySpreadMultiplier: 3.0
   }
 };
 

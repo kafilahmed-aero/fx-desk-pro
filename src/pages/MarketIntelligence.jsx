@@ -20,7 +20,7 @@ import {
 import { fetchWithCredentials } from "../services/apiClient";
 import AiDiagnosticsCard from "../components/AiDiagnosticsCard";
 
-function AiIntelligence() {
+function MarketIntelligence() {
   const [aiRecommendation, setAiRecommendation] = useState(null);
   const [aiAnalytics, setAiAnalytics] = useState(null);
   const [consensusPairs, setConsensusPairs] = useState([]);
@@ -65,7 +65,7 @@ function AiIntelligence() {
         setError("");
       } catch (err) {
         if (isMounted) {
-          setError(err.message || "Failed to load AI Intelligence details.");
+          setError(err.message || "Failed to load Market Intelligence details.");
         }
       } finally {
         if (isMounted) {
@@ -109,10 +109,10 @@ function AiIntelligence() {
       <div>
         <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-500 dark:text-blue-300">
           <Brain size={14} />
-          Learning Engine
+          Decision Engine
         </p>
         <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
-          AI Intelligence
+          Market Intelligence
         </h1>
         <p className="mt-1 max-w-2xl text-xs text-slate-500 dark:text-slate-400 font-medium">
           Multi-layer algorithmic signals, dynamic weights, correlations, and continuous accuracy snapshots.
@@ -125,7 +125,7 @@ function AiIntelligence() {
         </div>
       )}
 
-      {/* AI Diagnostics Card */}
+      {/* System Diagnostics Card */}
       <div className="mb-6">
         <AiDiagnosticsCard />
       </div>
@@ -171,7 +171,7 @@ function AiIntelligence() {
                   <p className="font-bold text-slate-400 uppercase text-[9px] tracking-wider">Historical WR by Regime</p>
                   <div className="space-y-1.5">
                     {d.intelligenceEffectiveness?.marketRegime ? (
-                      Object.entries(d.intelligenceEffectiveness.marketRegime).map(([regimeName, stats]) => (
+                       Object.entries(d.intelligenceEffectiveness.marketRegime).map(([regimeName, stats]) => (
                         <div key={regimeName} className="flex justify-between items-center text-[11px] bg-slate-50 dark:bg-white/[0.01] p-1.5 rounded">
                           <span className="text-slate-600 dark:text-slate-400">{regimeName}</span>
                           <span className="font-extrabold">{stats.winRate !== null ? `${stats.winRate}% WR` : "—"} ({stats.total}t)</span>
@@ -461,7 +461,7 @@ function AiIntelligence() {
               <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4 text-xs animate-fade-in transition-all duration-200">
                 <div className="space-y-1">
                   <p className="font-bold text-slate-400 uppercase text-[9px] tracking-wider">Rolling Correlation Matrix</p>
-                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px] font-semibold">
+                  <p className="text-slate-650 dark:text-slate-400 leading-relaxed text-[11px] font-semibold">
                     Monitors rolling Pearson correlation coefficients against DXY, US10Y, VIX, Silver, and majors, prioritizing Tier 1 macro drivers.
                   </p>
                 </div>
@@ -613,4 +613,4 @@ function AiIntelligence() {
   );
 }
 
-export default AiIntelligence;
+export default MarketIntelligence;

@@ -239,7 +239,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* TOP SECTION: Large AI Recommendation Hero Card */}
+      {/* TOP SECTION: Large Trading Recommendation Hero Card */}
       <XauusdAiAdvisorCard 
         data={aiRecommendation} 
         loading={isLoading} 

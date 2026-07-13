@@ -145,7 +145,19 @@ const aiRecommendationSnapshotSchema = new mongoose.Schema(
       lossBeforeRecovery: { type: Number, default: null },
       distanceTravelled: { type: Number, default: null },
       resolvedAt: { type: Date, default: null }
-    }
+    },
+    grade: {
+      type: String,
+      default: null,
+    },
+    subsystemScores: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    marketContext: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   {
     timestamps: true,

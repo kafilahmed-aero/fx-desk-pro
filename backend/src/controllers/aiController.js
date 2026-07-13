@@ -51,7 +51,7 @@ export async function getLatestXauusdRecommendationController(req, res) {
     if (!sessionActive && !hasOverride) {
       return res.status(200).json({
         status: "offline",
-        message: "AI Advisor Offline"
+        message: "Decision Engine Offline"
       });
     }
 

@@ -148,8 +148,8 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         <div className="flex items-center gap-3">
           <AlertCircle className="text-rose-500" size={24} />
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-rose-455">XAUUSD AI Advisor</h3>
-            <p className="mt-1 text-xs text-rose-400/80">AI recommendation temporarily unavailable</p>
+            <h3 className="text-base font-bold text-rose-455">XAUUSD Trading Decision</h3>
+            <p className="mt-1 text-xs text-rose-400/80">Trading recommendation temporarily unavailable</p>
           </div>
         </div>
       </div>
@@ -163,7 +163,7 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-slate-400 animate-pulse"></div>
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">XAUUSD AI Advisor Offline</h3>
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">Decision Engine Offline</h3>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Waiting for London–New York overlap (17:30–21:30 IST)
             </p>
@@ -180,8 +180,8 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-ping"></div>
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-blue-900 dark:text-blue-200">XAUUSD AI Advisor</h3>
-            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">AI recommendation is being generated...</p>
+            <h3 className="text-base font-bold text-blue-900 dark:text-blue-200">XAUUSD Trading Decision</h3>
+            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">Trading recommendation is being generated...</p>
           </div>
         </div>
       </div>
@@ -195,8 +195,8 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         <div className="flex items-center gap-3">
           <AlertCircle className="text-rose-500" size={24} />
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-rose-455">XAUUSD AI Advisor</h3>
-            <p className="mt-1 text-xs text-rose-400/80">AI recommendation temporarily unavailable</p>
+            <h3 className="text-base font-bold text-rose-455">XAUUSD Trading Decision</h3>
+            <p className="mt-1 text-xs text-rose-400/80">Trading recommendation temporarily unavailable</p>
           </div>
         </div>
       </div>
@@ -247,7 +247,7 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         {/* Confidence Display */}
         <div className="min-w-[14rem] space-y-1.5">
           <div className="flex items-baseline justify-between text-xs">
-            <span className="text-slate-400 font-bold">Confidence</span>
+            <span className="text-slate-400 font-bold">Decision Confidence</span>
             <span className="font-extrabold text-slate-900 dark:text-white text-sm">{data.confidence !== undefined ? `${data.confidence}%` : "50%"}</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -350,7 +350,7 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
           <span className="text-slate-600 dark:text-slate-400">{formatLastUpdated(data.lastGenerationTime)}</span>
         </div>
         <div>
-          <span className="uppercase tracking-wider">Advisor Age:</span>{" "}
+          <span className="uppercase tracking-wider">Decision Age:</span>{" "}
           <span className="text-slate-600 dark:text-slate-400">{formatAge(data.lastGenerationTime)}</span>
         </div>
         <div>
@@ -361,7 +361,7 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         </div>
         <div>
           <span className="uppercase tracking-wider">Engine:</span>{" "}
-          <span className="text-slate-600 dark:text-slate-400">Gemini-2.5-Advisor (v{data.schemaVersion || "1"})</span>
+          <span className="text-slate-600 dark:text-slate-400">LLM Provider (Gemini) (v{data.schemaVersion || "1"})</span>
         </div>
       </div>
     </div>
