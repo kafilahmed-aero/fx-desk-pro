@@ -5,6 +5,10 @@ export const consensusSignalStates = new Set(["ACTIVE", "PARTIAL"]);
 export function getSignalStateTransition(signal) {
   const classification = signal?.parserClassification || signal?.classification;
 
+  if (classification === "CANCEL_SIGNAL") {
+    return "CANCELLED";
+  }
+
   if (classification === "RESULT_SIGNAL") {
     if (signal.resultAction?.type === "TARGET_HIT") {
       return "PARTIAL";
@@ -32,7 +36,7 @@ export function getSignalStateTransition(signal) {
 }
 
 export function canAffectConsensus(signal) {
-  return consensusSignalStates.has(signal?.signalState);
+  return consensusSignalStates.has(signal?.signalState) && !signal?.possibleDuplicate;
 }
 
 export function shouldExpireSignal(signal, expirationAgeMinutes, now = new Date()) {

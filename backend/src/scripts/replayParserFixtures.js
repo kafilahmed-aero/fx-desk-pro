@@ -13,6 +13,7 @@ const actionableClassifications = new Set([
   "UPDATE_SIGNAL",
   "RESULT_SIGNAL",
   "MARKET_ANALYSIS",
+  "CANCEL_SIGNAL",
 ]);
 
 const datasets = loadFixtureDatasets();

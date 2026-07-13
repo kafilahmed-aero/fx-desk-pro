@@ -12,9 +12,16 @@ const OUTCOME_TO_SIGNAL_STATE_MAP = {
   ACTIVE: "ACTIVE",
   PARTIAL_TP: "PARTIAL",
   FULL_TP: "CLOSED",
-  SL_HIT: "CLOSED",
-  EXPIRED: "CLOSED",
-  CANCELLED: "CLOSED",
+};
+
+const STATE_HIERARCHY = {
+  PENDING: 1,
+  ACTIVE: 2,
+  PARTIAL_TP: 3,
+  FULL_TP: 4,
+  SL_HIT: 4,
+  EXPIRED: 4,
+  CANCELLED: 4,
 };
 
 
@@ -579,6 +586,23 @@ export async function updateOutcomeStatus(messageKey, status, reason, data = {})
   }
 
   const originalStatus = outcome.status;
+  if (originalStatus === status) {
+    return outcome;
+  }
+
+  const originalRank = STATE_HIERARCHY[originalStatus] || 0;
+  const newRank = STATE_HIERARCHY[status] || 0;
+
+  if (originalRank >= 4) {
+    logger.warn("outcome.regression_lock.blocked_terminal", { messageKey, originalStatus, targetStatus: status });
+    return outcome;
+  }
+
+  if (originalRank > newRank) {
+    logger.warn("outcome.regression_lock.blocked_downgrade", { messageKey, originalStatus, targetStatus: status });
+    return outcome;
+  }
+
   outcome.status = status;
   outcome.outcomeReason = reason;
   outcome.outcomeTime = data.time ? new Date(data.time) : new Date();
@@ -648,7 +672,7 @@ export async function updateOutcomeStatus(messageKey, status, reason, data = {})
  */
 export async function processSignalUpdate(signal) {
   const classification = signal.parserClassification || signal.classification;
-  if (!["UPDATE_SIGNAL", "RESULT_SIGNAL"].includes(classification)) {
+  if (!["UPDATE_SIGNAL", "RESULT_SIGNAL", "CANCEL_SIGNAL"].includes(classification)) {
     return null;
   }
 
@@ -670,7 +694,9 @@ export async function processSignalUpdate(signal) {
   let targetStatus = null;
   const reason = "CHANNEL_RESULT";
 
-  if (classification === "UPDATE_SIGNAL") {
+  if (classification === "CANCEL_SIGNAL") {
+    targetStatus = "CANCELLED";
+  } else if (classification === "UPDATE_SIGNAL") {
     if (
       signal.managementAction === "CLOSE_TRADE" ||
       signal.managementAction === "CANCEL_SIGNAL"

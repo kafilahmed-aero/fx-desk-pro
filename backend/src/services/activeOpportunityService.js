@@ -52,30 +52,26 @@ export function getLiveMarketOverview() {
 
 function getFreshPairStates() {
   return getPairStates()
+    .filter((pairState) => pairState && pairState.activeSignalsCount > 0)
     .map((pairState) => ({
       ...pairState,
       freshnessLevel: getPairFreshnessLevel(pairState),
-    }))
-    .filter((pairState) => pairState.signalCount > 0)
-    .filter((pairState) => pairState.freshnessLevel !== "STALE");
+    }));
 }
 
 function formatPairIntelligence(pairState) {
-  const activeSignals = (pairState.activeSignals || []).filter(canAffectConsensus);
-  const channelCount = new Set(activeSignals.map(s => s.sourceChannel).filter(Boolean)).size;
-
   return {
     pair: pairState.pair,
-    marketDirection: pairState.marketDirection,
-    confidenceScore: pairState.confidenceScore,
-    buyConfidence: pairState.buyConfidence,
-    sellConfidence: pairState.sellConfidence,
-    buyWeight: pairState.buyWeight,
-    sellWeight: pairState.sellWeight,
-    signalCount: pairState.signalCount,
-    buySignalsCount: activeSignals.filter(s => s.action === "BUY").length,
-    sellSignalsCount: activeSignals.filter(s => s.action === "SELL").length,
-    channelCount,
+    marketDirection: pairState.marketDirection || "NEUTRAL",
+    confidenceScore: pairState.confidenceScore || 0,
+    buyConfidence: pairState.buyConfidence || 0,
+    sellConfidence: pairState.sellConfidence || 0,
+    buyWeight: pairState.buyWeight || 0,
+    sellWeight: pairState.sellWeight || 0,
+    signalCount: pairState.activeSignalsCount || 0,
+    buySignalsCount: pairState.activeBuySignals || 0,
+    sellSignalsCount: pairState.activeSellSignals || 0,
+    channelCount: pairState.channelCount || 0,
     freshnessLevel: pairState.freshnessLevel,
     buyZones: pairState.buyZones,
     sellZones: pairState.sellZones,
@@ -83,7 +79,16 @@ function formatPairIntelligence(pairState) {
     tpZone: pairState.tpZone,
     slZone: pairState.slZone,
     lastUpdated: pairState.lastUpdated,
-    totalWeight: pairState.totalWeight,
+    totalWeight: pairState.totalWeight || 0,
+    // Expose raw state metrics
+    buyRatio: pairState.buyRatio || 0,
+    sellRatio: pairState.sellRatio || 0,
+    activeBuySignals: pairState.activeBuySignals || 0,
+    activeSellSignals: pairState.activeSellSignals || 0,
+    activeSignalsCount: pairState.activeSignalsCount || 0,
+    weightedFreshness: pairState.weightedFreshness || 0,
+    averageConfidence: pairState.averageConfidence || 0,
+    averageSignalAge: pairState.averageSignalAge || 0,
   };
 }
 
@@ -112,24 +117,11 @@ function getLatestUpdate(opportunities) {
     .map((time) => new Date(time).toISOString())[0] || null;
 }
 
-function getConsensusSignals(pairState) {
-  return pairState.activeSignals.filter((signal) => canAffectConsensus(signal));
-}
-
 function getPairFreshnessLevel(pairState) {
-  const activeSignals = getConsensusSignals(pairState);
-
-  if (activeSignals.length === 0) {
-    return "STALE";
-  }
-
-  const strongestWeight = Math.max(
-    ...activeSignals.map((signal) => Number(signal.freshnessWeight) || 0)
-  );
-
-  if (strongestWeight >= 1) return "VERY_FRESH";
-  if (strongestWeight >= 0.8) return "FRESH";
-  if (strongestWeight >= 0.5) return "AGING";
-  if (strongestWeight > 0) return "WEAK";
+  const freshness = pairState.weightedFreshness || 0;
+  if (freshness >= 1) return "VERY_FRESH";
+  if (freshness >= 0.8) return "FRESH";
+  if (freshness >= 0.5) return "AGING";
+  if (freshness > 0) return "WEAK";
   return "STALE";
 }

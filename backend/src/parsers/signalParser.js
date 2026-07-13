@@ -24,25 +24,7 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
       entities.pair = CHANNEL_DEFAULT_PAIRS[rawMessage.channel];
     }
 
-    // Apply dynamic market price validation if currentPrice is provided in options
-    if (options && options.currentPrice && typeof options.currentPrice === "number" && entities.pair && entities.pair !== "unknown") {
-      const minAllowed = options.currentPrice * 0.25;
-      const maxAllowed = options.currentPrice * 4.0;
-      const isValid = (val) => val === "OPEN" || (typeof val === "number" && val >= minAllowed && val <= maxAllowed);
 
-      if (entities.entryInfo.entry !== null && !isValid(entities.entryInfo.entry)) {
-        entities.entryInfo.entry = null;
-      }
-      if (entities.entryInfo.entryRange) {
-        entities.entryInfo.entryRange = entities.entryInfo.entryRange.filter(isValid);
-      }
-      if (entities.targets) {
-        entities.targets = entities.targets.filter(isValid);
-      }
-      if (entities.stopLoss !== null && !isValid(entities.stopLoss)) {
-        entities.stopLoss = null;
-      }
-    }
 
     // Hardened Dynamic Validation (Issue 10): filter out indices, ratios, and invalid low values globally
     if (entities.pair && entities.pair !== "unknown") {
@@ -105,8 +87,9 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
     const filteredTargets = entities.targets.filter((t) => t !== "OPEN" && typeof t === "number");
 
     const parsedSignal = {
-      pair: entities.pair,
+      pair: entities.pair === "unknown" ? null : entities.pair,
       action: entities.action,
+      orderType: entities.orderType,
       bias: entities.bias,
       entry: entities.entryInfo.entry,
       entryRange: entities.entryInfo.entryRange,
@@ -174,6 +157,7 @@ function runEntityExtractionStage(normalized) {
   const pair = extractPair(normalized.cleanedText);
   const bias = extractBias(normalized.compactText);
   const action = extractAction(normalized.compactText, bias);
+  const orderType = extractOrderType(normalized.compactText);
   const entryInfo = extractEntry(normalized, action);
   const stopLoss = extractStopLoss(normalized);
   const pipTargets = extractPipTargets(normalized.compactText);
@@ -183,6 +167,7 @@ function runEntityExtractionStage(normalized) {
     pair,
     bias,
     action,
+    orderType,
     entryInfo,
     pipTargets,
     targets,
@@ -293,6 +278,19 @@ function extractAction(text, bias = null) {
     return "SELL";
   }
 
+  return null;
+}
+
+function extractOrderType(text) {
+  if (/\b(?:BUY|SELL|LONG|SHORT)?\s*LIMIT\b/i.test(text)) {
+    return "LIMIT";
+  }
+  if (/\b(?:BUY|SELL|LONG|SHORT)?\s*STOP\b/i.test(text)) {
+    return "STOP";
+  }
+  if (/\b(?:BUY|SELL|LONG|SHORT)\s+(?:NOW|NOW\s*@|@?\s*CMP|CMP)\b/i.test(text) || /\b(?:MARKET)\s+(?:BUY|SELL|ORDER|EXECUTION)\b/i.test(text)) {
+    return "MARKET";
+  }
   return null;
 }
 
@@ -616,6 +614,10 @@ function getLifecycleEvent(classification, managementAction, resultAction) {
     return "OPENED";
   }
 
+  if (classification === "CANCEL_SIGNAL" || managementAction === "CANCEL_SIGNAL") {
+    return "CANCELLED";
+  }
+
   if (classification === "RESULT_SIGNAL") {
     return resultAction?.type || "RESULT_REPORTED";
   }
@@ -628,6 +630,10 @@ function getLifecycleEvent(classification, managementAction, resultAction) {
 }
 
 function getLifecycleIntent(classification, managementAction, resultAction) {
+  if (classification === "CANCEL_SIGNAL" || managementAction === "CANCEL_SIGNAL") {
+    return "CANCEL";
+  }
+
   if (classification === "RESULT_SIGNAL" && resultAction?.type === "TARGET_HIT") {
     return "TP_HIT";
   }
@@ -658,7 +664,7 @@ function getLifecycleIntent(classification, managementAction, resultAction) {
 }
 
 function getSignalStatus(classification, managementAction, resultAction, freshness) {
-  if (managementAction === "CANCEL_SIGNAL") {
+  if (classification === "CANCEL_SIGNAL" || managementAction === "CANCEL_SIGNAL") {
     return "CANCELLED";
   }
 
@@ -688,7 +694,7 @@ function getSignalStatus(classification, managementAction, resultAction, freshne
 }
 
 function getSignalState(classification, managementAction, resultAction) {
-  if (managementAction === "CANCEL_SIGNAL") {
+  if (classification === "CANCEL_SIGNAL" || managementAction === "CANCEL_SIGNAL") {
     return "CANCELLED";
   }
 

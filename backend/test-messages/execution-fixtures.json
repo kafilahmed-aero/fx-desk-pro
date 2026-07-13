@@ -1,0 +1,164 @@
+[
+  {
+    "description": "Clean approved BUY setup with entryRange -> APPROVED",
+    "validationResult": { "status": "APPROVED", "rejectionReason": null, "timestamp": "2026-07-11T12:00:00.000Z" },
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.1000, "high": 1.1010 },
+      "stopLoss": 1.0950,
+      "takeProfits": [1.1100, 1.1200],
+      "confidence": 85
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK",
+      "rewardToRiskRatio": 2.0,
+      "isValidStructure": true
+    },
+    "positionSizing": {
+      "lotSize": 0.50,
+      "riskAmount": 100.0,
+      "stopDistanceUnits": 0.0050
+    },
+    "expectedStatus": "APPROVED",
+    "expectedReason": null,
+    "expectedSymbol": "EURUSD",
+    "expectedAction": "BUY",
+    "expectedVolume": 0.50,
+    "expectedEntry": 1.1005
+  },
+  {
+    "description": "Clean approved SELL setup with priceSnapshot -> APPROVED",
+    "validationResult": { "status": "APPROVED", "rejectionReason": null, "timestamp": "2026-07-11T12:05:00.000Z" },
+    "decision": {
+      "pair": "gbpusd",
+      "decision": "SELL",
+      "entryRange": { "low": null, "high": null },
+      "priceSnapshot": 1.3000,
+      "stopLoss": 1.3050,
+      "takeProfits": [1.2900],
+      "confidence": 75
+    },
+    "riskAssessment": {
+      "riskGrade": "MODERATE_RISK",
+      "rewardToRiskRatio": 2.0,
+      "isValidStructure": true
+    },
+    "positionSizing": {
+      "lotSize": 0.25,
+      "riskAmount": 50.0,
+      "stopDistanceUnits": 0.0050
+    },
+    "expectedStatus": "APPROVED",
+    "expectedReason": null,
+    "expectedSymbol": "GBPUSD",
+    "expectedAction": "SELL",
+    "expectedVolume": 0.25,
+    "expectedEntry": 1.3000
+  },
+  {
+    "description": "Setup with missing positionSizing input -> REJECTED (MISSING_INPUTS)",
+    "validationResult": { "status": "APPROVED", "rejectionReason": null, "timestamp": "2026-07-11T12:00:00.000Z" },
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.1000, "high": 1.1010 },
+      "stopLoss": 1.0950,
+      "takeProfits": [1.1100, 1.1200]
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK",
+      "rewardToRiskRatio": 2.0,
+      "isValidStructure": true
+    },
+    "positionSizing": null,
+    "expectedStatus": "REJECTED",
+    "expectedReason": "MISSING_INPUTS",
+    "expectedSymbol": null,
+    "expectedAction": null,
+    "expectedVolume": null,
+    "expectedEntry": null
+  },
+  {
+    "description": "Setup with unapproved validationResult -> REJECTED (VALIDATION_NOT_APPROVED)",
+    "validationResult": { "status": "REJECTED", "rejectionReason": "LOT_SIZE_ZERO", "timestamp": "2026-07-11T12:00:00.000Z" },
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.1000, "high": 1.1010 },
+      "stopLoss": 1.0950,
+      "takeProfits": [1.1100, 1.1200]
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK",
+      "rewardToRiskRatio": 2.0,
+      "isValidStructure": true
+    },
+    "positionSizing": {
+      "lotSize": 0.00,
+      "riskAmount": 0,
+      "stopDistanceUnits": 0.0050
+    },
+    "expectedStatus": "REJECTED",
+    "expectedReason": "VALIDATION_NOT_APPROVED",
+    "expectedSymbol": null,
+    "expectedAction": null,
+    "expectedVolume": null,
+    "expectedEntry": null
+  },
+  {
+    "description": "Setup with invalid entry price -> REJECTED (INVALID_ENTRY_PRICE)",
+    "validationResult": { "status": "APPROVED", "rejectionReason": null, "timestamp": "2026-07-11T12:00:00.000Z" },
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": null, "high": null },
+      "priceSnapshot": null,
+      "stopLoss": 1.0950,
+      "takeProfits": [1.1100, 1.1200]
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK",
+      "rewardToRiskRatio": 2.0,
+      "isValidStructure": true
+    },
+    "positionSizing": {
+      "lotSize": 0.50,
+      "riskAmount": 100.0,
+      "stopDistanceUnits": 0.0050
+    },
+    "expectedStatus": "REJECTED",
+    "expectedReason": "INVALID_ENTRY_PRICE",
+    "expectedSymbol": null,
+    "expectedAction": null,
+    "expectedVolume": null,
+    "expectedEntry": null
+  },
+  {
+    "description": "Setup with zero volume/lotSize -> REJECTED (INVALID_VOLUME)",
+    "validationResult": { "status": "APPROVED", "rejectionReason": null, "timestamp": "2026-07-11T12:00:00.000Z" },
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.1000, "high": 1.1010 },
+      "stopLoss": 1.0950,
+      "takeProfits": [1.1100, 1.1200]
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK",
+      "rewardToRiskRatio": 2.0,
+      "isValidStructure": true
+    },
+    "positionSizing": {
+      "lotSize": 0.00,
+      "riskAmount": 100.0,
+      "stopDistanceUnits": 0.0050
+    },
+    "expectedStatus": "REJECTED",
+    "expectedReason": "INVALID_VOLUME",
+    "expectedSymbol": null,
+    "expectedAction": null,
+    "expectedVolume": null,
+    "expectedEntry": null
+  }
+]

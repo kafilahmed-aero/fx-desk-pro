@@ -4,6 +4,7 @@ import { updateOutcomePrice } from "../services/signalOutcomeEngine.js";
 import { getAiAnalytics } from "../services/aiAnalyticsService.js";
 import { adaptAiToSignalOutcome } from "../services/signalOutcomeStore.js";
 import { config } from "../config/env.js";
+import { updateConfig } from "../config/systemConfigManager.js";
 
 async function run() {
   console.log("=== RUNNING PAPER TRADING RISK MANAGER UNIT TESTS ===");
@@ -15,14 +16,16 @@ async function run() {
   });
 
   // Config custom limits for robust deterministic testing:
-  config.paperRisk = {
-    maxOpenTrades: 2,
-    maxDailyTrades: 4,
-    maxConsecutiveLosses: 2,
-    dailyLossLimitR: 3,
-    dailyProfitTargetR: 6,
-    slCooldownMinutes: 10
-  };
+  updateConfig({
+    paperRisk: {
+      maxOpenTrades: 2,
+      maxDailyTrades: 4,
+      maxConsecutiveLosses: 2,
+      dailyLossLimitR: 3,
+      dailyProfitTargetR: 6,
+      slCooldownMinutes: 10
+    }
+  });
 
   const baseT = new Date("2026-07-07T00:00:00Z");
 

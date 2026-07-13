@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import mongoose from "mongoose";
 import { config } from "../config/env.js";
 import { getXauusdRecommendation, getActiveXauusdSignals } from "./geminiAdvisorService.js";
 import { getXauusdNewsContext } from "./xauusdNewsService.js";
@@ -87,10 +88,14 @@ async function applyFallback(reqId, tickStartTime, currentPrice) {
   try {
     let fallback = null;
     try {
-      fallback = await AiRecommendationOutcome.findOne({
-        pair: "XAUUSD",
-        status: { $ne: "PENDING" }
-      }).sort({ createdAt: -1 }).lean();
+      if (mongoose.connection.readyState === 1) {
+        fallback = await AiRecommendationOutcome.findOne({
+          pair: "XAUUSD",
+          status: { $ne: "PENDING" }
+        }).sort({ createdAt: -1 }).lean();
+      } else {
+        logger.info("ai_state.fallback_query_skipped", { reason: "database_disconnected" });
+      }
     } catch (dbErr) {
       logger.warn("ai_state.fallback_query_failed", { error: dbErr.message });
     }

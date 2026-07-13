@@ -9,8 +9,18 @@ const levels = {
   error: 40,
 };
 
+function getLogLevel() {
+  try {
+    if (config && config.logLevel) {
+      return config.logLevel;
+    }
+  } catch (e) {}
+  return process.env.LOG_LEVEL || "info";
+}
+
 function shouldLog(level) {
-  return levels[level] >= (levels[config.logLevel] || levels.info);
+  const activeLevel = getLogLevel();
+  return levels[level] >= (levels[activeLevel] || levels.info);
 }
 
 export const logger = {

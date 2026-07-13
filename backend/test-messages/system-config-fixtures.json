@@ -1,0 +1,22 @@
+{
+  "validUpdate": {
+    "signalExpirationMinutes": 90,
+    "autoTrade": {
+      "lotSize": 0.05,
+      "minConfidence": 80
+    }
+  },
+  "invalidLotSize": {
+    "autoTrade": {
+      "lotSize": 150.0
+    }
+  },
+  "invalidConfidence": {
+    "autoTrade": {
+      "minConfidence": -10
+    }
+  },
+  "invalidType": {
+    "signalExpirationMinutes": "sixty-minutes"
+  }
+}

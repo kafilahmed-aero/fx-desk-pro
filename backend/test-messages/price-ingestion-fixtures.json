@@ -1,0 +1,12 @@
+[
+  {
+    "description": "EURUSD Forex price request",
+    "pair": "EURUSD",
+    "expectedSource": "YAHOO"
+  },
+  {
+    "description": "BTCUSD Crypto price request",
+    "pair": "BTCUSD",
+    "expectedSource": "BINANCE"
+  }
+]

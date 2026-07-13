@@ -1,0 +1,34 @@
+[
+  {
+    "description": "Clean low-risk BUY setup -> APPROVED",
+    "decision": { "pair": "EURUSD", "decision": "BUY" },
+    "riskAssessment": { "isValidStructure": true, "riskGrade": "LOW_RISK" },
+    "positionSizing": { "lotSize": 0.10 },
+    "expectedStatus": "APPROVED",
+    "expectedReason": null
+  },
+  {
+    "description": "Setup with missing inputs -> REJECTED (MISSING_INPUTS)",
+    "decision": { "pair": "EURUSD", "decision": "BUY" },
+    "riskAssessment": null,
+    "positionSizing": { "lotSize": 0.10 },
+    "expectedStatus": "REJECTED",
+    "expectedReason": "MISSING_INPUTS"
+  },
+  {
+    "description": "Setup with zero lot size -> REJECTED (LOT_SIZE_ZERO)",
+    "decision": { "pair": "EURUSD", "decision": "BUY" },
+    "riskAssessment": { "isValidStructure": true, "riskGrade": "LOW_RISK" },
+    "positionSizing": { "lotSize": 0.00 },
+    "expectedStatus": "REJECTED",
+    "expectedReason": "LOT_SIZE_ZERO"
+  },
+  {
+    "description": "Setup with structurally invalid zones -> REJECTED (INVALID_ORDER_STRUCTURE)",
+    "decision": { "pair": "EURUSD", "decision": "BUY" },
+    "riskAssessment": { "isValidStructure": false, "riskGrade": "INVALID" },
+    "positionSizing": { "lotSize": 0.10 },
+    "expectedStatus": "REJECTED",
+    "expectedReason": "INVALID_ORDER_STRUCTURE"
+  }
+]

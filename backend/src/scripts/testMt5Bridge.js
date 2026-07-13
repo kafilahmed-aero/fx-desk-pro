@@ -139,6 +139,21 @@ async function runTests() {
     configurable: true
   });
 
+  // Intercept the heartbeat interval
+  const originalSetInterval = global.setInterval;
+  let heartbeatCallback = null;
+  global.setInterval = (cb, ms) => {
+    if (ms === 10000) {
+      heartbeatCallback = cb;
+    }
+    return originalSetInterval(cb, ms);
+  };
+
+  // Mock Date.now()
+  let mockNow = Date.now();
+  const originalNow = Date.now;
+  Date.now = () => mockNow;
+
   // Start the service
   startMt5SyncService();
   console.log("WS server started on port", TEST_PORT);
@@ -208,6 +223,110 @@ async function runTests() {
   clientWs.send(JSON.stringify({ event: "PING" }));
   await sleep(100);
   console.log("-> PASS: PING/PONG handled successfully.");
+
+  // Test 3.1: Heartbeat keep-alive, offline mode, and timeout triggers
+  console.log("\n[Test 3.1] Testing Heartbeat keep-alive under offline mode & timeout triggers...");
+  
+  if (typeof heartbeatCallback !== "function") {
+    console.error("-> FAIL: Heartbeat callback was not intercepted.");
+    process.exit(1);
+  }
+
+  // A. REGISTER a new test socket client under database disconnected state
+  Object.defineProperty(mongoose.connection, "readyState", {
+    get: () => 0, // database disconnected
+    configurable: true
+  });
+
+  const testWs = new WebSocket(`ws://localhost:${TEST_PORT}?token=${TEST_TOKEN}`);
+  let testRegistered = false;
+  testWs.on("message", (data) => {
+    const msg = JSON.parse(data.toString());
+    if (msg.event === "REGISTER" && msg.status === "SUCCESS") {
+      testRegistered = true;
+    }
+  });
+
+  await sleep(100);
+  testWs.send(JSON.stringify({
+    event: "REGISTER",
+    broker: "Vantage-Demo",
+    server: "Vantage-Demo-Server",
+    accountNumber: "123456",
+    token: TEST_TOKEN,
+    eaVersion: "2.00",
+    protocolVersion: 2
+  }));
+  await sleep(100);
+
+  if (!testRegistered || !connectedClients.has("Vantage-Demo_123456")) {
+    console.error("-> FAIL: Offline registration failed.");
+    process.exit(1);
+  }
+  console.log("-> PASS: Offline registration completed successfully.");
+
+  // B. Verify PONG updates lastSeen and prevents timeout
+  // Reset mock time
+  mockNow = originalNow();
+  const testClientInfo = connectedClients.get("Vantage-Demo_123456");
+  testClientInfo.lastSeen = mockNow;
+  
+  const firstClientInfo = connectedClients.get("Vantage-Demo_998877");
+  if (firstClientInfo) {
+    firstClientInfo.lastSeen = mockNow;
+  }
+
+  // Advance time by 30 seconds
+  mockNow += 30000;
+  if (firstClientInfo) {
+    firstClientInfo.lastSeen = mockNow;
+  }
+  // Send PONG from client
+  testWs.send(JSON.stringify({ event: "PONG" }));
+  await sleep(100); // Give server event loop time to process the PONG message
+
+  // Trigger heartbeat check callback
+  heartbeatCallback();
+  
+  if (connectedClients.has("Vantage-Demo_123456") && testClientInfo.lastSeen === mockNow) {
+    console.log("-> PASS: PONG message bypasses offline DB check, updates lastSeen, and connection remains alive.");
+  } else {
+    console.error("-> FAIL: PONG message processing failed under offline DB mode.");
+    process.exit(1);
+  }
+
+  // C. Verify Heartbeat timeout still occurs when no PONG is received
+  // Advance time by another 65 seconds without sending PONG
+  mockNow += 65000;
+  if (firstClientInfo) {
+    firstClientInfo.lastSeen = mockNow;
+  }
+  
+  let testClosed = false;
+  let testCloseCode = null;
+  testWs.on("close", (code) => {
+    testClosed = true;
+    testCloseCode = code;
+  });
+
+  // Trigger heartbeat check callback
+  heartbeatCallback();
+  await sleep(100);
+
+  if (testClosed && testCloseCode === 4408 && !connectedClients.has("Vantage-Demo_123456")) {
+    console.log("-> PASS: Connection was disconnected with code 4408 (Heartbeat Timeout) after 65s of inactivity.");
+  } else {
+    console.error("-> FAIL: Heartbeat timeout was not triggered correctly.");
+    process.exit(1);
+  }
+
+  // Restore original Date.now, setInterval, and readyState for subsequent tests
+  Date.now = originalNow;
+  global.setInterval = originalSetInterval;
+  Object.defineProperty(mongoose.connection, "readyState", {
+    get: () => 1, // database connected for subsequent tests
+    configurable: true
+  });
 
   // Test 4: Magic number mapping
   console.log("\n[Test 4] Testing Magic Number mapping...");

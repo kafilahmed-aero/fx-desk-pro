@@ -1,0 +1,104 @@
+[
+  {
+    "description": "Standard progression: PENDING -> ACTIVE -> PARTIAL_TP -> FULL_TP",
+    "initialSignal": {
+      "_id": "60b43283f0f5123456789101",
+      "channel": "lifecycletest",
+      "messageId": 101,
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.0800,
+      "targets": [1.0850, 1.0900],
+      "stopLoss": 1.0750,
+      "classification": "NEW_SIGNAL",
+      "parserClassification": "NEW_SIGNAL"
+    },
+    "updates": [
+      { "status": "ACTIVE", "reason": "PRICE_MONITOR" },
+      { "status": "PARTIAL_TP", "reason": "PRICE_MONITOR" },
+      { "status": "FULL_TP", "reason": "PRICE_MONITOR" }
+    ],
+    "expectedStatus": "FULL_TP"
+  },
+  {
+    "description": "Regression protection: Downgrade from PARTIAL_TP to ACTIVE must be blocked",
+    "initialSignal": {
+      "_id": "60b43283f0f5123456789102",
+      "channel": "lifecycletest",
+      "messageId": 102,
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.0800,
+      "targets": [1.0850, 1.0900],
+      "stopLoss": 1.0750,
+      "classification": "NEW_SIGNAL",
+      "parserClassification": "NEW_SIGNAL"
+    },
+    "updates": [
+      { "status": "ACTIVE", "reason": "PRICE_MONITOR" },
+      { "status": "PARTIAL_TP", "reason": "PRICE_MONITOR" },
+      { "status": "ACTIVE", "reason": "PRICE_MONITOR" }
+    ],
+    "expectedStatus": "PARTIAL_TP"
+  },
+  {
+    "description": "Terminal lock protection: Transition from terminal state SL_HIT to FULL_TP must be blocked",
+    "initialSignal": {
+      "_id": "60b43283f0f5123456789103",
+      "channel": "lifecycletest",
+      "messageId": 103,
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.0800,
+      "targets": [1.0850, 1.0900],
+      "stopLoss": 1.0750,
+      "classification": "NEW_SIGNAL",
+      "parserClassification": "NEW_SIGNAL"
+    },
+    "updates": [
+      { "status": "ACTIVE", "reason": "PRICE_MONITOR" },
+      { "status": "SL_HIT", "reason": "PRICE_MONITOR" },
+      { "status": "FULL_TP", "reason": "PRICE_MONITOR" }
+    ],
+    "expectedStatus": "SL_HIT"
+  },
+  {
+    "description": "Idempotency: Repeated updates to same state should process successfully and keep state identical",
+    "initialSignal": {
+      "_id": "60b43283f0f5123456789104",
+      "channel": "lifecycletest",
+      "messageId": 104,
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.0800,
+      "targets": [1.0850, 1.0900],
+      "stopLoss": 1.0750,
+      "classification": "NEW_SIGNAL",
+      "parserClassification": "NEW_SIGNAL"
+    },
+    "updates": [
+      { "status": "ACTIVE", "reason": "PRICE_MONITOR" },
+      { "status": "ACTIVE", "reason": "PRICE_MONITOR" }
+    ],
+    "expectedStatus": "ACTIVE"
+  },
+  {
+    "description": "Whitelisted CANCEL_SIGNAL mapping and terminal CANCELLED transition",
+    "initialSignal": {
+      "_id": "60b43283f0f5123456789105",
+      "channel": "lifecycletest",
+      "messageId": 105,
+      "pair": "EURUSD",
+      "action": "BUY",
+      "entry": 1.0800,
+      "targets": [1.0850, 1.0900],
+      "stopLoss": 1.0750,
+      "classification": "NEW_SIGNAL",
+      "parserClassification": "NEW_SIGNAL"
+    },
+    "updates": [
+      { "classification": "CANCEL_SIGNAL", "parserClassification": "CANCEL_SIGNAL", "pair": "EURUSD", "channel": "lifecycletest", "action": "BUY" }
+    ],
+    "expectedStatus": "CANCELLED"
+  }
+]

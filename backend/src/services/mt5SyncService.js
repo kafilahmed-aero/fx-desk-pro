@@ -569,8 +569,16 @@ URL: ${req.url}
           return;
         }
 
+        // Handle PONG
+        if (eventType === "PONG") {
+          if (clientInfo) {
+            clientInfo.lastSeen = Date.now();
+          }
+          return;
+        }
+
         // Check database connection state for DB-interactive messages (Issue 1)
-        if (mongoose.connection.readyState !== 1) {
+        if (mongoose.connection.readyState !== 1 && eventType !== "REGISTER" && eventType !== "PONG") {
           logger.warn("mt5_sync.message_skipped_database_disconnected", { event: eventType });
           return;
         }
@@ -656,22 +664,26 @@ URL: ${req.url}
             let activeOpportunities = [];
             let currentAiRecommendation = null;
             try {
-              const activeOutcomes = await AiRecommendationOutcome.find({
-                simulationMode: "DEMO",
-                status: "ACTIVE"
-              }).sort({ createdAt: -1 }).lean();
-              
-              activeOpportunities = activeOutcomes.map(o => ({
-                recommendationId: o.recommendationId,
-                pair: o.pair,
-                direction: o.direction,
-                entryPrice: o.simulatedEntryPrice || o.entryMin,
-                sl: o.sl,
-                tp: o.tp
-              }));
+              if (mongoose.connection.readyState === 1) {
+                const activeOutcomes = await AiRecommendationOutcome.find({
+                  simulationMode: "DEMO",
+                  status: "ACTIVE"
+                }).sort({ createdAt: -1 }).lean();
+                
+                activeOpportunities = activeOutcomes.map(o => ({
+                  recommendationId: o.recommendationId,
+                  pair: o.pair,
+                  direction: o.direction,
+                  entryPrice: o.simulatedEntryPrice || o.entryMin,
+                  sl: o.sl,
+                  tp: o.tp
+                }));
 
-              if (activeOutcomes.length > 0) {
-                currentAiRecommendation = activeOutcomes[0];
+                if (activeOutcomes.length > 0) {
+                  currentAiRecommendation = activeOutcomes[0];
+                }
+              } else {
+                logger.info("mt5_sync.state_recovery_db_skipped", { reason: "database_disconnected" });
               }
             } catch (dbErr) {
               logger.error("mt5_sync.state_recovery_db_failed", { error: dbErr.message });

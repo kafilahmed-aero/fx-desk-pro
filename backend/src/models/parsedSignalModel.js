@@ -12,6 +12,11 @@ const parsedSignalSchema = new mongoose.Schema(
       enum: ["BUY", "SELL", null],
       default: null,
     },
+    orderType: {
+      type: String,
+      enum: ["MARKET", "LIMIT", "STOP", null],
+      default: null,
+    },
     bias: {
       type: String,
       enum: ["BULLISH", "BEARISH", null],
@@ -84,12 +89,12 @@ const parsedSignalSchema = new mongoose.Schema(
     },
     classification: {
       type: String,
-      enum: ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL", "MARKET_ANALYSIS"],
+      enum: ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL", "MARKET_ANALYSIS", "CANCEL_SIGNAL"],
       default: "NEW_SIGNAL",
     },
     parserClassification: {
       type: String,
-      enum: ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL", "MARKET_ANALYSIS"],
+      enum: ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL", "MARKET_ANALYSIS", "CANCEL_SIGNAL"],
       default: "NEW_SIGNAL",
     },
     managementAction: {

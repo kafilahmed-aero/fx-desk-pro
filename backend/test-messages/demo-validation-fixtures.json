@@ -1,0 +1,26 @@
+{
+  "validDemoAccount": {
+    "broker": "Vantage-Demo",
+    "server": "Vantage-Demo-Server",
+    "accountNumber": "112233",
+    "tradeMode": "Demo"
+  },
+  "liveBrokerAccount": {
+    "broker": "Vantage-Live",
+    "server": "Vantage-Demo-Server",
+    "accountNumber": "445566",
+    "tradeMode": "Demo"
+  },
+  "liveServerAccount": {
+    "broker": "Vantage-Demo",
+    "server": "Vantage-Real-Server",
+    "accountNumber": "778899",
+    "tradeMode": "Demo"
+  },
+  "liveTradeModeAccount": {
+    "broker": "Vantage-Demo",
+    "server": "Vantage-Demo-Server",
+    "accountNumber": "123456",
+    "tradeMode": "Real"
+  }
+}

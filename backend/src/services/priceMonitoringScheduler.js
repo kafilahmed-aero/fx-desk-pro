@@ -5,12 +5,129 @@ import {
   adaptAiToSignalOutcome
 } from "./signalOutcomeStore.js";
 import { fetchPrices } from "./priceIngestionService.js";
-import { updateOutcomePrice } from "./signalOutcomeEngine.js";
+import { publishLifecycleEvent } from "./lifecycleEventDispatcher.js";
 import { logger } from "../utils/logger.js";
 
 let monitorInterval = null;
 let cycleInProgress = false;
 let monitorIntervalMs = 60000; // default 1 minute
+
+export async function evaluatePriceCrossovers(outcome, price, timestamp = new Date()) {
+  const t = new Date(timestamp);
+  const currentPrice = Number(price);
+
+  if (["FULL_TP", "SL_HIT", "EXPIRED", "CANCELLED"].includes(outcome.status)) {
+    return;
+  }
+
+  // 1. Expiration check
+  if (t >= new Date(outcome.expiresAt)) {
+    await publishLifecycleEvent({
+      eventType: "EXPIRED",
+      messageKey: outcome.messageKey,
+      pair: outcome.pair,
+      detectedPrice: currentPrice,
+      detectedAt: t,
+      source: "PRICE_MONITOR"
+    });
+    return;
+  }
+
+  // 2. Pending to Active entry crossing check
+  if (outcome.status === "PENDING") {
+    let entryTriggered = false;
+    const entry = outcome.entry;
+
+    if (entry.entryType === "RANGE") {
+      if (currentPrice >= entry.entryLow && currentPrice <= entry.entryHigh) {
+        entryTriggered = true;
+      }
+    } else if (entry.entryPrice !== null) {
+      if (outcome.action === "BUY") {
+        if (currentPrice <= entry.entryPrice) {
+          entryTriggered = true;
+        }
+      } else if (outcome.action === "SELL") {
+        if (currentPrice >= entry.entryPrice) {
+          entryTriggered = true;
+        }
+      }
+    }
+
+    if (entryTriggered) {
+      await publishLifecycleEvent({
+        eventType: "ENTRY_FILLED",
+        messageKey: outcome.messageKey,
+        pair: outcome.pair,
+        detectedPrice: currentPrice,
+        detectedAt: t,
+        source: "PRICE_MONITOR"
+      });
+    }
+    return;
+  }
+
+  // 3. Active / Partial TP crossovers
+  if (outcome.status === "ACTIVE" || outcome.status === "PARTIAL_TP") {
+    // 3a. Check Stop Loss crossover
+    let slTriggered = false;
+    if (outcome.stopLoss !== null) {
+      if (outcome.action === "BUY") {
+        if (currentPrice <= outcome.stopLoss) {
+          slTriggered = true;
+        }
+      } else if (outcome.action === "SELL") {
+        if (currentPrice >= outcome.stopLoss) {
+          slTriggered = true;
+        }
+      }
+    }
+
+    if (slTriggered) {
+      await publishLifecycleEvent({
+        eventType: "SL_HIT",
+        messageKey: outcome.messageKey,
+        pair: outcome.pair,
+        detectedPrice: currentPrice,
+        detectedAt: t,
+        source: "PRICE_MONITOR"
+      });
+      return;
+    }
+
+    // 3b. Check Take Profit targets crossover
+    if (Array.isArray(outcome.targets) && outcome.targets.length > 0) {
+      const activeTargets = outcome.targets.filter((tgt) => !tgt.isHit);
+
+      for (const target of activeTargets) {
+        let tpTriggered = false;
+        if (outcome.action === "BUY") {
+          if (currentPrice >= target.price) {
+            tpTriggered = true;
+          }
+        } else if (outcome.action === "SELL") {
+          if (currentPrice <= target.price) {
+            tpTriggered = true;
+          }
+        }
+
+        if (tpTriggered) {
+          // If this is the last remaining target, it's FULL_TP, else PARTIAL_TP
+          const isLastTarget = activeTargets.length === 1;
+          await publishLifecycleEvent({
+            eventType: isLastTarget ? "FULL_TP" : "PARTIAL_TP",
+            messageKey: outcome.messageKey,
+            pair: outcome.pair,
+            detectedPrice: currentPrice,
+            detectedAt: t,
+            source: "PRICE_MONITOR",
+            targetNumber: target.targetNumber
+          });
+        }
+      }
+    }
+  }
+}
 
 export async function runMonitoringCycle() {
   if (cycleInProgress) {
@@ -53,7 +170,7 @@ export async function runMonitoringCycle() {
       const priceInfo = pricesMap.get(outcome.pair);
       if (priceInfo && priceInfo.price) {
         try {
-          await updateOutcomePrice(outcome, priceInfo.price, priceInfo.lastUpdated);
+          await evaluatePriceCrossovers(outcome, priceInfo.price, priceInfo.lastUpdated);
           updatedCount++;
         } catch (outcomeErr) {
           logger.error("price_monitor.outcome_update_failed", {

@@ -1,0 +1,50 @@
+[
+  {
+    "description": "BUY with RRR >= 1.5 -> LOW_RISK",
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.0800, "high": 1.0800 },
+      "stopLoss": 1.0700,
+      "takeProfits": [1.0950]
+    },
+    "expectedGrade": "LOW_RISK",
+    "expectedRatio": 1.5
+  },
+  {
+    "description": "BUY with 1.0 <= RRR < 1.5 -> MODERATE_RISK",
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.0800, "high": 1.0800 },
+      "stopLoss": 1.0700,
+      "takeProfits": [1.0920]
+    },
+    "expectedGrade": "MODERATE_RISK",
+    "expectedRatio": 1.2
+  },
+  {
+    "description": "BUY with RRR < 1.0 -> HIGH_RISK",
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.0800, "high": 1.0800 },
+      "stopLoss": 1.0700,
+      "takeProfits": [1.0880]
+    },
+    "expectedGrade": "HIGH_RISK",
+    "expectedRatio": 0.8
+  },
+  {
+    "description": "BUY with stop loss above entry -> INVALID",
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.0800, "high": 1.0800 },
+      "stopLoss": 1.0900,
+      "takeProfits": [1.0950]
+    },
+    "expectedGrade": "INVALID",
+    "expectedRatio": 0
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "description": "Initial active signal on XAUUSD",
+    "signals": [
+      {
+        "_id": "60b43283f0f5123456789001",
+        "pair": "XAUUSD",
+        "action": "BUY",
+        "entry": 4020,
+        "entryRange": [],
+        "targets": [4040, 4060],
+        "stopLoss": 4000,
+        "classification": "NEW_SIGNAL",
+        "parserClassification": "NEW_SIGNAL",
+        "signalState": "ACTIVE",
+        "freshnessWeight": 1,
+        "ageMinutes": 2
+      }
+    ],
+    "expectedMetrics": {
+      "signalCount": 1,
+      "buyWeight": 1,
+      "sellWeight": 0,
+      "totalWeight": 1,
+      "buyRatio": 1,
+      "sellRatio": 0,
+      "activeBuySignals": 1,
+      "activeSellSignals": 0,
+      "activeSignalsCount": 1,
+      "entryZone": { "min": 4020, "max": 4020 },
+      "tpZone": { "min": 4040, "max": 4060 },
+      "slZone": { "min": 4000, "max": 4000 }
+    }
+  },
+  {
+    "description": "Mark duplicate signal on XAUUSD, should be excluded from consensus",
+    "signals": [
+      {
+        "_id": "60b43283f0f5123456789001",
+        "pair": "XAUUSD",
+        "action": "BUY",
+        "entry": 4020,
+        "targets": [4040, 4060],
+        "stopLoss": 4000,
+        "classification": "NEW_SIGNAL",
+        "parserClassification": "NEW_SIGNAL",
+        "signalState": "ACTIVE",
+        "freshnessWeight": 1,
+        "ageMinutes": 2
+      },
+      {
+        "_id": "60b43283f0f5123456789002",
+        "pair": "XAUUSD",
+        "action": "BUY",
+        "entry": 4021,
+        "targets": [4040],
+        "stopLoss": 4000,
+        "classification": "NEW_SIGNAL",
+        "parserClassification": "NEW_SIGNAL",
+        "signalState": "ACTIVE",
+        "possibleDuplicate": true,
+        "freshnessWeight": 1,
+        "ageMinutes": 1
+      }
+    ],
+    "expectedMetrics": {
+      "signalCount": 1,
+      "buyWeight": 1,
+      "sellWeight": 0,
+      "totalWeight": 1,
+      "buyRatio": 1,
+      "sellRatio": 0,
+      "activeBuySignals": 1,
+      "activeSellSignals": 0,
+      "activeSignalsCount": 1
+    }
+  },
+  {
+    "description": "Cancel the active signal, should change state to CANCELLED and leave consensus",
+    "signals": [
+      {
+        "_id": "60b43283f0f5123456789001",
+        "pair": "XAUUSD",
+        "action": "BUY",
+        "entry": 4020,
+        "targets": [4040],
+        "stopLoss": 4000,
+        "classification": "NEW_SIGNAL",
+        "parserClassification": "NEW_SIGNAL",
+        "signalState": "ACTIVE",
+        "freshnessWeight": 1,
+        "ageMinutes": 2
+      },
+      {
+        "pair": "XAUUSD",
+        "classification": "CANCEL_SIGNAL",
+        "parserClassification": "CANCEL_SIGNAL",
+        "signalState": "CANCELLED"
+      }
+    ],
+    "expectedMetrics": {
+      "signalCount": 0,
+      "buyWeight": 0,
+      "sellWeight": 0,
+      "totalWeight": 0,
+      "buyRatio": 0,
+      "sellRatio": 0,
+      "activeBuySignals": 0,
+      "activeSellSignals": 0,
+      "activeSignalsCount": 0,
+      "entryZone": null,
+      "tpZone": null,
+      "slZone": null
+    }
+  }
+]

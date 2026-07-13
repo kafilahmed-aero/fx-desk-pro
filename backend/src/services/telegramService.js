@@ -218,6 +218,25 @@ async function resolvePublicChannelEntity(client, channelRef) {
 }
 
 async function joinOrResolvePrivateInvite(client, inviteHash) {
+  // First, check if already joined to avoid rate-limiting ImportChatInvite
+  try {
+    const invite = await client.invoke(
+      new Api.messages.CheckChatInvite({
+        hash: inviteHash,
+      })
+    );
+
+    if (invite?.chat) {
+      return invite.chat;
+    }
+  } catch (error) {
+    const message = error?.message || String(error);
+    if (message.includes("FLOOD")) {
+      logger.warn("telegram.check_chat_invite_flood", { error: message });
+    }
+  }
+
+  // If not joined or check failed, try to import invite link
   try {
     const result = await client.invoke(
       new Api.messages.ImportChatInvite({
@@ -243,6 +262,7 @@ async function joinOrResolvePrivateInvite(client, inviteHash) {
     }
   }
 
+  // Final check invite fallback
   const invite = await client.invoke(
     new Api.messages.CheckChatInvite({
       hash: inviteHash,

@@ -199,7 +199,7 @@ function isPrivateTestSignal(signal) {
 }
 
 function isPairStateSignal(signal) {
-  return signal?.pair && ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL"].includes(
+  return signal?.pair && ["NEW_SIGNAL", "UPDATE_SIGNAL", "RESULT_SIGNAL", "CANCEL_SIGNAL"].includes(
     signal.parserClassification || signal.classification
   );
 }
@@ -230,6 +230,7 @@ function createStoredSignal(signal) {
     rawMessage: signal.rawText || "",
     signalState: signal.signalState || signal.signalStatus || "ACTIVE",
     isTestSignal: Boolean(signal.isTestSignal),
+    possibleDuplicate: Boolean(signal.possibleDuplicate),
     expiresAt: signal.expiresAt || null,
   };
 }
@@ -257,13 +258,28 @@ function recalculatePairState(pairState, now) {
   pairState.buyWeight = consensus.buyWeight;
   pairState.sellWeight = consensus.sellWeight;
   pairState.totalWeight = consensus.totalWeight;
+  
+  // Calculate raw metrics
+  pairState.buyRatio = pairState.totalWeight > 0 ? Number((pairState.buyWeight / pairState.totalWeight).toFixed(3)) : 0;
+  pairState.sellRatio = pairState.totalWeight > 0 ? Number((pairState.sellWeight / pairState.totalWeight).toFixed(3)) : 0;
+  
+  const activeCountable = pairState.activeSignals.filter(canAffectConsensus);
+  pairState.activeBuySignals = activeCountable.filter(s => s.action === "BUY").length;
+  pairState.activeSellSignals = activeCountable.filter(s => s.action === "SELL").length;
+  pairState.activeSignalsCount = pairState.activeBuySignals + pairState.activeSellSignals;
+  pairState.channelCount = new Set(activeCountable.map(s => s.sourceChannel).filter(Boolean)).size;
+  
+  pairState.weightedFreshness = activeCountable.length > 0 ? Number((activeCountable.reduce((sum, s) => sum + Number(s.freshnessWeight || 0), 0) / activeCountable.length).toFixed(3)) : 0;
+  pairState.averageConfidence = activeCountable.length > 0 ? Number((activeCountable.reduce((sum, s) => sum + Number(s.extractionConfidence || 0), 0) / activeCountable.length).toFixed(1)) : 0;
+  pairState.averageSignalAge = activeCountable.length > 0 ? Number((activeCountable.reduce((sum, s) => sum + Number(s.ageMinutes || 0), 0) / activeCountable.length).toFixed(1)) : 0;
+
   pairState.marketDirection = consensus.marketDirection;
   pairState.confidenceScore = consensus.confidenceScore;
   pairState.buyConfidence = consensus.buyConfidence;
   pairState.sellConfidence = consensus.sellConfidence;
   pairState.buyZones = zones.buyZones;
   pairState.sellZones = zones.sellZones;
-  const primaryZones = getPrimaryDirectionalZones(pairState.marketDirection, zones);
+  const primaryZones = getPrimaryDirectionalZones(pairState.buyWeight, pairState.sellWeight, zones);
   pairState.entryZone = primaryZones.entryZone;
   pairState.tpZone = primaryZones.tpZone;
   pairState.slZone = primaryZones.slZone;
@@ -320,12 +336,12 @@ function buildDirectionalZones(signals) {
   };
 }
 
-function getPrimaryDirectionalZones(marketDirection, zones) {
-  if (String(marketDirection || "").includes("BUY")) {
+function getPrimaryDirectionalZones(buyWeight, sellWeight, zones) {
+  if (buyWeight > sellWeight) {
     return zones.buyZones;
   }
 
-  if (String(marketDirection || "").includes("SELL")) {
+  if (sellWeight > buyWeight) {
     return zones.sellZones;
   }
 

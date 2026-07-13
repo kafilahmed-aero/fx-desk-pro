@@ -2220,8 +2220,9 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
     // 5. Call Gemini API via Centralized AI Model Manager with Fallback
     let textResponse;
     let finalModelUsed;
+    let modelManagerRes;
     try {
-      const modelManagerRes = await callGeminiWithFallback(prompt, reqId, startT, logStage);
+      modelManagerRes = await callGeminiWithFallback(prompt, reqId, startT, logStage);
       textResponse = modelManagerRes.textResponse;
       finalModelUsed = modelManagerRes.modelUsed;
       
@@ -2492,6 +2493,22 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       logStage(reqId, 9, "Recommendation saved to MongoDB", false, startT, `Save failed: ${saveErr.message}`);
     }
 
+    const nearestObStr = orderFlow
+      ? (orderFlow.nearestBullishOB || orderFlow.nearestBearishOB
+        ? `Bullish: ${orderFlow.nearestBullishOB ? orderFlow.nearestBullishOB.top.toFixed(2) + "-" + orderFlow.nearestBullishOB.bottom.toFixed(2) : "None"} | Bearish: ${orderFlow.nearestBearishOB ? orderFlow.nearestBearishOB.top.toFixed(2) + "-" + orderFlow.nearestBearishOB.bottom.toFixed(2) : "None"}`
+        : "None")
+      : "None";
+
+    const nearestFvgStr = orderFlow
+      ? (orderFlow.nearestBullishFvg || orderFlow.nearestBearishFvg
+        ? `Bullish: ${orderFlow.nearestBullishFvg ? orderFlow.nearestBullishFvg.bottom.toFixed(2) + "-" + orderFlow.nearestBullishFvg.top.toFixed(2) : "None"} | Bearish: ${orderFlow.nearestBearishFvg ? orderFlow.nearestBearishFvg.bottom.toFixed(2) + "-" + orderFlow.nearestBearishFvg.top.toFixed(2) : "None"}`
+        : "None")
+      : "None";
+
+    const liqStatusStr = orderFlow && orderFlow.liquidity
+      ? `Equal Highs: ${orderFlow.liquidity.equalHighs ? orderFlow.liquidity.equalHighs.toFixed(2) : "None"} | Equal Lows: ${orderFlow.liquidity.equalLows ? orderFlow.liquidity.equalLows.toFixed(2) : "None"} | Last Sweep: ${orderFlow.liquidity.lastSweepType || "None"}`
+      : "None";
+
     // Call AI Decision Validation log asynchronously
     import("./aiDecisionValidationService.js").then((mod) => {
       mod.logDecisionCycle(prompt, textResponse, recommendation, {
@@ -2530,22 +2547,6 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       } else {
         tradingSession = "Sydney/Asian";
       }
-
-      const nearestObStr = orderFlow
-        ? (orderFlow.nearestBullishOB || orderFlow.nearestBearishOB
-          ? `Bullish: ${orderFlow.nearestBullishOB ? orderFlow.nearestBullishOB.high.toFixed(2) + "-" + orderFlow.nearestBullishOB.low.toFixed(2) : "None"} | Bearish: ${orderFlow.nearestBearishOB ? orderFlow.nearestBearishOB.high.toFixed(2) + "-" + orderFlow.nearestBearishOB.low.toFixed(2) : "None"}`
-          : "None")
-        : "None";
-
-      const nearestFvgStr = orderFlow
-        ? (orderFlow.nearestBullishFvg || orderFlow.nearestBearishFvg
-          ? `Bullish: ${orderFlow.nearestBullishFvg ? orderFlow.nearestBullishFvg.gapLow.toFixed(2) + "-" + orderFlow.nearestBullishFvg.gapHigh.toFixed(2) : "None"} | Bearish: ${orderFlow.nearestBearishFvg ? orderFlow.nearestBearishFvg.gapLow.toFixed(2) + "-" + orderFlow.nearestBearishFvg.gapHigh.toFixed(2) : "None"}`
-          : "None")
-        : "None";
-
-      const liqStatusStr = orderFlow && orderFlow.liquidity
-        ? `Equal Highs: ${orderFlow.liquidity.eqHighPrice ? orderFlow.liquidity.eqHighPrice.toFixed(2) : "None"} | Equal Lows: ${orderFlow.liquidity.eqLowPrice ? orderFlow.liquidity.eqLowPrice.toFixed(2) : "None"} | Last Sweep: ${orderFlow.liquidity.lastSweepType || "None"}`
-        : "None";
 
       const snapshotContext = {
         telegramQuality: overallTelegramQuality,

@@ -1,0 +1,45 @@
+[
+  {
+    "rawText": "CANCEL GOLD SETUP NOW ❌",
+    "expectedClassification": "CANCEL_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "lifecycleIntent": "CANCEL",
+      "lifecycleEvent": "CANCELLED",
+      "signalStatus": "CANCELLED"
+    }
+  },
+  {
+    "rawText": "Delete Limit Order BUY LIMIT GOLD 4020",
+    "expectedClassification": "CANCEL_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "orderType": "LIMIT",
+      "lifecycleIntent": "CANCEL",
+      "lifecycleEvent": "CANCELLED",
+      "signalStatus": "CANCELLED"
+    }
+  },
+  {
+    "rawText": "IGNORE XAUUSD SETUP",
+    "expectedClassification": "CANCEL_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "lifecycleIntent": "CANCEL",
+      "lifecycleEvent": "CANCELLED",
+      "signalStatus": "CANCELLED"
+    }
+  },
+  {
+    "rawText": "Cancel Sell limit XAUUSD @ 4050 ❌",
+    "expectedClassification": "CANCEL_SIGNAL",
+    "expectedFields": {
+      "pair": "XAUUSD",
+      "action": "SELL",
+      "orderType": "LIMIT",
+      "lifecycleIntent": "CANCEL",
+      "lifecycleEvent": "CANCELLED",
+      "signalStatus": "CANCELLED"
+    }
+  }
+]

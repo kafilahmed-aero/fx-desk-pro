@@ -1,0 +1,112 @@
+{
+  "validBuy": {
+    "symbol": "XAUUSD",
+    "action": "BUY",
+    "volume": 0.05,
+    "entry": 4110.0,
+    "stopLoss": 4100.0,
+    "takeProfits": [4130.0, 4140.0],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:00:00.000Z",
+    "metadata": {
+      "confidence": 90,
+      "riskGrade": "LOW",
+      "rewardToRiskRatio": 2.0,
+      "riskAmount": 50,
+      "stopDistanceUnits": 10.0,
+      "validationTimestamp": "2026-07-11T11:59:50.000Z"
+    }
+  },
+  "validSell": {
+    "symbol": "GBPUSD",
+    "action": "SELL",
+    "volume": 0.1,
+    "entry": 1.2500,
+    "stopLoss": 1.2550,
+    "takeProfits": [1.2400],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:01:00.000Z",
+    "metadata": {
+      "confidence": 85,
+      "riskGrade": "MEDIUM",
+      "rewardToRiskRatio": 2.0,
+      "riskAmount": 100,
+      "stopDistanceUnits": 50.0,
+      "validationTimestamp": "2026-07-11T12:00:50.000Z"
+    }
+  },
+  "rejectedStatus": {
+    "symbol": "XAUUSD",
+    "action": "BUY",
+    "volume": 0.05,
+    "entry": 4110.0,
+    "stopLoss": 4100.0,
+    "takeProfits": [4130.0],
+    "status": "REJECTED",
+    "rejectionReason": "MISSING_INPUTS",
+    "timestamp": "2026-07-11T12:02:00.000Z",
+    "metadata": {}
+  },
+  "invalidVolume": {
+    "symbol": "EURUSD",
+    "action": "BUY",
+    "volume": -0.01,
+    "entry": 1.0900,
+    "stopLoss": 1.0800,
+    "takeProfits": [1.1100],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:03:00.000Z",
+    "metadata": {}
+  },
+  "wrongBuySl": {
+    "symbol": "XAUUSD",
+    "action": "BUY",
+    "volume": 0.02,
+    "entry": 4110.0,
+    "stopLoss": 4120.0,
+    "takeProfits": [4130.0],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:04:00.000Z",
+    "metadata": {}
+  },
+  "wrongBuyTp": {
+    "symbol": "XAUUSD",
+    "action": "BUY",
+    "volume": 0.02,
+    "entry": 4110.0,
+    "stopLoss": 4100.0,
+    "takeProfits": [4090.0],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:05:00.000Z",
+    "metadata": {}
+  },
+  "wrongSellSl": {
+    "symbol": "GBPUSD",
+    "action": "SELL",
+    "volume": 0.05,
+    "entry": 1.2500,
+    "stopLoss": 1.2400,
+    "takeProfits": [1.2300],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:06:00.000Z",
+    "metadata": {}
+  },
+  "wrongSellTp": {
+    "symbol": "GBPUSD",
+    "action": "SELL",
+    "volume": 0.05,
+    "entry": 1.2500,
+    "stopLoss": 1.2600,
+    "takeProfits": [1.2700],
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "timestamp": "2026-07-11T12:07:00.000Z",
+    "metadata": {}
+  }
+}

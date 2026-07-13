@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { MarketPrice } from "../models/marketPriceModel.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config/env.js";
+import { getBestProvider } from "./providerRegistryService.js";
 
 const CACHE_TTL_MS = 60000; // 1 minute
 const priceCache = new Map(); // pair -> { price, bid, ask, lastUpdated }
@@ -109,6 +110,71 @@ export function resolveSymbol(pair) {
   return { symbol: normalized, provider: "yahoo" };
 }
 
+export async function fetchWithRetry(url, options = {}, retries = 2, delay = 500) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return response;
+      }
+      if (i === retries) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (err) {
+      if (i === retries) {
+        throw err;
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, i)));
+  }
+}
+
+const providers = {
+  yahoo: {
+    async fetchPrice(symbol) {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+      const response = await fetchWithRetry(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+      const json = await response.json();
+      const meta = json?.chart?.result?.[0]?.meta;
+      const result = json?.chart?.result?.[0];
+      const timestamps = result?.timestamp || [];
+      const closes = result?.indicators?.quote?.[0]?.close || [];
+
+      if (!meta || meta.regularMarketPrice === undefined) {
+        throw new Error("regularMarketPrice missing in Yahoo meta");
+      }
+
+      return {
+        price: Number(meta.regularMarketPrice),
+        bid: Number(meta.regularMarketPrice),
+        ask: Number(meta.regularMarketPrice),
+        lastUpdated: new Date(),
+        source: "YAHOO",
+        timestamps,
+        closes
+      };
+    }
+  },
+  binance: {
+    async fetchPrice(symbol) {
+      const url = `https://api.binance.com/api/v3/ticker/bookTicker?symbol=${symbol}`;
+      const response = await fetchWithRetry(url);
+      const ticker = await response.json();
+      const bid = Number(ticker.bidPrice);
+      const ask = Number(ticker.askPrice);
+      const price = (bid + ask) / 2;
+
+      return {
+        price,
+        bid,
+        ask,
+        lastUpdated: new Date(),
+        source: "BINANCE"
+      };
+    }
+  }
+};
+
 /**
  * Fetches prices for a set of pairs from their respective providers and updates cache & DB
  * @param {Array<string>} pairs - Array of normalized pair names
@@ -123,61 +189,55 @@ export async function fetchPrices(pairs) {
   const yahooPairs = [];
   const binancePairs = [];
 
-  // Categorize pairs
+  // Categorize pairs using the Provider Registry
   pairs.forEach((pair) => {
     const resolved = resolveSymbol(pair);
+    const candidates = [resolved.provider];
     if (resolved.provider === "binance") {
+      candidates.push("yahoo");
+    }
+    const best = getBestProvider(candidates);
+    const providerId = best ? best.id : resolved.provider;
+
+    if (providerId === "binance") {
       binancePairs.push({ pair, symbol: resolved.symbol });
     } else {
-      yahooPairs.push({ pair, symbol: resolved.symbol });
+      let symbol = resolved.symbol;
+      if (resolved.provider === "binance" && providerId === "yahoo") {
+        symbol = pair.replace("USD", "-USD");
+      }
+      yahooPairs.push({ pair, symbol });
     }
   });
 
-  // Fetch Yahoo Prices in parallel using v8 chart endpoint
+  // Fetch Yahoo Prices in parallel
   if (yahooPairs.length > 0) {
     try {
       const promises = yahooPairs.map(async (item) => {
         try {
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${item.symbol}?interval=1m&range=1d`;
-          const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-          if (response.ok) {
-            const json = await response.json();
-            const meta = json?.chart?.result?.[0]?.meta;
-            const result = json?.chart?.result?.[0];
-            const timestamps = result?.timestamp || [];
-            const closes = result?.indicators?.quote?.[0]?.close || [];
+          const data = await providers.yahoo.fetchPrice(item.symbol);
+          const priceInfo = Object.freeze({
+            price: data.price,
+            bid: data.bid,
+            ask: data.ask,
+            lastUpdated: data.lastUpdated,
+            source: data.source,
+          });
+          results.set(item.pair, priceInfo);
+          updatePriceCacheAndHistory(item.pair, priceInfo);
+          saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
 
-            if (meta && meta.regularMarketPrice !== undefined) {
-              const price = Number(meta.regularMarketPrice);
-              const priceInfo = {
-                price,
-                bid: price,
-                ask: price,
-                lastUpdated: new Date(),
-                source: "YAHOO",
-              };
-              results.set(item.pair, priceInfo);
-              updatePriceCacheAndHistory(item.pair, priceInfo);
-              saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
-
-              // Pre-populate historical price cache from Yahoo's chart history!
-              if (timestamps.length > 0 && closes.length > 0) {
-                const history = [];
-                for (let idx = 0; idx < timestamps.length; idx++) {
-                  const p = closes[idx];
-                  if (p !== null && p !== undefined && !Number.isNaN(p)) {
-                    history.push({ price: p, timestamp: timestamps[idx] * 1000 });
-                  }
-                }
-                const retentionHours = config.priceHistoryRetentionHours || 24;
-                const cutoff = Date.now() - retentionHours * 60 * 60 * 1000;
-                priceHistoryCache.set(item.pair, history.filter(h => h.timestamp >= cutoff));
+          if (data.timestamps.length > 0 && data.closes.length > 0) {
+            const history = [];
+            for (let idx = 0; idx < data.timestamps.length; idx++) {
+              const p = data.closes[idx];
+              if (p !== null && p !== undefined && !Number.isNaN(p)) {
+                history.push({ price: p, timestamp: data.timestamps[idx] * 1000 });
               }
-            } else {
-              logger.warn("price_ingestion.yahoo_meta_missing", { symbol: item.symbol });
             }
-          } else {
-            logger.warn("price_ingestion.yahoo_failed_http", { symbol: item.symbol, status: response.status });
+            const retentionHours = config.priceHistoryRetentionHours || 24;
+            const cutoff = Date.now() - retentionHours * 60 * 60 * 1000;
+            priceHistoryCache.set(item.pair, history.filter(h => h.timestamp >= cutoff));
           }
         } catch (err) {
           logger.error("price_ingestion.yahoo_fetch_item_failed", { symbol: item.symbol, error: err.message });
@@ -189,76 +249,54 @@ export async function fetchPrices(pairs) {
     }
   }
 
-  // Fetch Binance Prices sequentially (usually crypto is limited to BTC and ETH in signals)
+  // Fetch Binance Prices sequentially
   if (binancePairs.length > 0) {
     for (const item of binancePairs) {
       let fetchedOk = false;
       try {
-        const url = `https://api.binance.com/api/v3/ticker/bookTicker?symbol=${item.symbol}`;
-        const response = await fetch(url);
-        if (response.ok) {
-          const ticker = await response.json();
-          const bid = Number(ticker.bidPrice);
-          const ask = Number(ticker.askPrice);
-          const price = (bid + ask) / 2;
-
-          const priceInfo = {
-            price,
-            bid,
-            ask,
-            lastUpdated: new Date(),
-            source: "BINANCE",
-          };
-          results.set(item.pair, priceInfo);
-          updatePriceCacheAndHistory(item.pair, priceInfo);
-          saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
-          fetchedOk = true;
-        } else {
-          logger.warn("price_ingestion.binance_failed_http", { symbol: item.symbol, status: response.status });
-        }
+        const data = await providers.binance.fetchPrice(item.symbol);
+        const priceInfo = Object.freeze({
+          price: data.price,
+          bid: data.bid,
+          ask: data.ask,
+          lastUpdated: data.lastUpdated,
+          source: data.source,
+        });
+        results.set(item.pair, priceInfo);
+        updatePriceCacheAndHistory(item.pair, priceInfo);
+        saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
+        fetchedOk = true;
       } catch (err) {
         logger.error("price_ingestion.binance_failed", { symbol: item.symbol, error: err.message });
       }
 
-      // Fallback to Yahoo Finance for crypto (e.g. BTCUSD -> BTC-USD) if Binance fails
+      // Fallback to Yahoo Finance for crypto if Binance fails
       if (!fetchedOk) {
         try {
           const yahooCryptoSymbol = item.pair.replace("USD", "-USD");
           logger.info("price_ingestion.binance_fallback_to_yahoo", { pair: item.pair, yahooSymbol: yahooCryptoSymbol });
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooCryptoSymbol}?interval=1m&range=1d`;
-          const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-          if (response.ok) {
-            const json = await response.json();
-            const meta = json?.chart?.result?.[0]?.meta;
-            const result = json?.chart?.result?.[0];
-            const timestamps = result?.timestamp || [];
-            const closes = result?.indicators?.quote?.[0]?.close || [];
-            if (meta && meta.regularMarketPrice !== undefined) {
-              const price = Number(meta.regularMarketPrice);
-              const priceInfo = {
-                price,
-                bid: price,
-                ask: price,
-                lastUpdated: new Date(),
-                source: "YAHOO_FALLBACK",
-              };
-              results.set(item.pair, priceInfo);
-              updatePriceCacheAndHistory(item.pair, priceInfo);
-              saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
+          const data = await providers.yahoo.fetchPrice(yahooCryptoSymbol);
+          const priceInfo = Object.freeze({
+            price: data.price,
+            bid: data.bid,
+            ask: data.ask,
+            lastUpdated: data.lastUpdated,
+            source: "YAHOO_FALLBACK",
+          });
+          results.set(item.pair, priceInfo);
+          updatePriceCacheAndHistory(item.pair, priceInfo);
+          saveMarketPriceToDB(item.pair, item.symbol, priceInfo).catch(() => {});
 
-              // Pre-populate historical price cache from Yahoo fallback chart history!
-              if (timestamps.length > 0 && closes.length > 0) {
-                const history = [];
-                for (let idx = 0; idx < timestamps.length; idx++) {
-                  const p = closes[idx];
-                  if (p !== null && p !== undefined && !Number.isNaN(p)) {
-                    history.push({ price: p, timestamp: timestamps[idx] * 1000 });
-                  }
-                }
-                const cutoff = Date.now() - 65 * 60 * 1000;
-                priceHistoryCache.set(item.pair, history.filter(h => h.timestamp >= cutoff));
+          if (data.timestamps.length > 0 && data.closes.length > 0) {
+            const history = [];
+            for (let idx = 0; idx < data.timestamps.length; idx++) {
+              const p = data.closes[idx];
+              if (p !== null && p !== undefined && !Number.isNaN(p)) {
+                history.push({ price: p, timestamp: data.timestamps[idx] * 1000 });
               }
             }
+            const cutoff = Date.now() - 65 * 60 * 1000;
+            priceHistoryCache.set(item.pair, history.filter(h => h.timestamp >= cutoff));
           }
         } catch (yahooErr) {
           logger.error("price_ingestion.binance_yahoo_fallback_failed", { pair: item.pair, error: yahooErr.message });
@@ -288,7 +326,7 @@ export async function getCurrentPrice(pair) {
   // 1. Check in-memory cache
   const cached = priceCache.get(normalized);
   if (cached && (Date.now() - new Date(cached.lastUpdated).getTime() < CACHE_TTL_MS)) {
-    return cached;
+    return Object.freeze({ ...cached });
   }
 
   // 2. Fetch fresh price
@@ -296,7 +334,7 @@ export async function getCurrentPrice(pair) {
     const fetched = await fetchPrices([normalized]);
     const priceInfo = fetched.get(normalized);
     if (priceInfo) {
-      return priceInfo;
+      return Object.freeze({ ...priceInfo });
     }
   } catch (err) {
     logger.error("price_ingestion.get_current_price_fetch_failed", { pair: normalized, error: err.message });
@@ -304,7 +342,7 @@ export async function getCurrentPrice(pair) {
 
   // 3. Fallback to cache (even if expired)
   if (cached) {
-    return cached;
+    return Object.freeze({ ...cached });
   }
 
   // 4. Fallback to MongoDB
@@ -312,13 +350,13 @@ export async function getCurrentPrice(pair) {
     try {
       const stored = await MarketPrice.findById(normalized).lean();
       if (stored) {
-        const priceInfo = {
+        const priceInfo = Object.freeze({
           price: stored.price,
           bid: stored.bid || stored.price,
           ask: stored.ask || stored.price,
           lastUpdated: stored.lastUpdated,
           source: stored.source || "UNKNOWN",
-        };
+        });
         // Re-hydrate cache
         updatePriceCacheAndHistory(normalized, priceInfo);
         return priceInfo;

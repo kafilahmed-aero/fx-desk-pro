@@ -1,0 +1,6 @@
+[
+  {
+    "description": "BTCUSD setup verifying fallback loop and failover routing",
+    "pair": "BTCUSD"
+  }
+]

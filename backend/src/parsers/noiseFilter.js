@@ -374,7 +374,12 @@ function createResult(classification, normalized, reasons, parsed) {
 }
 
 function getClassification(reasons, text = "") {
-  const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
+  const explicitCancelPattern = /\b(CANCEL|CANCELLED|CANCELED|DELETE|IGNORE)\b/i;
+  if (explicitCancelPattern.test(text)) {
+    return "CANCEL_SIGNAL";
+  }
+
+  const explicitUpdatePattern = /\b(CLOSE TRADE|EXIT TRADE|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
   
   const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text)) &&
                            reasons.marketAnalysisScore < 2 &&

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "gemini",
+    "priority": 1,
+    "enabled": true,
+    "cooldownMs": 300000,
+    "maxFailures": 3
+  },
+  {
+    "id": "mock",
+    "priority": 2,
+    "enabled": true,
+    "cooldownMs": 300000,
+    "maxFailures": 3
+  }
+]

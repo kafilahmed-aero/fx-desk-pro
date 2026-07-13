@@ -1,0 +1,59 @@
+[
+  {
+    "description": "EURUSD BUY low risk: $10,000 balance, 1% risk, 100 pips stop -> raw lots 0.10, LOW_RISK lots 0.10",
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.0800, "high": 1.0800 },
+      "stopLoss": 1.0700,
+      "takeProfits": [1.0950]
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK"
+    },
+    "accountState": {
+      "balance": 10000,
+      "maxRiskPercent": 1.0,
+      "maxLotLimit": 10.00
+    },
+    "expectedLots": 0.10
+  },
+  {
+    "description": "EURUSD BUY moderate risk: $10,000 balance, 1% risk, 100 pips stop -> raw lots 0.10, MODERATE lots 0.08",
+    "decision": {
+      "pair": "EURUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 1.0800, "high": 1.0800 },
+      "stopLoss": 1.0700,
+      "takeProfits": [1.0950]
+    },
+    "riskAssessment": {
+      "riskGrade": "MODERATE_RISK"
+    },
+    "accountState": {
+      "balance": 10000,
+      "maxRiskPercent": 1.0,
+      "maxLotLimit": 10.00
+    },
+    "expectedLots": 0.08
+  },
+  {
+    "description": "XAUUSD BUY metal standard: $10,000 balance, 1% risk, $10 stop -> raw lots 0.10, LOW_RISK lots 0.10",
+    "decision": {
+      "pair": "XAUUSD",
+      "decision": "BUY",
+      "entryRange": { "low": 2030.00, "high": 2030.00 },
+      "stopLoss": 2020.00,
+      "takeProfits": [2050.00]
+    },
+    "riskAssessment": {
+      "riskGrade": "LOW_RISK"
+    },
+    "accountState": {
+      "balance": 10000,
+      "maxRiskPercent": 1.0,
+      "maxLotLimit": 10.00
+    },
+    "expectedLots": 0.10
+  }
+]

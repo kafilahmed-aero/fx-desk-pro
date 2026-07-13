@@ -1,0 +1,16 @@
+[
+  {
+    "description": "Standard setup: binance (priority 1) and yahoo (priority 2)",
+    "config": [
+      { "id": "binance", "priority": 1, "enabled": true, "cooldownMs": 1000, "maxFailures": 3 },
+      { "id": "yahoo", "priority": 2, "enabled": true, "cooldownMs": 1000, "maxFailures": 3 }
+    ]
+  },
+  {
+    "description": "Equal-priority setup for deterministic sorting (both priority 1)",
+    "config": [
+      { "id": "yahoo", "priority": 1, "enabled": true, "cooldownMs": 1000, "maxFailures": 3 },
+      { "id": "binance", "priority": 1, "enabled": true, "cooldownMs": 1000, "maxFailures": 3 }
+    ]
+  }
+]

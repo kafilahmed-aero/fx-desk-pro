@@ -1,0 +1,48 @@
+[
+  {
+    "description": "Strong BUY setup",
+    "pair": "EURUSD",
+    "pairState": {
+      "activeSignalsCount": 3,
+      "totalWeight": 6,
+      "buyWeight": 5,
+      "sellWeight": 1,
+      "buyRatio": 0.833,
+      "sellRatio": 0.167,
+      "entryZone": { "min": 1.0800, "max": 1.0820 },
+      "tpZone": { "min": 1.0900, "max": 1.0950 },
+      "slZone": { "min": 1.0750, "max": 1.0750 }
+    },
+    "activeOpportunities": ["EURUSD"],
+    "marketPrice": {
+      "status": "SUCCESS",
+      "price": 1.0810,
+      "source": "YAHOO"
+    },
+    "expectedDecision": "BUY",
+    "expectedConfidence": 100
+  },
+  {
+    "description": "Neutral setup defaulting to HOLD",
+    "pair": "GBPUSD",
+    "pairState": {
+      "activeSignalsCount": 2,
+      "totalWeight": 4,
+      "buyWeight": 2,
+      "sellWeight": 2,
+      "buyRatio": 0.5,
+      "sellRatio": 0.5,
+      "entryZone": { "min": 1.2500, "max": 1.2520 },
+      "tpZone": { "min": 1.2600, "max": 1.2600 },
+      "slZone": { "min": 1.2450, "max": 1.2450 }
+    },
+    "activeOpportunities": ["GBPUSD"],
+    "marketPrice": {
+      "status": "SUCCESS",
+      "price": 1.2510,
+      "source": "YAHOO"
+    },
+    "expectedDecision": "HOLD",
+    "expectedConfidence": 0
+  }
+]

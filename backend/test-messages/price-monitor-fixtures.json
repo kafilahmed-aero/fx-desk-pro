@@ -1,0 +1,70 @@
+[
+  {
+    "description": "PENDING outcome receives price below entry for BUY: must publish ENTRY_FILLED event",
+    "outcome": {
+      "messageKey": "monitortest:201",
+      "pair": "EURUSD",
+      "action": "BUY",
+      "status": "PENDING",
+      "entry": {
+        "entryType": "PRICE",
+        "entryPrice": 1.0800
+      },
+      "targets": [
+        { "targetNumber": 1, "price": 1.0850, "isHit": false },
+        { "targetNumber": 2, "price": 1.0900, "isHit": false }
+      ],
+      "stopLoss": 1.0750,
+      "expiresAt": "2026-07-14T12:00:00.000Z"
+    },
+    "ticks": [
+      { "price": 1.0810, "expectedEvent": null },
+      { "price": 1.0795, "expectedEvent": "ENTRY_FILLED" }
+    ]
+  },
+  {
+    "description": "ACTIVE outcome receives price touching TP1 for BUY: must publish PARTIAL_TP event",
+    "outcome": {
+      "messageKey": "monitortest:202",
+      "pair": "EURUSD",
+      "action": "BUY",
+      "status": "ACTIVE",
+      "entry": {
+        "entryType": "PRICE",
+        "entryPrice": 1.0800
+      },
+      "targets": [
+        { "targetNumber": 1, "price": 1.0850, "isHit": false },
+        { "targetNumber": 2, "price": 1.0900, "isHit": false }
+      ],
+      "stopLoss": 1.0750,
+      "expiresAt": "2026-07-14T12:00:00.000Z"
+    },
+    "ticks": [
+      { "price": 1.0830, "expectedEvent": null },
+      { "price": 1.0855, "expectedEvent": "PARTIAL_TP" }
+    ]
+  },
+  {
+    "description": "ACTIVE outcome receives price touching SL for BUY: must publish SL_HIT event",
+    "outcome": {
+      "messageKey": "monitortest:203",
+      "pair": "EURUSD",
+      "action": "BUY",
+      "status": "ACTIVE",
+      "entry": {
+        "entryType": "PRICE",
+        "entryPrice": 1.0800
+      },
+      "targets": [
+        { "targetNumber": 1, "price": 1.0850, "isHit": false }
+      ],
+      "stopLoss": 1.0750,
+      "expiresAt": "2026-07-14T12:00:00.000Z"
+    },
+    "ticks": [
+      { "price": 1.0760, "expectedEvent": null },
+      { "price": 1.0745, "expectedEvent": "SL_HIT" }
+    ]
+  }
+]

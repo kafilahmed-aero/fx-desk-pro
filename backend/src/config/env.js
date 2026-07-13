@@ -22,7 +22,9 @@ const clientUrls = [
 ];
 const authUsers = parseAuthUsers();
 
-export const config = {
+import { initializeManager, getConfig } from "./systemConfigManager.js";
+
+const rawConfig = {
   port: process.env.PORT || 5000,
   nodeEnv,
   isProduction,
@@ -126,6 +128,18 @@ export const config = {
     lotSize: Number(process.env.AUTO_TRADE_LOT_SIZE) || 0.01
   }
 };
+
+initializeManager(rawConfig);
+
+export const config = new Proxy({}, {
+  get(target, prop) {
+    const activeConfig = getConfig();
+    return activeConfig[prop];
+  },
+  set() {
+    throw new Error("Configuration is read-only. Use systemConfigManager.updateConfig() to perform runtime updates.");
+  }
+});
 
 validateProductionConfig();
 

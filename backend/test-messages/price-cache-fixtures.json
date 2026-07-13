@@ -1,0 +1,24 @@
+[
+  {
+    "description": "EURUSD standard payload",
+    "pair": "EURUSD",
+    "payload": {
+      "price": 1.0820,
+      "bid": 1.0818,
+      "ask": 1.0822,
+      "source": "YAHOO",
+      "meta": { "providerPriority": 2 }
+    }
+  },
+  {
+    "description": "GBPUSD standard payload",
+    "pair": "GBPUSD",
+    "payload": {
+      "price": 1.2530,
+      "bid": 1.2528,
+      "ask": 1.2532,
+      "source": "YAHOO",
+      "meta": { "providerPriority": 2 }
+    }
+  }
+]

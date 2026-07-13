@@ -1,0 +1,19 @@
+{
+  "validBuySignal": {
+    "text": "GOLD BUY Entry: 2030 TP: 2045 SL: 2020",
+    "channel": "TestForexChannel",
+    "messageId": 5001,
+    "pair": "XAUUSD"
+  },
+  "highRiskSignal": {
+    "text": "GBPUSD SELL Entry: 1.2500 TP: 1.2200 SL: 1.2700",
+    "channel": "TestForexChannel",
+    "messageId": 5002,
+    "pair": "GBPUSD"
+  },
+  "noiseMessage": {
+    "text": "JOIN THE EXCLUSIVE VIP CHANNEL NOW FOR 99% ACCURACY! http://vip-signals.t.me",
+    "channel": "TestForexChannel",
+    "messageId": 5003
+  }
+}
