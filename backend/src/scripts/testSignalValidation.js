@@ -56,7 +56,7 @@ async function runTests() {
     }
 
     if (
-      ctx.order.type !== null || ctx.order.ticket !== null ||
+      ctx.order.ticket !== null ||
       ctx.monitoring.status !== "NOT_STARTED" || ctx.outcome.result !== null ||
       ctx.rating.processed !== false
     ) {

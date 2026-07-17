@@ -115,6 +115,8 @@ export function validateParsedSignal(rawMessage = {}, parsedSignal = {}, options
     // Resolve channelId safely
     const channelId = rawMessage?.channelId || parsedSignal?.channelId || "unknown-channel-id";
     const receivedTimestamp = rawMessage?.timestamp || new Date(now).toISOString();
+    const entryFrom = (parsedSignal?.entryRange && parsedSignal.entryRange.length >= 2) ? parsedSignal.entryRange[0] : null;
+    const entryTo = (parsedSignal?.entryRange && parsedSignal.entryRange.length >= 2) ? parsedSignal.entryRange[1] : null;
 
     context = {
       signalId,
@@ -123,6 +125,8 @@ export function validateParsedSignal(rawMessage = {}, parsedSignal = {}, options
       symbol,
       direction,
       entry,
+      entryFrom,
+      entryTo,
       stopLoss,
       takeProfits,
       receivedTimestamp,
