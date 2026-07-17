@@ -3,6 +3,9 @@ import { MarketPrice } from "../models/marketPriceModel.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config/env.js";
 import { getBestProvider } from "./providerRegistryService.js";
+import { EventEmitter } from "events";
+
+export const priceEvents = new EventEmitter();
 
 const CACHE_TTL_MS = 60000; // 1 minute
 const priceCache = new Map(); // pair -> { price, bid, ask, lastUpdated }
@@ -311,6 +314,8 @@ export async function fetchPrices(pairs) {
       mod.generateRecommendationIfNeeded("PRICE_CHANGE", xauusdPrice.price).catch(() => {});
     }).catch(() => {});
   }
+
+  priceEvents.emit("pricesUpdated", results);
 
   return results;
 }

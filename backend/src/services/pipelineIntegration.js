@@ -99,6 +99,25 @@ export async function executePipelineE2E(rawMessage = {}, options = {}) {
     if (config.executionMode === "signal_validation") {
       const { executeSignalValidationPipeline } = await import("./signalValidationPipeline.js");
       const validationReport = await executeSignalValidationPipeline(rawMessage, parsedSignal, options);
+      
+      if (validationReport.success && validationReport.context) {
+        try {
+          const { SignalValidationContextModel } = await import("../models/signalValidationContextModel.js");
+          await SignalValidationContextModel.create(validationReport.context);
+          
+          const { validationEvents } = await import("./validationEvents.js");
+          validationEvents.emit("validationContextCreated", validationReport.context);
+          
+          logger.info("pipeline_integration.context_persisted", { signalId: validationReport.context.signalId });
+        } catch (err) {
+          if (err.code === 11000) {
+            logger.warn("pipeline_integration.duplicate_context_skipped", { signalId: validationReport.context.signalId });
+          } else {
+            logger.error("pipeline_integration.context_persist_failed", { signalId: validationReport.context.signalId, error: err.message });
+          }
+        }
+      }
+
       steps.push({
         step: "SIGNAL_VALIDATION_ROUTER",
         status: "SUCCESS",

@@ -6,6 +6,9 @@ import http from "http";
 import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config/env.js";
+import { EventEmitter } from "events";
+
+export const mt5Events = new EventEmitter();
 
 // Shared callbacks registry for Signal Validation Mode (Stage 5)
 export const signalCallbacks = new Map(); // signalId -> { resolve, reject }
@@ -579,6 +582,9 @@ URL: ${req.url}
           }
           return;
         }
+
+        // Emit trade event for Signal Validation Mode (Stage 6-7 background worker)
+        mt5Events.emit("tradeEvent", { eventType, payload });
 
         // Check database connection state for DB-interactive messages (Issue 1)
         if (mongoose.connection.readyState !== 1 && eventType !== "REGISTER" && eventType !== "PONG") {

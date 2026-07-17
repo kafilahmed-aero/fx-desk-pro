@@ -6,7 +6,16 @@ import { logger } from "../utils/logger.js";
  * @returns {Object} Frozen object
  */
 export function deepFreeze(obj) {
-  if (obj === null || typeof obj !== "object") {
+  if (
+    obj === null ||
+    typeof obj !== "object" ||
+    Object.isFrozen(obj) ||
+    obj instanceof Date ||
+    obj instanceof RegExp ||
+    ArrayBuffer.isView(obj) ||
+    (obj.constructor && obj.constructor.name === "ObjectId") ||
+    (obj._bsontype && obj._bsontype === "ObjectID")
+  ) {
     return obj;
   }
   Object.freeze(obj);
