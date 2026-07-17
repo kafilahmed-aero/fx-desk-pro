@@ -232,6 +232,19 @@ async function handlePricesUpdated(pricesMap) {
 async function handleTradeEvent({ eventType, payload }) {
   if (!isRunning) return;
 
+  if (eventType === "POSITION_LIST") {
+    const { positions, history } = payload;
+    const accountId = payload.accountId || "default";
+    import("./mt5ReconciliationService.js").then((mod) => {
+      mod.reconcileValidationStates(accountId, positions, history || []).catch((err) => {
+        logger.error("worker.reconciliation_failed", { error: err.message });
+      });
+    }).catch((err) => {
+      logger.error("worker.import_reconciliation_service_failed", { error: err.message });
+    });
+    return;
+  }
+
   const { recommendationId, ticket } = payload;
   const signalId = recommendationId;
   if (!signalId) return;
