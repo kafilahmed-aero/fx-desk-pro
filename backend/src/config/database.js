@@ -6,6 +6,7 @@ import { logger } from "../utils/logger.js";
 // Future Mongoose models will use this connection automatically.
 export async function connectDatabase() {
   try {
+    mongoose.set("bufferCommands", false);
     await mongoose.connect(config.mongoUri, {
       serverSelectionTimeoutMS: 3000,
     });
