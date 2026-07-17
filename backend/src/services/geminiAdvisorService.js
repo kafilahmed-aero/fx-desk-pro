@@ -2256,7 +2256,7 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
       newsContext: newsContext
     };
 
-    const decisionResult = evaluateMarketOpportunity(decisionInputs);
+    const decisionResult = await evaluateMarketOpportunity(decisionInputs);
     logger.info("gemini_advisor.deterministic_decision_engine_evaluated", {
       decision: decisionResult.decision,
       grade: decisionResult.grade,
