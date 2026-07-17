@@ -7,6 +7,9 @@ import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.
 import { logger } from "../utils/logger.js";
 import { config } from "../config/env.js";
 
+// Shared callbacks registry for Signal Validation Mode (Stage 5)
+export const signalCallbacks = new Map(); // signalId -> { resolve, reject }
+
 // Global connection registry
 export const connectedClients = new Map(); // key: accountId / accountNumber, value: { ws, broker, server, accountNumber, lastSeen, connectedTime, eaVersion, protocolVersion }
 export const clientStatsRegistry = new Map(); // key: accountId, value: { reconnects, errors }
@@ -742,6 +745,14 @@ URL: ${req.url}
 
           case "ORDER_FILLED": {
             const { recommendationId, ticket, fillPrice, fillTime, slippage, spread, latencyMs } = payload;
+            
+            // Resolve Signal Validation Mode execution bridge callback
+            if (recommendationId && signalCallbacks.has(String(recommendationId))) {
+              const cb = signalCallbacks.get(String(recommendationId));
+              signalCallbacks.delete(String(recommendationId));
+              cb.resolve(payload);
+            }
+
             const doc = await AiRecommendationOutcome.findOne({ recommendationId });
             if (doc) {
               doc.mt5TicketId = String(ticket);
@@ -960,6 +971,14 @@ URL: ${req.url}
 
           case "TRADE_FAILED": {
             const { recommendationId, reason, retcode } = payload;
+
+            // Reject Signal Validation Mode execution bridge callback
+            if (recommendationId && signalCallbacks.has(String(recommendationId))) {
+              const cb = signalCallbacks.get(String(recommendationId));
+              signalCallbacks.delete(String(recommendationId));
+              cb.reject(new Error(reason || `MT5 trade execution failed with retcode: ${retcode}`));
+            }
+
             const doc = await AiRecommendationOutcome.findOne({ recommendationId });
             if (doc) {
               // Revert execution state to null and set status to CANCELLED to prevent auto-retry
