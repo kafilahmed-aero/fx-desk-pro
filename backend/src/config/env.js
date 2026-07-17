@@ -28,6 +28,7 @@ const rawConfig = {
   port: process.env.PORT || 5000,
   nodeEnv,
   isProduction,
+  executionMode: process.env.EXECUTION_MODE || "decision",
   geminiApiKey: process.env.GEMINI_API_KEY || "",
   models: {
     primary: process.env.PRIMARY_MODEL || "gemini-2.5-flash",

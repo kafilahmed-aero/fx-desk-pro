@@ -1,4 +1,5 @@
 import { logger } from "../utils/logger.js";
+import { config } from "../config/env.js";
 import { classifyMessage } from "../parsers/noiseFilter.js";
 import { parseSignalMessage } from "../parsers/signalParser.js";
 import { updatePairStateFromSignal, getPairState } from "./pairStateEngine.js";
@@ -93,6 +94,19 @@ export async function executePipelineE2E(rawMessage = {}, options = {}) {
       status: "HEALTHY",
       source: "MOCK"
     };
+
+    // EXECUTION MODE ROUTER
+    if (config.executionMode === "signal_validation") {
+      const { executeSignalValidationPipeline } = await import("./signalValidationPipeline.js");
+      const validationReport = await executeSignalValidationPipeline(rawMessage, parsedSignal, options);
+      steps.push({
+        step: "SIGNAL_VALIDATION_ROUTER",
+        status: "SUCCESS",
+        latencyMs: Date.now() - overallStart
+      });
+      report.signalValidationReport = validationReport;
+      return finishReport(report, overallStart);
+    }
 
     // 3. Decision Evaluation
     const decisionStart = Date.now();

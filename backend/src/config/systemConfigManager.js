@@ -287,6 +287,13 @@ function validateConfigUpdates(updates) {
     }
   }
 
+  if (updates.executionMode !== undefined) {
+    const validModes = ["decision", "signal_validation"];
+    if (!validModes.includes(String(updates.executionMode).toLowerCase())) {
+      errors.push(`Invalid executionMode: ${updates.executionMode}. Allowed: ${validModes.join(", ")}`);
+    }
+  }
+
   return errors;
 }
 
