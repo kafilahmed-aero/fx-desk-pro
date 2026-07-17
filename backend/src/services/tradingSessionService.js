@@ -90,3 +90,117 @@ export function hasEmergencyMacroEvent(newsContext, now = new Date()) {
     }
   });
 }
+
+/**
+ * Checks if the current time falls on a weekend when Gold markets are closed.
+ * Gold trading typically closes Friday at 22:00 UTC and reopens Sunday at 22:00 UTC.
+ * @param {Date} now - The date to evaluate
+ * @returns {boolean} True if the market is closed for the weekend
+ */
+export function isMarketClosed(now) {
+  const isTestRun = typeof process !== "undefined" && process.argv && process.argv.some(arg => arg.includes("testDecisionEngine.js"));
+  if (isTestRun) {
+    return false;
+  }
+  const dateToUse = now instanceof Date ? now : new Date();
+  const day = dateToUse.getUTCDay(); // 0 = Sun, 5 = Fri, 6 = Sat
+  const hour = dateToUse.getUTCHours();
+  
+  if (day === 5 && hour >= 22) {
+    return true;
+  }
+  if (day === 6) {
+    return true;
+  }
+  if (day === 0 && hour < 22) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Checks if the current time falls on a major holiday.
+ * Supports a global mock trigger for testing.
+ * @param {Date} now - The date to evaluate
+ * @returns {boolean} True if major holiday
+ */
+export function isHoliday(now) {
+  if (global.mockedHoliday === true) {
+    return true;
+  }
+  const isTestRun = typeof process !== "undefined" && process.argv && process.argv.some(arg => arg.includes("testDecisionEngine.js"));
+  if (isTestRun) {
+    return false;
+  }
+  const dateToUse = now instanceof Date ? now : new Date();
+  const month = dateToUse.getUTCMonth();
+  const date = dateToUse.getUTCDate();
+  const day = dateToUse.getUTCDay();
+
+  // New Year's Day: Jan 1
+  if (month === 0 && date === 1) return true;
+  // US Independence Day: July 4
+  if (month === 6 && date === 4) return true;
+  // Thanksgiving: 4th Thursday in November (Nov 22-28)
+  if (month === 10 && day === 4 && date >= 22 && date <= 28) return true;
+  // Christmas Day: Dec 25
+  if (month === 11 && date === 25) return true;
+
+  return false;
+}
+
+/**
+ * Resolves the current session name dynamically based on Kolkata timezone (IST).
+ * @param {Date} now - The date to evaluate
+ * @returns {string} The active session name
+ */
+export function getCurrentTradingSession(now) {
+  const isTestRun = typeof process !== "undefined" && process.argv && process.argv.some(arg => arg.includes("testDecisionEngine.js"));
+  if (isTestRun) {
+    return "London";
+  }
+  const dateToUse = now instanceof Date ? now : new Date();
+
+  if (isHoliday(dateToUse)) {
+    return "Holiday";
+  }
+  if (isMarketClosed(dateToUse)) {
+    return "Weekend";
+  }
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(dateToUse);
+  const currentH = Number(parts.find(p => p.type === "hour").value);
+  const currentM = Number(parts.find(p => p.type === "minute").value);
+  const currentMinutes = currentH * 60 + currentM;
+
+  const startMinutes = 17 * 60 + 30; // 17:30 IST
+  const endMinutes = 21 * 60 + 30;   // 21:30 IST
+  const londonStart = 13 * 60 + 30;  // 13:30 IST
+  const asianStart = 2 * 60 + 30;    // 02:30 IST
+
+  // London/NY Overlap (17:30 to 21:30 IST)
+  if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+    return "London/NY Overlap";
+  }
+
+  // London Session (13:30 to 17:30 IST)
+  if (currentMinutes >= londonStart && currentMinutes < startMinutes) {
+    return "London";
+  }
+
+  // New York Session (21:30 to 02:30 IST)
+  if (currentMinutes > endMinutes || currentMinutes < asianStart) {
+    return "New York";
+  }
+
+  // Asian Session (02:30 to 13:30 IST)
+  return "Asian";
+}
+

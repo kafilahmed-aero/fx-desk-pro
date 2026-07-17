@@ -1,6 +1,6 @@
 import { getXauusdRecommendation } from "../services/geminiAdvisorService.js";
 import { getLastRecommendation, getRecommendationState, logStage } from "../services/aiRecommendationStateService.js";
-import { isAiTradingSessionActive, hasEmergencyMacroEvent } from "../services/tradingSessionService.js";
+import { isMarketClosed } from "../services/tradingSessionService.js";
 import { getXauusdNewsContext } from "../services/xauusdNewsService.js";
 import { getAiAnalytics } from "../services/aiAnalyticsService.js";
 import { logger } from "../utils/logger.js";
@@ -8,6 +8,48 @@ import mongoose from "mongoose";
 import { AiDecisionValidation } from "../models/aiDecisionValidationModel.js";
 import { localValidations } from "../services/aiDecisionValidationService.js";
 import { getModelManagerDiagnostics } from "../services/aiModelManager.js";
+
+/**
+ * Helper to compute the current Decision Engine runtime status.
+ */
+async function getDecisionEngineStatus(recommendation, state) {
+  if (isMarketClosed(new Date())) {
+    return "Market Closed";
+  }
+
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const activeCount = await mongoose.model("AiRecommendationOutcome").countDocuments({
+        pair: "XAUUSD",
+        executionState: { $in: ["ORDER_FILLED", "POSITION_OPEN"] }
+      });
+      if (activeCount > 0) {
+        return "Managing Active Trade";
+      }
+
+      const pendingCount = await mongoose.model("AiRecommendationOutcome").countDocuments({
+        pair: "XAUUSD",
+        executionState: { $in: ["ORDER_SENT", "ORDER_ACCEPTED", "WAITING_FOR_MT5"] }
+      });
+      if (pendingCount > 0) {
+        return "Managing Pending Orders";
+      }
+    } catch (dbErr) {
+      logger.warn("api.get_engine_status.query_failed", { error: dbErr.message });
+    }
+  }
+
+  const { isGenerationInProgress } = await import("../services/aiRecommendationStateService.js");
+  if (isGenerationInProgress && isGenerationInProgress()) {
+    return "Evaluating Opportunities";
+  }
+
+  if (recommendation && (recommendation.direction === "HOLD" || recommendation.status === "offline")) {
+    return "Waiting for High Probability Setup";
+  }
+
+  return "Monitoring Markets";
+}
 
 /**
  * Controller to fetch AI trade recommendation for XAUUSD.
@@ -36,35 +78,18 @@ export async function getXauusdRecommendationController(req, res) {
 export async function getLatestXauusdRecommendationController(req, res) {
   req.startTime = Date.now();
   try {
-    const sessionActive = isAiTradingSessionActive();
-    let hasOverride = false;
-
-    if (!sessionActive) {
-      try {
-        const newsContext = await getXauusdNewsContext();
-        hasOverride = hasEmergencyMacroEvent(newsContext);
-      } catch (err) {
-        logger.warn("api.latest_check_override_failed", { error: err.message });
-      }
-    }
-
-    if (!sessionActive && !hasOverride) {
-      return res.status(200).json({
-        status: "offline",
-        message: "Decision Engine Offline"
-      });
-    }
-
     const recommendation = getLastRecommendation();
+    const state = getRecommendationState();
+    const engineStatus = await getDecisionEngineStatus(recommendation, state);
 
     if (!recommendation) {
       return res.status(200).json({
         status: "pending",
-        message: "No recommendation generated yet"
+        message: "No recommendation generated yet",
+        engineStatus
       });
     }
 
-    const state = getRecommendationState();
     const reqId = recommendation.requestId || state.lastRequestId || "UNKNOWN-REQUEST";
 
     // Stage 11: API endpoint returns recommendation
@@ -74,6 +99,8 @@ export async function getLatestXauusdRecommendationController(req, res) {
 
     return res.status(200).json({
       ...recommendation,
+      status: recommendation.status === "offline" ? "active" : recommendation.status,
+      engineStatus,
       lastGenerationTime: state.lastGenerationTime,
       signalsUsed: state.signalsUsed || 0,
       newestSignalTime: state.newestSignalTime || null,
@@ -91,6 +118,7 @@ export async function getLatestXauusdRecommendationController(req, res) {
     });
   }
 }
+
 
 /**
  * Controller to fetch AI trade analytics.

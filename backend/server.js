@@ -12,6 +12,7 @@ import { stopKeepAlive } from "./src/services/keepAliveService.js";
 import { stopMt5SyncService } from "./src/services/mt5SyncService.js";
 import { stopOutcomeTracker } from "./src/services/aiDecisionValidationService.js";
 import { initializeAllServices } from "./src/services/serviceRegistry.js";
+import { stopPositionMonitoring } from "./src/services/positionManagerService.js";
 
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
@@ -46,6 +47,7 @@ async function startServer() {
   });
 
   const shutdown = async () => {
+    stopPositionMonitoring();
     stopKeepAlive();
     stopMarketEngine();
     stopPriceMonitoring();

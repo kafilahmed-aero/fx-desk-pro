@@ -156,22 +156,7 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
     );
   }
 
-  // Render Offline State
-  if (data && data.status === "offline") {
-    return (
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/50 p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-        <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-slate-400 animate-pulse"></div>
-          <div className="min-w-0">
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">Decision Engine Offline</h3>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Waiting for London–New York overlap (17:30–21:30 IST)
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   // Render Pending State
   if (data && data.status === "pending") {
@@ -217,6 +202,27 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
   const priority = getPriorityStatus(direction, data.confidence, data.tradeQuality);
   const confDetails = getConfidenceDetails(data.confidence);
 
+  const getEngineStatusColor = (status) => {
+    switch (status) {
+      case "Market Closed":
+        return "bg-slate-500/10 text-slate-400 border-slate-500/20";
+      case "Managing Active Trade":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "Managing Pending Orders":
+        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+      case "Evaluating Opportunities":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse";
+      case "Waiting for High Probability Setup":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      default:
+        return "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+    }
+  };
+
+  const currentSessionName = data?.marketContext?.subsystemMetrics?.session?.currentSession || 
+                             data?.marketContext?.session?.metrics?.currentSession || 
+                             (tradingSession?.active ? "London/NY Overlap" : "Asian");
+
   // Slice reasoning to max 3 bullets
   const reasoningBullets = Array.isArray(data.reasoning) ? data.reasoning.slice(0, 3) : [];
 
@@ -233,6 +239,9 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
             </span>
             <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-bold ${getQualityColor(data.tradeQuality)}`}>
               Quality {data.tradeQuality || "C"}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-bold ${getEngineStatusColor(data.engineStatus)}`}>
+              {data.engineStatus || "Monitoring Markets"}
             </span>
           </div>
           {/* Top Priority Conviction Badge */}
@@ -344,7 +353,7 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
       </div>
 
       {/* 5. Minimalist Metadata Footer */}
-      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-[10px] font-bold text-slate-400 dark:border-white/5 dark:text-slate-500 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-[10px] font-bold text-slate-400 dark:border-white/5 dark:text-slate-500 sm:grid-cols-5">
         <div>
           <span className="uppercase tracking-wider">Generated:</span>{" "}
           <span className="text-slate-600 dark:text-slate-400">{formatLastUpdated(data.lastGenerationTime)}</span>
@@ -355,13 +364,21 @@ function XauusdAiAdvisorCard({ data: propData, loading: propLoading, refreshTrig
         </div>
         <div>
           <span className="uppercase tracking-wider">Trading Session:</span>{" "}
-          <span className={`font-bold ${tradingSession?.active ? "text-emerald-500" : "text-slate-600 dark:text-slate-400"}`}>
-            {tradingSession?.active ? "Active" : "Inactive"}
+          <span className={`font-bold ${
+            currentSessionName?.includes("Overlap") || currentSessionName?.includes("London") || currentSessionName?.includes("NewYork") || currentSessionName?.includes("New York")
+              ? "text-blue-500 dark:text-blue-400"
+              : "text-slate-600 dark:text-slate-400"
+          }`}>
+            {currentSessionName}
           </span>
         </div>
         <div>
+          <span className="uppercase tracking-wider">Engine Status:</span>{" "}
+          <span className="text-slate-600 dark:text-slate-400">{data.engineStatus || "Monitoring Markets"}</span>
+        </div>
+        <div>
           <span className="uppercase tracking-wider">Engine:</span>{" "}
-          <span className="text-slate-600 dark:text-slate-400">LLM Provider (Gemini) (v{data.schemaVersion || "1"})</span>
+          <span className="text-slate-600 dark:text-slate-400">Phoenix v{data.schemaVersion || "1"}</span>
         </div>
       </div>
     </div>

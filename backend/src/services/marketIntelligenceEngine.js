@@ -195,12 +195,21 @@ export function evaluateSession(inputs = {}) {
   const reasons = [];
   const warnings = [];
 
-  if (currentSession === "London" || currentSession === "NewYork") {
-    score = 90;
-    reasons.push(`Highly active volume session context: ${currentSession}`);
-  } else if (currentSession === "Crossover") {
-    score = 80;
-    reasons.push("High liquidity session overlap period");
+  if (currentSession === "London/NY Overlap" || currentSession === "Crossover" || currentSession === "London–New York overlap") {
+    score = 95;
+    reasons.push("High liquidity London-NY overlap session");
+  } else if (currentSession === "London" || currentSession === "NewYork" || currentSession === "New York") {
+    score = 85;
+    reasons.push(`Active volume session context: ${currentSession}`);
+  } else if (currentSession === "Asian") {
+    score = 55;
+    warnings.push("Trading in lower volume Asian session environment");
+  } else if (currentSession === "Holiday") {
+    score = 30;
+    warnings.push("Trading during holiday period; extremely low volume expected");
+  } else if (currentSession === "Weekend") {
+    score = 0;
+    warnings.push("Market is closed for the weekend");
   } else {
     score = 50;
     warnings.push("Trading in lower volume session environment");
@@ -368,8 +377,10 @@ export function evaluateMarketContext(inputs = {}, configOverride = null) {
   );
 
   // 3. Determine overall grade
+  const isClosed = inputs.spread?.marketClosed === true || inputs.session?.currentSession === "Weekend";
+
   let overallGrade = "REJECT";
-  if (inputs.spread?.marketClosed === true) {
+  if (isClosed) {
     overallGrade = "REJECT";
   } else if (overallScore >= thresholds.gradeA) {
     overallGrade = "GRADE A";
@@ -398,7 +409,7 @@ export function evaluateMarketContext(inputs = {}, configOverride = null) {
     ...spreadRes.warnings
   ];
 
-  if (inputs.spread?.marketClosed === true) {
+  if (isClosed) {
     warnings.push("Market check blocked: Trading is closed");
   }
 
@@ -412,7 +423,7 @@ export function evaluateMarketContext(inputs = {}, configOverride = null) {
     spread: spreadRes.metrics
   };
 
-  const status = inputs.spread?.marketClosed === true ? "CLOSED" : (overallGrade === "REJECT" ? "WARNING" : "HEALTHY");
+  const status = isClosed ? "CLOSED" : (overallGrade === "REJECT" ? "WARNING" : "HEALTHY");
 
   const report = {
     status,

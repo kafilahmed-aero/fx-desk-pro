@@ -28,6 +28,10 @@ const aiRecommendationOutcomeSchema = new mongoose.Schema(
       enum: ["BUY", "SELL", "HOLD"],
       required: true,
     },
+    volume: {
+      type: Number,
+      default: 0.1,
+    },
     entryMin: {
       type: Number,
       required: true,
@@ -235,6 +239,19 @@ const aiRecommendationOutcomeSchema = new mongoose.Schema(
     lastMt5Sync: {
       type: Date,
       default: null,
+    },
+    positionManagement: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        breakEvenActive: false,
+        breakEvenTriggered: false,
+        trailingActive: false,
+        lastTrailingSL: null,
+        partialTpExecuted: false,
+        remainingVolume: null,
+        lifecycleStage: "POSITION_OPEN",
+        history: []
+      }
     },
     grade: {
       type: String,

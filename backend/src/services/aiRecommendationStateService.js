@@ -64,6 +64,14 @@ export function getRecommendationState() {
 }
 
 /**
+ * Returns whether recommendation generation is currently in progress.
+ * @returns {boolean} True if generation is active
+ */
+export function isGenerationInProgress() {
+  return generationInProgress;
+}
+
+/**
 /**
  * Event-driven recommendation checker.
  */
@@ -341,18 +349,6 @@ export async function generateRecommendationIfNeeded(triggerSource, triggerData)
     const newsString = JSON.stringify(newsContext);
     const currentNewsHash = hashString(newsString);
 
-    const sessionActive = isAiTradingSessionActive();
-    const hasOverride = hasEmergencyMacroEvent(newsContext);
-
-    if (!sessionActive && !hasOverride) {
-      logger.info("ai_state.skipped_outside_session", {
-        triggerSource,
-        currentPrice,
-        message: "AI generation skipped: outside London-US session"
-      });
-      return;
-    }
-
     const detectedTrigger = detectChangeAndTrigger(activeSignals, currentPrice, currentSignalHash, currentNewsHash);
 
     if (detectedTrigger) {
@@ -398,14 +394,6 @@ export async function runAiRecommendationCycle() {
   }
 
   try {
-    const sessionActive = isAiTradingSessionActive();
-    logger.info(`Session active: ${sessionActive ? "YES" : "NO"}`);
-
-    if (!sessionActive) {
-      logger.info("Generation skipped: outside session hours");
-      return;
-    }
-
     const priceInfo = await getCurrentPrice("XAUUSD");
     const currentPrice = priceInfo ? priceInfo.price : null;
 

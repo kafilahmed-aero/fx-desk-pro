@@ -9,6 +9,7 @@ import { startOutcomeTracker } from "./aiDecisionValidationService.js";
 import { generateRecommendationIfNeeded } from "./aiRecommendationStateService.js";
 import { startTelegramListener } from "./telegramIngestionService.js";
 import { startKeepAlive } from "./keepAliveService.js";
+import { initPositionManager } from "./positionManagerService.js";
 
 const services = [
   {
@@ -69,6 +70,13 @@ const services = [
       } else {
         logger.warn("STARTUP 4 Telegram Listener skipped or failed to start", { reason: telRes?.error || "skipped" });
       }
+    }
+  },
+  {
+    name: "Phoenix Position Manager",
+    start: async () => {
+      initPositionManager();
+      logger.info("STARTUP 5 Phoenix Position Manager Started");
     }
   }
 ];

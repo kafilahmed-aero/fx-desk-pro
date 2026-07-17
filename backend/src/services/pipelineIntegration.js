@@ -96,7 +96,7 @@ export async function executePipelineE2E(rawMessage = {}, options = {}) {
 
     // 3. Decision Evaluation
     const decisionStart = Date.now();
-    const decision = evaluateDecision(
+    const decision = await evaluateDecision(
       parsedSignal.pair,
       pairState,
       activeOpportunities,

@@ -760,6 +760,25 @@ URL: ${req.url}
               doc.lastMt5Sync = new Date();
               doc.executionState = "POSITION_OPEN";
 
+              // Check if partial TP pending
+              if (doc.positionManagement && doc.positionManagement.pendingAction === "PARTIAL_TP") {
+                const pm = doc.positionManagement;
+                const prevStage = pm.lifecycleStage || "POSITION_OPEN";
+                const closedVol = pm.pendingVolume || 0;
+                pm.partialTpExecuted = true;
+                pm.remainingVolume = doc.volume - closedVol;
+                pm.lifecycleStage = "PARTIAL_TP_TAKEN";
+                pm.pendingAction = null;
+                pm.history.push({
+                  action: "PARTIAL_TP_CONFIRMED",
+                  timestamp: new Date(),
+                  previousState: prevStage,
+                  newState: "PARTIAL_TP_TAKEN",
+                  mt5TicketId: String(ticket),
+                  reason: `MT5 confirmed partial close of ${closedVol} lots executed.`
+                });
+              }
+
               const fillMsg = `MT5 Order Filled: Ticket ${ticket}, Price ${fillPrice}`;
               if (!doc.simulationNotes.includes(fillMsg)) {
                 doc.simulationNotes.push(fillMsg);
@@ -814,6 +833,46 @@ URL: ${req.url}
               }
 
               doc.executionState = "SYNC_COMPLETE";
+
+              // Position Manager close confirmation
+              if (doc.positionManagement) {
+                const pm = doc.positionManagement;
+                const prevStage = pm.lifecycleStage || "POSITION_OPEN";
+                let newState = "SYNC_COMPLETE";
+                let actionName = "CLOSE_CONFIRMED";
+                let desc = `MT5 confirmed position closed: ${reason}`;
+                
+                if (pm.pendingAction === "TIME_EXIT") {
+                  newState = "TIME_EXIT";
+                  actionName = "TIME_EXIT_CONFIRMED";
+                  desc = "MT5 confirmed Time Exit executed successfully.";
+                  doc.status = "EXPIRED";
+                } else if (pm.pendingAction === "MARKET_EXIT") {
+                  newState = "MARKET_EXIT";
+                  actionName = "MARKET_EXIT_CONFIRMED";
+                  desc = "MT5 confirmed Market Exit executed successfully.";
+                  doc.status = "CANCELLED";
+                } else if (reason === "SL") {
+                  newState = "SL_HIT";
+                  actionName = "SL_HIT_CONFIRMED";
+                  desc = "Stop Loss hit on MT5 terminal.";
+                } else if (reason === "TP") {
+                  newState = "FULL_TP";
+                  actionName = "TP_HIT_CONFIRMED";
+                  desc = "Take Profit hit on MT5 terminal.";
+                }
+                
+                pm.lifecycleStage = newState;
+                pm.pendingAction = null;
+                pm.history.push({
+                  action: actionName,
+                  timestamp: new Date(),
+                  previousState: prevStage,
+                  newState,
+                  mt5TicketId: String(ticket),
+                  reason: desc
+                });
+              }
               const closeMsg = `MT5 Order Closed: Ticket ${ticket}, Price ${exitPrice}, Reason ${reason}`;
               if (!doc.simulationNotes.includes(closeMsg)) {
                 doc.simulationNotes.push(closeMsg);
@@ -849,6 +908,38 @@ URL: ${req.url}
                 else if (doc.highRiskTp) doc.highRiskTp = Number(tp);
               }
               doc.lastMt5Sync = new Date();
+
+              // Position Manager SL modification confirmation
+              if (doc.positionManagement) {
+                const pm = doc.positionManagement;
+                const prevStage = pm.lifecycleStage || "POSITION_OPEN";
+                if (pm.pendingAction === "BREAK_EVEN") {
+                  pm.breakEvenTriggered = true;
+                  pm.breakEvenActive = true;
+                  pm.lifecycleStage = "BREAK_EVEN_ACTIVE";
+                  pm.pendingAction = null;
+                  pm.history.push({
+                    action: "BREAK_EVEN_CONFIRMED",
+                    timestamp: new Date(),
+                    previousState: prevStage,
+                    newState: "BREAK_EVEN_ACTIVE",
+                    mt5TicketId: String(ticket),
+                    reason: "MT5 confirmed Stop Loss moved to Entry"
+                  });
+                } else if (pm.pendingAction === "TRAILING_STOP") {
+                  pm.lastTrailingSL = sl !== undefined ? Number(sl) : pm.lastTrailingSL;
+                  pm.lifecycleStage = "TRAILING_ACTIVE";
+                  pm.pendingAction = null;
+                  pm.history.push({
+                    action: "TRAILING_STOP_CONFIRMED",
+                    timestamp: new Date(),
+                    previousState: prevStage,
+                    newState: "TRAILING_ACTIVE",
+                    mt5TicketId: String(ticket),
+                    reason: `MT5 confirmed Trailing SL adjusted to ${sl}`
+                  });
+                }
+              }
               const modMsg = `MT5 Order Modified: SL ${sl}, TP ${tp}`;
               if (!doc.simulationNotes.includes(modMsg)) {
                 doc.simulationNotes.push(modMsg);
@@ -906,90 +997,14 @@ URL: ${req.url}
             const { positions } = payload;
             const incomingPositions = Array.isArray(positions) ? positions : [];
 
-            // Fetch active DEMO outcomes in DB
-            const activeDbTrades = await AiRecommendationOutcome.find({
-              simulationMode: "DEMO",
-              status: "ACTIVE"
-            });
-
-            for (const trade of activeDbTrades) {
-              // Look for matching position in active MT5 positions by ticket or magic number
-              const matched = incomingPositions.find(
-                (pos) => String(pos.ticket) === String(trade.mt5TicketId) ||
-                         Number(pos.magic) === Number(trade.magicNumber)
-              );
-
-              if (!matched) {
-                // Pos not found on MT5 -> Close locally as CANCELLED or EXPIRED
-                trade.status = "CANCELLED";
-                trade.executionState = "SYNC_COMPLETE";
-                trade.outcomeTime = new Date();
-                
-                const recMsg = "Reconciliation: Active position not found on MT5. Closed locally.";
-                if (!trade.simulationNotes.includes(recMsg)) {
-                  trade.simulationNotes.push(recMsg);
-                }
-                trade.lastMt5Sync = new Date();
-                await trade.save();
-                logger.info("mt5_sync.reconciliation.closed_local_mismatch", {
-                  recommendationId: trade.recommendationId,
-                  magicNumber: trade.magicNumber,
-                  account: `${clientInfo?.broker}_${clientInfo?.accountNumber}`,
-                  timestamp: new Date()
-                });
-              }
-            }
-
-            // Sync: Filled in MT5 but waiting/sent in DB
-            // And look for positions on MT5 that should be closed because they are closed in DB
-            for (const pos of incomingPositions) {
-              const trade = await AiRecommendationOutcome.findOne({
-                $or: [
-                  { mt5TicketId: String(pos.ticket) },
-                  { magicNumber: Number(pos.magic) }
-                ]
+            // Delegate state synchronization and audit logging to Recovery Manager
+            import("./recoveryManagerService.js").then(({ executeRecoveryWorkflow }) => {
+              executeRecoveryWorkflow(incomingPositions, {
+                forceAccountId: clientInfo?.accountNumber || clientInfo?.accountId
+              }).catch(err => {
+                logger.error("mt5_sync.recovery_workflow_failed", { error: err.message });
               });
-
-              if (trade) {
-                if (["PENDING", "ACTIVE"].includes(trade.status) && trade.executionState !== "POSITION_OPEN") {
-                  // State mismatch: Trade is filled on MT5 but still waiting/sent in DB
-                  trade.status = "ACTIVE";
-                  trade.executionState = "POSITION_OPEN";
-                  trade.mt5TicketId = String(pos.ticket);
-                  trade.actualEntryPrice = Number(pos.openPrice);
-                  trade.lastMt5Sync = new Date();
-                  
-                  const fillMsg = `Reconciliation: Position found active on MT5. Updated to POSITION_OPEN (Ticket: ${pos.ticket}).`;
-                  if (!trade.simulationNotes.includes(fillMsg)) {
-                    trade.simulationNotes.push(fillMsg);
-                  }
-                  await trade.save();
-                  logger.info("mt5_sync.reconciliation.sync_waiting_to_open", {
-                    recommendationId: trade.recommendationId,
-                    magicNumber: trade.magicNumber,
-                    ticket: pos.ticket,
-                    account: `${clientInfo?.broker}_${clientInfo?.accountNumber}`,
-                    timestamp: new Date()
-                  });
-                } else if (["FULL_TP", "SL", "BREAK_EVEN", "EXPIRED", "CANCELLED"].includes(trade.status)) {
-                  logger.warn("mt5_sync.reconciliation.zombie_position_on_mt5", {
-                    recommendationId: trade.recommendationId,
-                    magicNumber: trade.magicNumber,
-                    ticket: pos.ticket,
-                    dbStatus: trade.status,
-                    account: `${clientInfo?.broker}_${clientInfo?.accountNumber}`,
-                    timestamp: new Date()
-                  });
-                  // Send closing command
-                  ws.send(JSON.stringify({
-                    action: "CLOSE_ORDER",
-                    recommendationId: trade.recommendationId,
-                    magicNumber: trade.magicNumber,
-                    ticket: String(pos.ticket)
-                  }));
-                }
-              }
-            }
+            });
             break;
           }
 

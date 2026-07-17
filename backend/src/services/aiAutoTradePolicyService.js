@@ -48,11 +48,7 @@ export async function evaluateAutoTradePolicy(rec, context = {}) {
     reasons.push(`Risk/Reward (${rr}) below minimum (${config.autoTrade.minRR})`);
   }
 
-  // 6. Session check
-  const sessionActive = isAiTradingSessionActive();
-  if (!sessionActive) {
-    reasons.push("Trading session is currently inactive");
-  }
+  // 6. Session check (Removed per continuous Phoenix decision engine requirement)
 
   // 7. News block check
   const newsContext = context.newsContext || {};

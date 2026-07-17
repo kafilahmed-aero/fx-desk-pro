@@ -45,23 +45,6 @@ export async function sendAiRecommendationIfChanged(recommendation) {
     return;
   }
 
-  // Enforce trading session window or emergency overrides
-  const sessionActive = isAiTradingSessionActive();
-  let hasOverride = false;
-  try {
-    const newsContext = await getXauusdNewsContext();
-    hasOverride = hasEmergencyMacroEvent(newsContext);
-  } catch (err) {
-    logger.warn("ai_notification.check_override_failed", { error: err.message });
-  }
-
-  if (!sessionActive && !hasOverride) {
-    logger.info("ai_notification.skipped_outside_session", {
-      message: "AI notification skipped: outside trading session"
-    });
-    return;
-  }
-
   const currentHash = hashRecommendation(recommendation);
 
   if (currentHash === state.lastSentHash) {

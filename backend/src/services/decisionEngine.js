@@ -1,6 +1,7 @@
 import { getConfig } from "../config/systemConfigManager.js";
 import { evaluateMarketContext } from "./marketIntelligenceEngine.js";
 import { logger } from "../utils/logger.js";
+import { getCurrentTradingSession, isMarketClosed } from "./tradingSessionService.js";
 
 // O(n log n) clustering algorithm matching the one in geminiAdvisorService.js
 export function findClusters(numbers, tolerance) {
@@ -49,7 +50,7 @@ export function deepFreeze(obj) {
  * @param {Object} configOverride - Optional overrides for testing
  * @returns {Object} Deeply frozen decision response
  */
-export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
+export async function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
   // 1. Resolve Config (Weights & Thresholds)
   let activeConfig = null;
   try {
@@ -173,7 +174,7 @@ export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
       obStrength: 50
     },
     session: {
-      currentSession: "London", // Standard baseline active session
+      currentSession: getCurrentTradingSession(inputs.timestamp ? new Date(inputs.timestamp) : new Date()), // Resolved via centralized service
       asianRangePips: 15.0
     },
     volatility: {
@@ -184,7 +185,7 @@ export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
     spread: {
       currentSpread: marketState.spread !== undefined ? Number(marketState.spread) : 1.8,
       maxSpreadLimit: 3.0,
-      marketClosed: !!marketState.marketClosed
+      marketClosed: !!marketState.marketClosed || isMarketClosed(inputs.timestamp ? new Date(inputs.timestamp) : new Date())
     }
   };
 
@@ -230,10 +231,18 @@ export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
   const penalties = -Math.min(maximumPenalty, marketContext.warnings.length * warningPenalty);
   let finalScore = Math.max(0, Math.min(100, Math.round(baseScore + penalties)));
 
+  const sessionName = getCurrentTradingSession(inputs.timestamp ? new Date(inputs.timestamp) : new Date());
+  if (sessionName === "Holiday") {
+    finalScore = Math.max(0, finalScore - 20); // Reduce confidence score by 20 points
+  }
+
   // Setup Hard Validation Blocks
   let grade = "REJECT";
   let finalDecision = "HOLD";
   const policyWarnings = [];
+  if (sessionName === "Holiday") {
+    policyWarnings.push("Low liquidity warning: Holiday market session");
+  }
 
   const isClosedBlocked = policies.blockMarketClosed && marketContext.status === "CLOSED";
   const isSpreadBlocked = policies.blockSpreadBlocked && (marketContext.spread.status === "BLOCKED" || marketContext.spread.status === "WIDE");
@@ -420,6 +429,14 @@ export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
     finalScore
   };
 
+  let mlAdvisory = { trained: false, status: "UNTRAINED" };
+  try {
+    const { evaluateOpportunity } = await import("./phoenixMachineLearningEngine.js");
+    mlAdvisory = await evaluateOpportunity(inputs);
+  } catch (err) {
+    logger.warn("decision_engine.ml_advisory_failed", { error: err.message });
+  }
+
   const response = {
     status: "success",
     decision: finalDecision,
@@ -432,6 +449,7 @@ export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
     warnings,
     subsystemScores: decisionBreakdown,
     marketContext,
+    mlAdvisory,
     metadata: {
       sumOfWeights,
       weightsUsed: weights,
@@ -449,7 +467,7 @@ export function evaluateMarketOpportunity(inputs = {}, configOverride = null) {
 /**
  * Legacy wrapper mapping positional arguments to evaluateMarketOpportunity named inputs.
  */
-export function evaluateDecision(pair, pairState, activeOpportunities, marketPrice, options = {}) {
+export async function evaluateDecision(pair, pairState, activeOpportunities, marketPrice, options = {}) {
   const signals = pairState?.activeSignals || pairState?.signals || [];
   const currentPrice = marketPrice?.price || 0;
   
@@ -509,7 +527,7 @@ export function evaluateDecision(pair, pairState, activeOpportunities, marketPri
     }
   };
 
-  const res = evaluateMarketOpportunity(decisionInputs);
+  const res = await evaluateMarketOpportunity(decisionInputs);
   
   const legacyResponse = {
     pair: pair,

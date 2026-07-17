@@ -52,7 +52,7 @@ async function runTests() {
     pairState: { direction: "BUY", valuationZone: "Discount", mtfTrend: "Strong Bullish" },
     marketState: { volatility: "Low", spread: 1.2 }
   });
-  const resA = evaluateMarketOpportunity(inputsA);
+  const resA = await evaluateMarketOpportunity(inputsA);
   assert(resA.decision === "BUY", "Decision is BUY");
   assert(resA.grade === "GRADE A", `Grade resolves to GRADE A (Actual: ${resA.grade}, Score: ${resA.score})`);
   assert(resA.decisionBreakdown.finalScore >= 90, "Final score is >= 90");
@@ -65,7 +65,7 @@ async function runTests() {
     marketState: { volatility: "High", spread: 2.8 },
     riskAssessment: { riskGrade: "HIGH_RISK", rrr: 1.0 }
   });
-  const resPoor = evaluateMarketOpportunity(inputsPoor);
+  const resPoor = await evaluateMarketOpportunity(inputsPoor);
   assert(resPoor.decision === "HOLD", "Decision becomes HOLD on poor market parameters");
   assert(resPoor.grade === "REJECT", `Grade is REJECT (Actual Score: ${resPoor.score})`);
   assert(resPoor.decisionBreakdown.finalScore < 70, `Final score is below 70 (Actual: ${resPoor.decisionBreakdown.finalScore})`);
@@ -76,7 +76,7 @@ async function runTests() {
     consensus: { buyConfidence: 50, sellConfidence: 50 },
     pairState: { direction: "HOLD", valuationZone: "Discount", mtfTrend: "Neutral" }
   });
-  const resWeak = evaluateMarketOpportunity(inputsWeak);
+  const resWeak = await evaluateMarketOpportunity(inputsWeak);
   assert(resWeak.decision === "HOLD", "Weak consensus stays in HOLD");
   assert(resWeak.grade === "REJECT", "Grade resolves to REJECT");
 
@@ -85,7 +85,7 @@ async function runTests() {
   const inputsConflict = buildMockInputs({
     pairState: { direction: "BUY", mtfTrend: "Bearish" }
   });
-  const resConflict = evaluateMarketOpportunity(inputsConflict);
+  const resConflict = await evaluateMarketOpportunity(inputsConflict);
   assert(resConflict.decisionBreakdown.finalScore < resA.decisionBreakdown.finalScore, "Score is lower due to trend conflict");
 
   // Test 5: High Spread Rejection
@@ -93,7 +93,7 @@ async function runTests() {
   const inputsHighSpread = buildMockInputs({
     marketState: { spread: 5.5 }
   });
-  const resHighSpread = evaluateMarketOpportunity(inputsHighSpread);
+  const resHighSpread = await evaluateMarketOpportunity(inputsHighSpread);
   assert(resHighSpread.decision === "HOLD", "Wide spread triggers HOLD block");
   assert(resHighSpread.grade === "REJECT", "Grade resolves to REJECT");
   assert(resHighSpread.score === 0, "Score forced to 0 on policy check block");
@@ -103,7 +103,7 @@ async function runTests() {
   const inputsClosed = buildMockInputs({
     marketState: { marketClosed: true }
   });
-  const resClosed = evaluateMarketOpportunity(inputsClosed);
+  const resClosed = await evaluateMarketOpportunity(inputsClosed);
   assert(resClosed.decision === "HOLD", "Closed market triggers HOLD block");
   assert(resClosed.grade === "REJECT", "Grade resolves to REJECT");
   assert(resClosed.score === 0, "Score forced to 0 on closed market");
@@ -113,7 +113,7 @@ async function runTests() {
   const inputsVol = buildMockInputs({
     marketState: { volatility: "Extreme" }
   });
-  const resVol = evaluateMarketOpportunity(inputsVol);
+  const resVol = await evaluateMarketOpportunity(inputsVol);
   assert(resVol.decision === "HOLD", "Extreme volatility triggers HOLD block");
   assert(resVol.grade === "REJECT", "Grade resolves to REJECT");
   assert(resVol.score === 0, "Score forced to 0 on extreme volatility");
@@ -124,7 +124,7 @@ async function runTests() {
     session: { currentSession: "London" }, // Prevent low volume session warning
     marketState: { spread: 3.5, volatility: "High" }
   });
-  const resPenalties = evaluateMarketOpportunity(inputsPenalties, {
+  const resPenalties = await evaluateMarketOpportunity(inputsPenalties, {
     policies: { blockSpreadBlocked: false, blockExtremeVolatility: false }, // disable hard blocks to isolate penalty calculations
     warningPenalty: 8,
     maximumPenalty: 25
@@ -146,13 +146,13 @@ async function runTests() {
   const inputsCustom = buildMockInputs({
     consensus: { buyConfidence: 80, sellConfidence: 20 }
   });
-  const resCustom = evaluateMarketOpportunity(inputsCustom, customConfig);
+  const resCustom = await evaluateMarketOpportunity(inputsCustom, customConfig);
   // Consensus agreement is 80%, which maps to raw score 100. Overridden weight is 100% consensus, so score should be 100.
   assert(resCustom.score === 100, `Custom configuration uses consensus weight solely (Actual score: ${resCustom.score})`);
 
   // Test 10: Deep Freeze Immutability
   console.log("\n[Test 10] Testing deep freeze validation...");
-  const resFreeze = evaluateMarketOpportunity(buildMockInputs());
+  const resFreeze = await evaluateMarketOpportunity(buildMockInputs());
   assert(Object.isFrozen(resFreeze), "Root response is frozen");
   assert(Object.isFrozen(resFreeze.decisionBreakdown), "decisionBreakdown object is frozen");
   assert(Object.isFrozen(resFreeze.marketContext), "Nested marketContext is frozen");
@@ -166,8 +166,8 @@ async function runTests() {
 
   // Test 11: Determinism
   console.log("\n[Test 11] Testing determinism across runs...");
-  const resD1 = evaluateMarketOpportunity(buildMockInputs());
-  const resD2 = evaluateMarketOpportunity(buildMockInputs());
+  const resD1 = await evaluateMarketOpportunity(buildMockInputs());
+  const resD2 = await evaluateMarketOpportunity(buildMockInputs());
   assert(resD1.score === resD2.score, "Scores match exactly");
   assert(resD1.decision === resD2.decision, "Decisions match exactly");
   assert(JSON.stringify(resD1.decisionBreakdown) === JSON.stringify(resD2.decisionBreakdown), "Breakdown elements match exactly");
