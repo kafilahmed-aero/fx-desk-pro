@@ -204,25 +204,29 @@ async function handleContextCreated(context) {
 async function handlePricesUpdated(pricesMap) {
   if (!isRunning) return;
 
-  // Find waiting signals
-  const waitingDocs = await SignalValidationContextModel.find({
-    pipelineStatus: "SCHEDULED",
-    "order.executionStatus": "WAITING_FOR_PRICE"
-  });
+  try {
+    // Find waiting signals
+    const waitingDocs = await SignalValidationContextModel.find({
+      pipelineStatus: "SCHEDULED",
+      "order.executionStatus": "WAITING_FOR_PRICE"
+    });
 
-  for (const doc of waitingDocs) {
-    const priceInfo = pricesMap.get(doc.symbol);
-    if (priceInfo && typeof priceInfo.price === "number") {
-      enqueue(doc.signalId, async () => {
-        const lockedDoc = await acquireLock(doc.signalId);
-        if (!lockedDoc) return;
-        try {
-          await advanceContext(lockedDoc, { livePrice: priceInfo.price });
-        } finally {
-          await releaseLock(lockedDoc);
-        }
-      });
+    for (const doc of waitingDocs) {
+      const priceInfo = pricesMap.get(doc.symbol);
+      if (priceInfo && typeof priceInfo.price === "number") {
+        enqueue(doc.signalId, async () => {
+          const lockedDoc = await acquireLock(doc.signalId);
+          if (!lockedDoc) return;
+          try {
+            await advanceContext(lockedDoc, { livePrice: priceInfo.price });
+          } finally {
+            await releaseLock(lockedDoc);
+          }
+        });
+      }
     }
+  } catch (err) {
+    logger.error("worker.handle_prices_failed", { error: err.message });
   }
 }
 
