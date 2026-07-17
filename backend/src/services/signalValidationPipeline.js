@@ -30,9 +30,13 @@ export async function executeSignalValidationPipeline(rawMessage, parsedSignal, 
   const { planSignalEntry } = await import("./signalEntryPlannerService.js");
   const plannedContext = planSignalEntry(validationResult.context, liveMarketPrice, options);
 
+  // Stage 3: Execution Scheduler
+  const { scheduleSignalExecution } = await import("./signalExecutionSchedulerService.js");
+  const scheduledContext = scheduleSignalExecution(plannedContext, options);
+
   const finalResult = {
     ...validationResult,
-    context: plannedContext
+    context: scheduledContext
   };
 
   return deepFreeze(finalResult);

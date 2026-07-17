@@ -51,7 +51,7 @@ async function runTests() {
     }
 
     // Validate future stage placeholders
-    if (ctx.pipelineStatus !== "VALIDATED" || ctx.executionStatus !== "NOT_STARTED") {
+    if (ctx.pipelineStatus !== "SCHEDULED" || ctx.executionStatus !== "NOT_STARTED") {
       throw new Error(`Invalid status states. pipelineStatus: ${ctx.pipelineStatus}, executionStatus: ${ctx.executionStatus}`);
     }
 

@@ -75,6 +75,7 @@ export function planSignalEntry(context = {}, liveMarketPrice, options = {}) {
   // 3. Build updated deep-frozen context
   const plannedContext = {
     ...context,
+    pipelineStatus: "PLANNED",
     order: {
       ...context.order,
       type,
