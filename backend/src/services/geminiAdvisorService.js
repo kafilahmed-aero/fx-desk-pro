@@ -2283,6 +2283,8 @@ Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`jso
 
     recommendation.explanation = explanation;
 
+    let textResponse = "";
+
     // Call Gemini only for auxiliary explanation generation if API key is present
     if (config.geminiApiKey) {
       // Stage 5: Gemini request started (Auxiliary explanation generation)
@@ -2317,7 +2319,7 @@ Generate a natural language explanation for this setup. Your response must be JS
 Return JSON ONLY. Do NOT enclose the JSON in markdown code blocks like \`\`\`json.`;
 
         const modelManagerRes = await callGeminiWithFallback(auxPrompt, reqId, startT, logStage);
-        let textResponse = modelManagerRes.textResponse.trim();
+        textResponse = modelManagerRes.textResponse.trim();
         if (textResponse.startsWith("```")) {
           textResponse = textResponse.replace(/^```(?:json)?\n?|```$/g, "").trim();
         }
