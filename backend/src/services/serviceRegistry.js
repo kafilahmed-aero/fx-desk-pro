@@ -64,12 +64,15 @@ const services = [
   {
     name: "Telegram Ingestion Listener",
     start: async () => {
-      const telRes = await startTelegramListener();
-      if (telRes && telRes.started) {
-        logger.info("STARTUP 4 Telegram Listener Started");
-      } else {
-        logger.warn("STARTUP 4 Telegram Listener skipped or failed to start", { reason: telRes?.error || "skipped" });
-      }
+      startTelegramListener().then((telRes) => {
+        if (telRes && telRes.started) {
+          logger.info("STARTUP 4 Telegram Listener Started");
+        } else {
+          logger.warn("STARTUP 4 Telegram Listener skipped or failed to start", { reason: telRes?.reason || "skipped" });
+        }
+      }).catch((err) => {
+        logger.error("STARTUP 4 Telegram Listener failed", { error: err.message });
+      });
     }
   },
   {

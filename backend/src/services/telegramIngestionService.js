@@ -81,8 +81,14 @@ export async function startTelegramListener() {
     const client = await connectTelegramWithSavedSession();
     logger.info("telegram.connected");
     logger.info("STARTUP 5 Telegram Connected");
-    lastStartupChannelReport = await validateStartupChannels();
-    await runStartupBackfill(client);
+    validateStartupChannels().then((report) => {
+      lastStartupChannelReport = report;
+    }).catch((err) => {
+      logger.error("telegram.validate_channels_failed", { error: err.message });
+    });
+    runStartupBackfill(client).catch((err) => {
+      logger.error("telegram.backfill_failed", { error: err.message });
+    });
 
     listenerTimer = setInterval(() => {
       pollTelegramChannels().catch((error) => {
