@@ -55,8 +55,8 @@ export async function executePipelineE2E(rawMessage = {}, options = {}) {
   try {
     // 1. Noise Filtering & Parsing
     const parseStart = Date.now();
-    const classificationRes = classifyMessage(rawMessage);
-    const parsedSignal = parseSignalMessage(rawMessage, "NEW_SIGNAL");
+    const classificationRes = options.mockClassificationRes || classifyMessage(rawMessage);
+    const parsedSignal = options.mockParsedSignal || parseSignalMessage(rawMessage, "NEW_SIGNAL");
     steps.push({
       step: "INGESTION_AND_PARSING",
       status: "SUCCESS",

@@ -1,23 +1,28 @@
 import { logger } from "../utils/logger.js";
+import { validateParsedSignal } from "./signalValidationService.js";
 
 /**
- * Signal Validation Pipeline (Phoenix v0 placeholder).
- * Bypasses the Decision Engine and executes direct signal validation.
+ * Signal Validation Pipeline (Phoenix v0).
+ * Bypasses the Decision Engine and runs Stage 1 signal validation.
  * @param {Object} rawMessage
  * @param {Object} parsedSignal
  * @param {Object} options
- * @returns {Object} Report snapshot
+ * @returns {Object} Standard Validation Result object
  */
 export async function executeSignalValidationPipeline(rawMessage, parsedSignal, options = {}) {
-  logger.info("Signal Validation Mode Active - Pipeline Placeholder", {
-    messageId: rawMessage?.id || "unknown",
-    pair: parsedSignal?.pair || "unknown"
-  });
+  const result = validateParsedSignal(rawMessage, parsedSignal, options);
 
-  return {
-    status: "SUCCESS",
-    mode: "signal_validation",
-    message: "Signal Validation Mode Active - Pipeline Placeholder",
-    parsedSignal: parsedSignal || null
-  };
+  if (result.success) {
+    logger.info(`Signal Validation Mode Active - Validation SUCCESS: ${result.context.signalId}`, {
+      signalId: result.context.signalId,
+      symbol: result.context.symbol
+    });
+  } else {
+    const errorMsg = result.errors.map(e => `[${e.field}]: ${e.message}`).join(", ");
+    logger.warn(`Signal Validation Mode Active - Validation FAILED: ${errorMsg}`, {
+      errors: result.errors
+    });
+  }
+
+  return result;
 }

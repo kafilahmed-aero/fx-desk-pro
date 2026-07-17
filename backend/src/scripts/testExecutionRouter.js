@@ -68,8 +68,8 @@ async function runTests() {
       report.status === "SUCCESS" &&
       report.mt5Payload === null &&
       report.signalValidationReport !== undefined &&
-      report.signalValidationReport.status === "SUCCESS" &&
-      report.signalValidationReport.message === "Signal Validation Mode Active - Pipeline Placeholder" &&
+      report.signalValidationReport.success === true &&
+      report.signalValidationReport.context !== null &&
       hasRouterStep &&
       !hasDecisionStep &&
       !hasRiskStep
