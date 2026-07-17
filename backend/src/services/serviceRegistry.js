@@ -78,6 +78,19 @@ const services = [
       initPositionManager();
       logger.info("STARTUP 5 Phoenix Position Manager Started");
     }
+  },
+  {
+    name: "Signal Validation Worker",
+    start: async () => {
+      const { start, status } = await import("./signalValidationWorker.js");
+      await start();
+      const stats = status();
+      logger.info("STARTUP 6 Signal Validation Worker Started", {
+        activeWorkerId: stats.activeWorkerId,
+        isRunning: stats.isRunning,
+        deduplicatedEventsCount: stats.deduplicatedEventsCount
+      });
+    }
   }
 ];
 

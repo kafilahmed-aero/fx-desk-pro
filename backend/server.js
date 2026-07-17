@@ -14,6 +14,8 @@ import { stopOutcomeTracker } from "./src/services/aiDecisionValidationService.j
 import { initializeAllServices } from "./src/services/serviceRegistry.js";
 import { stopPositionMonitoring } from "./src/services/positionManagerService.js";
 
+import mongoose from "mongoose";
+
 // server.js is the backend entry point.
 // It loads configuration, prepares external services, and starts Express.
 const app = createApp();
@@ -47,16 +49,39 @@ async function startServer() {
   });
 
   const shutdown = async () => {
+    logger.info("Graceful shutdown sequence initiated...");
+    
+    // 1. Stop Telegram Ingestion
+    await stopTelegramListener();
+
+    // 2. Stop Signal Validation Worker, flush queues, and release locks
+    try {
+      const { stop } = await import("./src/services/signalValidationWorker.js");
+      await stop();
+    } catch (err) {
+      logger.error("shutdown.stop_worker_failed", { error: err.message });
+    }
+
+    // 3. Stop Price Monitoring
+    stopPriceMonitoring();
+
+    // 4. Stop MT5 Bridge & other Decision Mode components
     stopPositionMonitoring();
     stopKeepAlive();
     stopMarketEngine();
-    stopPriceMonitoring();
     stopMt5SyncService();
     stopAiRecommendationScheduler();
     stopOutcomeTracker();
-    await stopTelegramListener();
-    server.close(() => {
+
+    // 5. Close Server
+    server.close(async () => {
       logger.info("server.stopped");
+      
+      // 6. Disconnect Database
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        await mongoose.connection.close();
+        logger.info("database.disconnected");
+      }
       process.exit(0);
     });
   };

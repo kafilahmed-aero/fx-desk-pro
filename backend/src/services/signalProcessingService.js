@@ -1,6 +1,7 @@
 import { classifyMessage } from "../parsers/noiseFilter.js";
 import { parseSignalMessage } from "../parsers/signalParser.js";
 import { detectTradingPair } from "../parsers/pairDetector.js";
+import { config } from "../config/env.js";
 import { storeParsedSignal } from "./parsedSignalStore.js";
 import {
   createDedupeFoundation,
@@ -163,6 +164,35 @@ export async function processRawMessage(rawMessage) {
         classification: classificationResult.classification,
         parsedSignal,
         stored: false,
+      };
+    }
+
+    if (config.executionMode === "signal_validation" && classificationResult.classification === "NEW_SIGNAL") {
+      const { executeSignalValidationPipeline } = await import("./signalValidationPipeline.js");
+      const validationReport = await executeSignalValidationPipeline(rawMessage, extractedSignal);
+      
+      if (validationReport.success && validationReport.context) {
+        try {
+          const { SignalValidationContextModel } = await import("../models/signalValidationContextModel.js");
+          await SignalValidationContextModel.create(validationReport.context);
+          
+          const { validationEvents } = await import("./validationEvents.js");
+          validationEvents.emit("validationContextCreated", validationReport.context);
+          
+          logger.info("pipeline_integration.context_persisted", { signalId: validationReport.context.signalId });
+        } catch (err) {
+          if (err.code === 11000) {
+            logger.warn("pipeline_integration.duplicate_context_skipped", { signalId: validationReport.context.signalId });
+          } else {
+            logger.error("pipeline_integration.context_persist_failed", { signalId: validationReport.context.signalId, error: err.message });
+          }
+        }
+      }
+
+      return {
+        classification: classificationResult.classification,
+        parsedSignal: validationReport.context,
+        stored: true
       };
     }
 
