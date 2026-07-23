@@ -17,7 +17,7 @@ import { normalizeTradingPair } from "../parsers/pairDetector.js";
 import { broadcastPairStateUpdate } from "./liveUpdateService.js";
 import { logger } from "../utils/logger.js";
 
-const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60;
+const signalExpirationAgeMinutes = Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 360;
 
 function debugLog(message) {
   logger.debug("pair_state.engine", {

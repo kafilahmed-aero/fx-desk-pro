@@ -20,36 +20,43 @@ function calculateAgeMinutes(timestamp, now) {
 }
 
 function getFreshnessByAge(ageMinutes) {
-  if (ageMinutes <= 5) {
+  if (ageMinutes <= 15) {
     return {
-      weight: 1,
+      weight: 1.0,
       level: "VERY_FRESH",
     };
   }
 
-  if (ageMinutes <= 15) {
+  if (ageMinutes <= 45) {
     return {
-      weight: 0.8,
+      weight: 0.85,
       level: "FRESH",
     };
   }
 
-  if (ageMinutes <= 30) {
+  if (ageMinutes <= 90) {
     return {
-      weight: 0.5,
+      weight: 0.70,
+      level: "ACTIVE",
+    };
+  }
+
+  if (ageMinutes <= 180) {
+    return {
+      weight: 0.50,
       level: "AGING",
     };
   }
 
-  if (ageMinutes < 60) {
+  if (ageMinutes <= 360) {
     return {
-      weight: 0.1,
+      weight: 0.30,
       level: "WEAK",
     };
   }
 
   return {
-    weight: 0,
+    weight: 0.10,
     level: "STALE",
   };
 }

@@ -208,7 +208,7 @@ function Dashboard() {
             <RadioTower size={14} className="text-slate-400" />
             Live Trading Desk
           </p>
-          <h1 className="mt-1 text-2xl font-black text-slate-950 dark:text-white tracking-tight">
+          <h1 className="mt-1 text-2xl font-black text-slate-955 dark:text-white tracking-tight">
             FX Desk Pro
           </h1>
         </div>
@@ -243,12 +243,12 @@ function Dashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left text-xs">
+          <table className="w-full min-w-[1020px] text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-400 dark:border-white/10 dark:text-slate-500 font-bold">
                 <th className="px-5 py-3.5 font-bold">Pair</th>
                 <th className="px-5 py-3.5 font-bold">Direction</th>
-                <th className="px-5 py-3.5 font-bold">Confidence</th>
+                <th className="px-5 py-3.5 font-bold min-w-[12rem]">Confidence</th>
                 <th className="px-5 py-3.5 font-bold">Weight Split</th>
                 <th className="px-5 py-3.5 font-bold">Signals</th>
                 <th className="px-5 py-3.5 font-bold">Age</th>
@@ -276,9 +276,8 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* BOTTOM SECTION: Gold Live Market Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Gold Price Card */}
+      {/* BOTTOM SECTION: Gold Live Market Status (Full-width expansion) */}
+      <div className="w-full">
         <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
           <div className="flex justify-between items-start">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Gold Live Price</p>
@@ -288,21 +287,7 @@ function Dashboard() {
             <p className="text-3xl font-black text-slate-955 dark:text-white leading-none">
               {systemHealth?.priceFeeds?.xauusdPrice ? `$${systemHealth.priceFeeds.xauusdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "--"}
             </p>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">XAUUSD Real-Time Price</span>
-          </div>
-        </div>
-
-        {/* Signal Monitor Status Card */}
-        <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
-          <div className="flex justify-between items-start">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Telegram Monitor Status</p>
-            <Activity size={16} className="text-emerald-500" />
-          </div>
-          <div>
-            <p className="text-3xl font-black text-emerald-500 leading-none">
-              {systemHealth?.activeServices?.telegramListener ? "Active" : "Online"}
-            </p>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">Real-Time Channel Ingestion & Parsing</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">XAUUSD Real-Time Consensus Price</span>
           </div>
         </div>
       </div>
@@ -319,8 +304,8 @@ function OpportunityRow({ opportunity }) {
       <td className="px-5 py-5">
         <DirectionBadge direction={opportunity.marketDirection} />
       </td>
-      <td className="px-5 py-5">
-        <ConfidenceBadge opportunity={opportunity} />
+      <td className="px-5 py-5 min-w-[12rem]">
+        <ConfidenceProgressBars opportunity={opportunity} />
       </td>
       <td className="px-5 py-5">
         <WeightSplit opportunity={opportunity} />
@@ -399,24 +384,40 @@ function AgeBadge({ lastUpdated }) {
   );
 }
 
-function ConfidenceBadge({ opportunity }) {
-  const direction = (opportunity.marketDirection || "NEUTRAL").toUpperCase();
-  const val = direction.includes("BUY") 
-    ? Number(opportunity.buyConfidence) 
-    : direction.includes("SELL") 
-    ? Number(opportunity.sellConfidence) 
-    : Math.max(Number(opportunity.buyConfidence) || 0, Number(opportunity.sellConfidence) || 0);
-
-  const conf = val || 0;
-  let colorClass = "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-white/10";
-  if (conf >= 75) colorClass = "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20";
-  else if (conf >= 50) colorClass = "bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/20";
-  else if (conf >= 30) colorClass = "bg-yellow-500/10 text-yellow-500 dark:text-yellow-400 border-yellow-500/20";
+function ConfidenceProgressBars({ opportunity }) {
+  const buyConf = Math.min(100, Math.max(0, Math.round(Number(opportunity.buyConfidence) || 0)));
+  const sellConf = Math.min(100, Math.max(0, Math.round(Number(opportunity.sellConfidence) || 0)));
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-extrabold ${colorClass}`}>
-      {conf}%
-    </span>
+    <div className="min-w-[12rem] space-y-1.5 text-[11px] font-bold">
+      {/* BUY Bar */}
+      <div>
+        <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">
+          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">BUY</span>
+          <span className="font-extrabold text-slate-800 dark:text-slate-200">{buyConf}%</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-300 shadow-sm shadow-emerald-500/30"
+            style={{ width: `${buyConf}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* SELL Bar */}
+      <div>
+        <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">
+          <span className="text-rose-600 dark:text-rose-400 font-extrabold">SELL</span>
+          <span className="font-extrabold text-slate-800 dark:text-slate-200">{sellConf}%</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800">
+          <div
+            className="h-full rounded-full bg-rose-500 transition-all duration-300 shadow-sm shadow-rose-500/30"
+            style={{ width: `${sellConf}%` }}
+          ></div>
+        </div>
+      </div>
+    </div>
   );
 }
 
