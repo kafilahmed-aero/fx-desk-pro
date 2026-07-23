@@ -28,14 +28,6 @@ const rawConfig = {
   port: process.env.PORT || 5000,
   nodeEnv,
   isProduction,
-  executionMode: process.env.EXECUTION_MODE || "decision",
-  geminiApiKey: process.env.GEMINI_API_KEY || "",
-  models: {
-    primary: process.env.PRIMARY_MODEL || "gemini-2.5-flash",
-    secondary: process.env.SECONDARY_MODEL || "gemini-2.5-flash-lite"
-  },
-  enableModelFallback: process.env.ENABLE_MODEL_FALLBACK !== "false",
-  enableModelTelemetry: process.env.ENABLE_MODEL_TELEMETRY !== "false",
   logLevel: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
   clientUrl: clientUrls[0],
   clientUrls,
@@ -50,7 +42,7 @@ const rawConfig = {
   mongoUri:
     process.env.MONGODB_URI ||
     "mongodb://127.0.0.1:27017/telegram_signal_consensus",
-  signalExpirationMinutes: Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 60,
+  signalExpirationMinutes: Number(process.env.SIGNAL_EXPIRATION_MINUTES) || 360,
   priceHistoryRetentionHours: Number(process.env.PRICE_HISTORY_RETENTION_HOURS) || 24,
   telegram: {
     apiId: Number(process.env.TELEGRAM_API_ID) || null,
@@ -68,8 +60,6 @@ const rawConfig = {
     botToken: process.env.TELEGRAM_ALERT_BOT_TOKEN || "",
     channelId: process.env.TELEGRAM_ALERT_CHANNEL_ID || "",
   },
-  aiSessionStartIst: process.env.AI_SESSION_START_IST || "17:30",
-  aiSessionEndIst: process.env.AI_SESSION_END_IST || "21:30",
   pipeline: {
     processingConcurrency: Math.max(
       1,
@@ -103,90 +93,6 @@ const rawConfig = {
     rawMessageDays: Math.max(1, Number(process.env.RAW_MESSAGE_RETENTION_DAYS) || 30),
     parsedSignalDays: Math.max(1, Number(process.env.PARSED_SIGNAL_RETENTION_DAYS) || 90),
   },
-  liveValidation: {
-    intervalMs: Math.max(
-      10000,
-      Number(process.env.LIVE_VALIDATION_INTERVAL_MS) || 60000
-    ),
-    durationMs: Math.max(
-      0,
-      Number(process.env.LIVE_VALIDATION_DURATION_MS) || 0
-    ),
-  },
-  paperRisk: {
-    maxOpenTrades: Number(process.env.PAPER_RISK_MAX_OPEN_TRADES) || 2,
-    maxDailyTrades: Number(process.env.PAPER_RISK_MAX_DAILY_TRADES) || 10,
-    maxConsecutiveLosses: Number(process.env.PAPER_RISK_MAX_CONSECUTIVE_LOSSES) || 3,
-    dailyLossLimitR: Number(process.env.PAPER_RISK_DAILY_LOSS_LIMIT_R) || 3,
-    dailyProfitTargetR: Number(process.env.PAPER_RISK_DAILY_PROFIT_TARGET_R) || 6,
-    slCooldownMinutes: Number(process.env.PAPER_RISK_SL_COOLDOWN_MINUTES) || 30
-  },
-  autoTrade: {
-    enabled: process.env.AUTO_TRADE_ENABLED !== "false", // Default to true unless explicitly disabled
-    minConfidence: Number(process.env.AUTO_TRADE_MIN_CONFIDENCE) || 75,
-    minTarget: Number(process.env.AUTO_TRADE_MIN_TARGET) || 5.0,
-    minRR: Number(process.env.AUTO_TRADE_MIN_RR) || 1.5,
-    lotSize: Number(process.env.AUTO_TRADE_LOT_SIZE) || 0.01
-  },
-  decisionEngine: {
-    weights: {
-      consensus: 35,
-      marketIntelligence: 40,
-      risk: 15,
-      rrr: 10
-    },
-    thresholds: {
-      gradeA: 90,
-      gradeB: 80,
-      gradeC: 70
-    },
-    warningPenalty: 5,
-    maximumPenalty: 20,
-    policies: {
-      blockMarketClosed: true,
-      blockSpreadBlocked: true,
-      blockExtremeVolatility: true
-    }
-  },
-  marketIntelligence: {
-    weights: {
-      trend: 25,
-      structure: 20,
-      supportResistance: 15,
-      session: 15,
-      volatility: 15,
-      spread: 10
-    },
-    thresholds: {
-      gradeA: 90,
-      gradeB: 80,
-      gradeC: 70
-    }
-  },
-  smartEntry: {
-    minimumRR: 1.5,
-    preferredRR: 2.0,
-    excellentRR: 3.0,
-    maximumTpTravelBeforeReject: 0.8,
-    maximumSpreadMultiplier: 2.0,
-    minimumEntryDistance: 1.0,
-    maximumEntryDistance: 10.0
-  },
-  tradeLifecycle: {
-    breakEvenTriggerPoints: 100.0,
-    breakEvenOffsetPoints: 10.0,
-    trailDistancePoints: 150.0,
-    trailStepPoints: 20.0,
-    partialProfitStages: [
-      { triggerRR: 1, closePercent: 30 },
-      { triggerRR: 2, closePercent: 30 },
-      { triggerRR: 3, closePercent: 40 }
-    ],
-    maximumTradeDurationMin: 120,
-    minimumProgressPoints: 20.0,
-    marketExitThreshold: 50,
-    emergencySpreadMultiplier: 3.0
-  }
 };
 
 initializeManager(rawConfig);
