@@ -4,12 +4,8 @@ import { hydratePairStatesFromDb } from "./pairStateHydrationService.js";
 import { startMarketEngine } from "./marketEngineService.js";
 import { startPriceMonitoring } from "./priceMonitoringScheduler.js";
 import { startMt5SyncService } from "./mt5SyncService.js";
-import { startAiRecommendationScheduler } from "./aiRecommendationStateService.js";
-import { startOutcomeTracker } from "./aiDecisionValidationService.js";
-import { generateRecommendationIfNeeded } from "./aiRecommendationStateService.js";
 import { startTelegramListener } from "./telegramIngestionService.js";
 import { startKeepAlive } from "./keepAliveService.js";
-import { initPositionManager } from "./positionManagerService.js";
 
 const services = [
   {
@@ -45,53 +41,16 @@ const services = [
     }
   },
   {
-    name: "AI Recommendation Scheduler",
-    start: async () => {
-      if (global.mockSchedulerCrash) {
-        throw new Error("Mock Scheduler Crash");
-      }
-      startAiRecommendationScheduler();
-      startOutcomeTracker();
-      
-      // Initial recommendation generation cycle (non-blocking async)
-      generateRecommendationIfNeeded("STARTUP").catch((err) => {
-        logger.warn("server.initial_recommendation_failed", { error: err.message });
-      });
-      
-      logger.info("STARTUP 3 AI Scheduler Started");
-    }
-  },
-  {
     name: "Telegram Ingestion Listener",
     start: async () => {
       startTelegramListener().then((telRes) => {
         if (telRes && telRes.started) {
-          logger.info("STARTUP 4 Telegram Listener Started");
+          logger.info("STARTUP 3 Telegram Listener Started");
         } else {
-          logger.warn("STARTUP 4 Telegram Listener skipped or failed to start", { reason: telRes?.reason || "skipped" });
+          logger.warn("STARTUP 3 Telegram Listener skipped or failed to start", { reason: telRes?.reason || "skipped" });
         }
       }).catch((err) => {
-        logger.error("STARTUP 4 Telegram Listener failed", { error: err.message });
-      });
-    }
-  },
-  {
-    name: "Phoenix Position Manager",
-    start: async () => {
-      initPositionManager();
-      logger.info("STARTUP 5 Phoenix Position Manager Started");
-    }
-  },
-  {
-    name: "Signal Validation Worker",
-    start: async () => {
-      const { start, status } = await import("./signalValidationWorker.js");
-      await start();
-      const stats = status();
-      logger.info("STARTUP 6 Signal Validation Worker Started", {
-        activeWorkerId: stats.activeWorkerId,
-        isRunning: stats.isRunning,
-        deduplicatedEventsCount: stats.deduplicatedEventsCount
+        logger.error("STARTUP 3 Telegram Listener failed", { error: err.message });
       });
     }
   }

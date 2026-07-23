@@ -13,10 +13,7 @@ import {
   getActiveOpportunities,
   getWeightedConsensus,
   subscribeToConsensusEvents,
-  getLatestXauusdRecommendation,
-  getAiAnalyticsData,
 } from "../services/signalService";
-import XauusdAiAdvisorCard from "../components/XauusdAiAdvisorCard";
 import { fetchWithCredentials } from "../services/apiClient";
 const fallbackRefreshMs = 30000;
 
@@ -31,9 +28,7 @@ const directionStyles = {
 function Dashboard() {
   const [opportunities, setOpportunities] = useState([]);
   const [consensusPairs, setConsensusPairs] = useState([]);
-  const [aiRecommendation, setAiRecommendation] = useState(null);
   const [systemHealth, setSystemHealth] = useState(null);
-  const [aiAnalytics, setAiAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
@@ -55,11 +50,10 @@ function Dashboard() {
       hasPendingRefresh = false;
 
       try {
-        const [nextOpportunities, nextConsensusPairs, nextAiData, nextHealthData, nextAnalyticsData] =
+        const [nextOpportunities, nextConsensusPairs, nextHealthData] =
           await Promise.all([
             getActiveOpportunities({ signal: activeController.signal }),
             getWeightedConsensus({ signal: activeController.signal }),
-            getLatestXauusdRecommendation({ signal: activeController.signal }),
             fetchWithCredentials("/system/health", { signal: activeController.signal })
               .then((res) => {
                 if (!res.ok) throw new Error("Failed to load health status");
@@ -69,20 +63,13 @@ function Dashboard() {
                 console.warn("Dashboard system health fetch failed", err);
                 return null;
               }),
-            getAiAnalyticsData({ signal: activeController.signal })
-              .catch((err) => {
-                console.warn("Dashboard AI analytics fetch failed", err);
-                return null;
-              }),
           ]);
 
         if (!isMounted) return;
 
         setOpportunities(nextOpportunities);
         setConsensusPairs(nextConsensusPairs);
-        setAiRecommendation(nextAiData);
         setSystemHealth(nextHealthData);
-        setAiAnalytics(nextAnalyticsData);
         setError("");
         setLastLoadedAt(new Date());
         if (import.meta.env.DEV) {
@@ -212,8 +199,6 @@ function Dashboard() {
     };
   }, []);
 
-
-
   return (
     <div className="animate-dashboard-in space-y-8 pb-8">
       {/* Page header */}
@@ -239,15 +224,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* TOP SECTION: Large Trading Recommendation Hero Card */}
-      <XauusdAiAdvisorCard 
-        data={aiRecommendation} 
-        loading={isLoading} 
-        refreshTrigger={lastLoadedAt ? lastLoadedAt.getTime() : 0} 
-        tradingSession={systemHealth?.tradingSession}
-      />
-
-      {/* SECOND SECTION: Active Opportunities Table */}
+      {/* MAIN SECTION: Active Opportunities Table */}
       <section className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm dark:border-white/10 dark:bg-[#0B1220]/90">
         <div className="flex flex-col gap-2 border-b border-slate-200 p-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -271,7 +248,7 @@ function Dashboard() {
               <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-400 dark:border-white/10 dark:text-slate-500 font-bold">
                 <th className="px-5 py-3.5 font-bold">Pair</th>
                 <th className="px-5 py-3.5 font-bold">Direction</th>
-                <th className="px-5 py-3.5 font-bold font-bold">Confidence</th>
+                <th className="px-5 py-3.5 font-bold">Confidence</th>
                 <th className="px-5 py-3.5 font-bold">Weight Split</th>
                 <th className="px-5 py-3.5 font-bold">Signals</th>
                 <th className="px-5 py-3.5 font-bold">Age</th>
@@ -299,68 +276,33 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* THIRD SECTION: Three compact status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* 1. Gold Price Card */}
+      {/* BOTTOM SECTION: Gold Live Market Status */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Gold Price Card */}
         <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
           <div className="flex justify-between items-start">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Gold Price</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Gold Live Price</p>
             <TrendingUp size={16} className="text-slate-400 dark:text-slate-500" />
           </div>
           <div>
             <p className="text-3xl font-black text-slate-955 dark:text-white leading-none">
               {systemHealth?.priceFeeds?.xauusdPrice ? `$${systemHealth.priceFeeds.xauusdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "--"}
             </p>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">XAUUSD Live Consensus</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">XAUUSD Real-Time Price</span>
           </div>
         </div>
 
-        {/* 2. Trading Session Card */}
+        {/* Signal Monitor Status Card */}
         <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
           <div className="flex justify-between items-start">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Trading Session</p>
-            <Clock3 size={16} className="text-slate-400 dark:text-slate-500" />
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Telegram Monitor Status</p>
+            <Activity size={16} className="text-emerald-500" />
           </div>
           <div>
-            <p className={`text-3xl font-black leading-none ${systemHealth?.tradingSession?.active ? "text-emerald-500" : "text-slate-400 dark:text-slate-500"}`}>
-              {systemHealth?.tradingSession?.active ? "Active" : "Inactive"}
+            <p className="text-3xl font-black text-emerald-500 leading-none">
+              {systemHealth?.activeServices?.telegramListener ? "Active" : "Online"}
             </p>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">
-              Overlap: {systemHealth?.tradingSession?.start || "17:30"}–{systemHealth?.tradingSession?.end || "21:30"} IST
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Today's Summary Card */}
-        <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
-          <div className="flex justify-between items-start">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Today's Summary</p>
-            <Activity size={16} className="text-slate-400 dark:text-slate-500" />
-          </div>
-          <div>
-            <div className="flex justify-between items-baseline">
-              <p className="text-2xl font-black text-slate-950 dark:text-white leading-none">
-                {aiAnalytics?.currentlyOpen ?? 0} <span className="text-xs font-normal text-slate-400">Open</span>
-                {" / "}
-                {aiAnalytics?.winRate !== null && aiAnalytics?.closedToday !== undefined 
-                  ? Math.round((aiAnalytics.winRate / 100) * aiAnalytics.closedToday) 
-                  : 0}
-                <span className="text-xs font-normal text-slate-400"> W</span>
-              </p>
-              
-              <span className={`text-sm font-black ${
-                (aiAnalytics?.simulationEquityCurve && aiAnalytics.simulationEquityCurve.length > 0 
-                  ? aiAnalytics.simulationEquityCurve[aiAnalytics.simulationEquityCurve.length - 1] - 10000 
-                  : 0) >= 0 
-                    ? "text-emerald-500" 
-                    : "text-rose-500"
-              }`}>
-                {aiAnalytics?.simulationEquityCurve && aiAnalytics.simulationEquityCurve.length > 0 
-                  ? (aiAnalytics.simulationEquityCurve[aiAnalytics.simulationEquityCurve.length - 1] - 10000 >= 0 ? "+" : "") + (aiAnalytics.simulationEquityCurve[aiAnalytics.simulationEquityCurve.length - 1] - 10000).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
-                  : "$0"}
-              </span>
-            </div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">Closed Today: {aiAnalytics?.closedToday ?? 0}</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">Real-Time Channel Ingestion & Parsing</span>
           </div>
         </div>
       </div>
@@ -493,8 +435,6 @@ function getAgeLabel(value) {
     return "--";
   }
 }
-
-
 
 function WeightSplit({ opportunity }) {
   const total =

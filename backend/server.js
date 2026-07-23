@@ -3,16 +3,13 @@ import { createApp } from "./src/app.js";
 import { connectDatabase } from "./src/config/database.js";
 import { config } from "./src/config/env.js";
 import { getSessionCookieStartupLogDetails } from "./src/config/sessionCookie.js";
-import { stopAiRecommendationScheduler } from "./src/services/aiRecommendationStateService.js";
 import { stopTelegramListener } from "./src/services/telegramIngestionService.js";
 import { stopMarketEngine } from "./src/services/marketEngineService.js";
 import { stopPriceMonitoring } from "./src/services/priceMonitoringScheduler.js";
 import { logger } from "./src/utils/logger.js";
 import { stopKeepAlive } from "./src/services/keepAliveService.js";
 import { stopMt5SyncService } from "./src/services/mt5SyncService.js";
-import { stopOutcomeTracker } from "./src/services/aiDecisionValidationService.js";
 import { initializeAllServices } from "./src/services/serviceRegistry.js";
-import { stopPositionMonitoring } from "./src/services/positionManagerService.js";
 
 import mongoose from "mongoose";
 
@@ -54,30 +51,19 @@ async function startServer() {
     // 1. Stop Telegram Ingestion
     await stopTelegramListener();
 
-    // 2. Stop Signal Validation Worker, flush queues, and release locks
-    try {
-      const { stop } = await import("./src/services/signalValidationWorker.js");
-      await stop();
-    } catch (err) {
-      logger.error("shutdown.stop_worker_failed", { error: err.message });
-    }
-
-    // 3. Stop Price Monitoring
+    // 2. Stop Price Monitoring
     stopPriceMonitoring();
 
-    // 4. Stop MT5 Bridge & other Decision Mode components
-    stopPositionMonitoring();
+    // 3. Stop MT5 Bridge & Keep Alive
     stopKeepAlive();
     stopMarketEngine();
     stopMt5SyncService();
-    stopAiRecommendationScheduler();
-    stopOutcomeTracker();
 
-    // 5. Close Server
+    // 4. Close Server
     server.close(async () => {
       logger.info("server.stopped");
       
-      // 6. Disconnect Database
+      // 5. Disconnect Database
       if (mongoose.connection && mongoose.connection.readyState === 1) {
         await mongoose.connection.close();
         logger.info("database.disconnected");

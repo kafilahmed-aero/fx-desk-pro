@@ -7,7 +7,6 @@ import healthRoutes from "./routes/healthRoutes.js";
 import rawMessageRoutes from "./routes/rawMessageRoutes.js";
 import signalRoutes from "./routes/signalRoutes.js";
 import systemRoutes from "./routes/systemRoutes.js";
-import aiRoutes from "./routes/aiRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 
 // app.js owns the Express application setup.
@@ -41,7 +40,6 @@ export function createApp() {
   app.use("/api/signals", requireAuth, signalRoutes);
   app.use("/api/consensus", requireAuth, consensusRoutes);
   app.use("/api/system", requireAuth, systemRoutes);
-  app.use("/api/ai", requireAuth, aiRoutes);
 
   return app;
 }
