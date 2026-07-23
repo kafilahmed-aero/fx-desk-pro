@@ -18,7 +18,12 @@ export function createApp() {
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin || config.clientUrls.includes(origin)) {
+        if (
+          !origin ||
+          config.clientUrls.includes(origin) ||
+          origin.endsWith(".onrender.com") ||
+          origin.endsWith(".vercel.app")
+        ) {
           callback(null, true);
           return;
         }

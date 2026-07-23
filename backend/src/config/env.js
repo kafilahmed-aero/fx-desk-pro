@@ -7,7 +7,7 @@ import {
 
 const nodeEnv = process.env.NODE_ENV || "development";
 const isProduction = nodeEnv === "production";
-const productionClientUrl = "https://fx-desk-pro.vercel.app";
+const productionClientUrls = ["https://fx-desk-pro.vercel.app", "https://fx-desk-pro-frontend.onrender.com"];
 const developmentClientUrls = ["http://localhost:5173", "http://127.0.0.1:5173"];
 const configuredClientUrls = (process.env.CLIENT_URL || "")
   .split(",")
@@ -16,7 +16,7 @@ const configuredClientUrls = (process.env.CLIENT_URL || "")
 const clientUrls = [
   ...new Set([
     ...configuredClientUrls,
-    productionClientUrl,
+    ...productionClientUrls,
     ...(!isProduction ? developmentClientUrls : []),
   ]),
 ];
@@ -319,8 +319,8 @@ function validateProductionConfig() {
 
   const errors = [];
 
-  if (!config.clientUrls.includes(productionClientUrl)) {
-    errors.push(`CLIENT_URL must allow the production frontend origin: ${productionClientUrl}.`);
+  if (!productionClientUrls.some((url) => config.clientUrls.includes(url))) {
+    errors.push(`CLIENT_URL must allow a valid production frontend origin.`);
   }
 
   if (!config.auth.jwtSecret || config.auth.jwtSecret.length < 32) {
