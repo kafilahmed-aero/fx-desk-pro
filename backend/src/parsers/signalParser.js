@@ -156,16 +156,25 @@ function runNormalizationStage(rawMessage) {
 function runEntityExtractionStage(normalized) {
   const pair = extractPair(normalized.cleanedText);
   const bias = extractBias(normalized.compactText);
-  const action = extractAction(normalized.compactText, bias);
+  let action = extractAction(normalized.compactText, bias);
   const orderType = extractOrderType(normalized.compactText);
   const entryInfo = extractEntry(normalized, action);
   const stopLoss = extractStopLoss(normalized);
   const pipTargets = extractPipTargets(normalized.compactText);
   const targets = extractTargets(normalized.cleanedText, action, entryInfo, stopLoss);
 
+  if (!action && entryInfo && typeof entryInfo.entry === "number") {
+    const entry = entryInfo.entry;
+    if (typeof stopLoss === "number" && stopLoss !== entry) {
+      action = stopLoss > entry ? "SELL" : "BUY";
+    } else if (Array.isArray(targets) && targets.length > 0 && typeof targets[0] === "number") {
+      action = targets[0] < entry ? "SELL" : "BUY";
+    }
+  }
+
   return {
     pair,
-    bias,
+    bias: bias || (action === "BUY" ? "BULLISH" : action === "SELL" ? "BEARISH" : null),
     action,
     orderType,
     entryInfo,
