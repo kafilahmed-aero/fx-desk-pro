@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { MarketPrice } from "../models/marketPriceModel.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config/env.js";
-import { getBestProvider } from "./providerRegistryService.js";
 import { EventEmitter } from "events";
 
 export const priceEvents = new EventEmitter();

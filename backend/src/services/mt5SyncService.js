@@ -3,7 +3,6 @@ import url from "url";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import http from "http";
-import { AiRecommendationOutcome } from "../models/aiRecommendationOutcomeModel.js";
 import { logger } from "../utils/logger.js";
 import { config } from "../config/env.js";
 import { EventEmitter } from "events";

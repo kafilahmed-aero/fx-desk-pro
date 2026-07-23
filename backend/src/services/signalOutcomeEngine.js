@@ -2,7 +2,6 @@ import { saveOutcome, getOutcomeByMessageKey, getActiveAndPendingOutcomes } from
 import { logger } from "../utils/logger.js";
 import { updateParsedSignalState, updateParsedSignalLifecycle } from "./parsedSignalStore.js";
 import { updateInMemorySignalState, updateInMemorySignalLifecycle } from "./pairStateEngine.js";
-import { canOpenTrade, formatBlockReason } from "./paperRiskManager.js";
 
 
 const DEFAULT_EXPIRATION_HOURS = 72;
