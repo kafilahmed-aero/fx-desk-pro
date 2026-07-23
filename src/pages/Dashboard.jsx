@@ -7,7 +7,6 @@ import {
   Minus,
   RefreshCw,
   RadioTower,
-  TrendingUp,
 } from "lucide-react";
 import {
   getActiveOpportunities,
@@ -275,22 +274,6 @@ function Dashboard() {
           </table>
         </div>
       </section>
-
-      {/* BOTTOM SECTION: Gold Live Market Status (Full-width expansion) */}
-      <div className="w-full">
-        <div className="h-32 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0B1220]/90">
-          <div className="flex justify-between items-start">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Gold Live Price</p>
-            <TrendingUp size={16} className="text-slate-400 dark:text-slate-500" />
-          </div>
-          <div>
-            <p className="text-3xl font-black text-slate-955 dark:text-white leading-none">
-              {systemHealth?.priceFeeds?.xauusdPrice ? `$${systemHealth.priceFeeds.xauusdPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "--"}
-            </p>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1.5">XAUUSD Real-Time Consensus Price</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
