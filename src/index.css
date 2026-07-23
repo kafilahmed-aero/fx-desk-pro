@@ -4,11 +4,28 @@
 
 @layer base {
   html {
-    @apply bg-[#eef4f8] dark:bg-[#0B1120];
+    @apply bg-[#eef4f8] dark:bg-[#07101f];
+    background-color: #07101f;
+    min-height: 100vh;
+    width: 100%;
+    overscroll-behavior: none;
   }
 
   body {
-    @apply bg-[#eef4f8] transition-colors duration-300 overscroll-none dark:bg-[#0B1120];
+    @apply bg-[#eef4f8] transition-colors duration-300 dark:bg-[#07101f];
+    background-color: #07101f;
+    min-height: 100vh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    min-height: 100vh;
+    width: 100%;
+    background-color: inherit;
   }
 }
 
@@ -200,4 +217,20 @@ body,
 #root {
   width: 100%;
   max-width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #07101f !important;
+}
+
+html:not(.dark),
+html:not(.dark) body,
+html:not(.dark) #root {
+  background-color: #eef4f8 !important;
 }
