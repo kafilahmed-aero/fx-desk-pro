@@ -188,12 +188,6 @@ export async function processRawMessage(rawMessage) {
           }
         }
       }
-
-      return {
-        classification: classificationResult.classification,
-        parsedSignal: validationReport.context,
-        stored: true
-      };
     }
 
     const parsedSignal = {
