@@ -260,7 +260,7 @@ function startFallbackPolling() {
     } catch (err) {
       logger.error("mt5_sync.polling_error", { error: err.message });
     }
-  }, 2000);
+  }, 15000);
 }
 
 /**

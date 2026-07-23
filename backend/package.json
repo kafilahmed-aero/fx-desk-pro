@@ -7,7 +7,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "node --watch server.js",
-    "start": "node server.js",
+    "start": "node --max-old-space-size=400 server.js",
     "telegram:test": "node src/scripts/testTelegramConnection.js",
     "telegram:regenerate-session": "node src/scripts/regenerateTelegramSession.js",
     "parser:test": "node src/scripts/testParserFixtures.js",
