@@ -1021,14 +1021,9 @@ URL: ${req.url}
           case "POSITION_LIST": {
             const { positions } = payload;
             const incomingPositions = Array.isArray(positions) ? positions : [];
-
-            // Delegate state synchronization and audit logging to Recovery Manager
-            import("./recoveryManagerService.js").then(({ executeRecoveryWorkflow }) => {
-              executeRecoveryWorkflow(incomingPositions, {
-                forceAccountId: clientInfo?.accountNumber || clientInfo?.accountId
-              }).catch(err => {
-                logger.error("mt5_sync.recovery_workflow_failed", { error: err.message });
-              });
+            logger.info("mt5_sync.position_list_received", {
+              account: clientInfo?.accountNumber || clientInfo?.accountId,
+              positionCount: incomingPositions.length
             });
             break;
           }
