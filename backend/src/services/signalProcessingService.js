@@ -14,7 +14,6 @@ import { sendTelegramAlert } from "./telegramAlertService.js";
 import { getPairState } from "./pairStateEngine.js";
 import { initializeOutcome, processSignalUpdate } from "./signalOutcomeEngine.js";
 import { getCurrentPrice } from "./priceIngestionService.js";
-import { sendSignalToFxExecute } from "./fxExecuteService.js";
 
 
 
@@ -203,16 +202,6 @@ export async function processRawMessage(rawMessage) {
     };
     const storeResult = await storeParsedSignal(parsedSignal);
     const storedParsedSignal = storeResult.signal || parsedSignal;
-
-    // Dispatch NEW_SIGNAL to FX Execute Execution Bridge (Independent of DB store result)
-    if (storedParsedSignal.classification === "NEW_SIGNAL") {
-      sendSignalToFxExecute(storedParsedSignal).catch((err) => {
-        logger.error("fx_execute_dispatch.failed", {
-          messageKey,
-          error: err.message,
-        });
-      });
-    }
 
     // Trigger Signal Outcome tracking if signal is newly stored in local DB/memory
     if (storeResult.stored) {

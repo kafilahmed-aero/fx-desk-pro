@@ -6,8 +6,6 @@ import { getPairStates as getStoredPairStates } from "./pairStateStore.js";
 import { getActiveOpportunities } from "./activeOpportunityService.js";
 import { logger } from "../utils/logger.js";
 
-import { markSignalDispatched } from "./fxExecuteService.js";
-
 /**
  * Hydrates the in-memory pairStates Map from MongoDB active signals.
  */
@@ -47,12 +45,10 @@ export async function hydratePairStatesFromDb() {
 
     let hydratedCount = 0;
     for (const signal of activeSignals) {
-      const formattedSignal = {
+      updatePairStateFromSignal({
         ...signal,
         _id: signal._id.toString()
-      };
-      updatePairStateFromSignal(formattedSignal);
-      markSignalDispatched(formattedSignal);
+      });
       hydratedCount++;
     }
 
