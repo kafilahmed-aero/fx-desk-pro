@@ -182,7 +182,15 @@ const providers = {
  * @param {Array<string>} pairs - Array of normalized pair names
  * @returns {Promise<Map<string, Object>>} Map of pair -> price info
  */
+function getBestProvider(candidates) {
+  if (!Array.isArray(candidates) || candidates.length === 0) return null;
+  const id = candidates[0];
+  return { id, name: id };
+}
+
 export async function fetchPrices(pairs) {
+
+
   const results = new Map();
   if (!Array.isArray(pairs) || pairs.length === 0) {
     return results;

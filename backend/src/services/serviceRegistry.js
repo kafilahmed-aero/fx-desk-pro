@@ -3,7 +3,6 @@ import { connectDatabase } from "../config/database.js";
 import { hydratePairStatesFromDb } from "./pairStateHydrationService.js";
 import { startMarketEngine } from "./marketEngineService.js";
 import { startPriceMonitoring } from "./priceMonitoringScheduler.js";
-import { startMt5SyncService } from "./mt5SyncService.js";
 import { startTelegramListener } from "./telegramIngestionService.js";
 import { startKeepAlive } from "./keepAliveService.js";
 
@@ -32,14 +31,14 @@ const services = [
     }
   },
   {
-    name: "Price Feeds & MT5 Bridge",
-    start: async (server) => {
+    name: "Price Feeds & Market Engine",
+    start: async () => {
       startMarketEngine();
       startPriceMonitoring();
-      startMt5SyncService(server);
       logger.info("STARTUP 2 Price Scheduler Started");
     }
   },
+
   {
     name: "Telegram Ingestion Listener",
     start: async () => {

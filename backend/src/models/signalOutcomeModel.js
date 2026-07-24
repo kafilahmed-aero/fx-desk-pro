@@ -134,3 +134,8 @@ signalOutcomeSchema.index({ status: 1, pair: 1 });
 export const SignalOutcome =
   mongoose.models.SignalOutcome ||
   mongoose.model("SignalOutcome", signalOutcomeSchema);
+
+export const AiRecommendationOutcome =
+  mongoose.models.AiRecommendationOutcome ||
+  mongoose.model("AiRecommendationOutcome", signalOutcomeSchema);
+

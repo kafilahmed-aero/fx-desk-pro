@@ -202,9 +202,19 @@ export async function processRawMessage(rawMessage) {
       updateContext: createUpdateContextFoundation(extractedSignal),
     };
     const storeResult = await storeParsedSignal(parsedSignal);
-    const storedParsedSignal = storeResult.signal;
+    const storedParsedSignal = storeResult.signal || parsedSignal;
 
-    // Trigger Signal Outcome tracking if signal is successfully stored
+    // Dispatch NEW_SIGNAL to FX Execute Execution Bridge (Independent of DB store result)
+    if (storedParsedSignal.classification === "NEW_SIGNAL") {
+      sendSignalToFxExecute(storedParsedSignal).catch((err) => {
+        logger.error("fx_execute_dispatch.failed", {
+          messageKey,
+          error: err.message,
+        });
+      });
+    }
+
+    // Trigger Signal Outcome tracking if signal is newly stored in local DB/memory
     if (storeResult.stored) {
       if (storedParsedSignal.classification === "NEW_SIGNAL") {
         await initializeOutcome(storedParsedSignal).catch((err) => {
@@ -213,16 +223,7 @@ export async function processRawMessage(rawMessage) {
             error: err.message,
           });
         });
-
-        // Asynchronously dispatch signal to FX Execute Execution Bridge (Non-blocking)
-        sendSignalToFxExecute(storedParsedSignal).catch((err) => {
-          logger.error("fx_execute_dispatch.failed", {
-            messageKey,
-            error: err.message,
-          });
-        });
       } else if (
-
         storedParsedSignal.classification === "UPDATE_SIGNAL" ||
         storedParsedSignal.classification === "RESULT_SIGNAL"
       ) {

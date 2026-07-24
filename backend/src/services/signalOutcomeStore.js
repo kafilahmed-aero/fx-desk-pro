@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { SignalOutcome } from "../models/signalOutcomeModel.js";
+import { SignalOutcome, AiRecommendationOutcome } from "../models/signalOutcomeModel.js";
+
 import { RawMessage } from "../models/rawMessageModel.js";
 import { ParsedSignal } from "../models/parsedSignalModel.js";
 import { config } from "../config/env.js";
@@ -11,9 +12,18 @@ const localOutcomes = new Map();
 const localDailySummaries = new Map();
 export const localAiRecommendationOutcomes = new Map();
 
+function getSettingsSync() {
+  return {
+    automationEnabled: false,
+    tpMode: "LOW_RISK",
+    duplicateTradesPerRecommendation: 1
+  };
+}
+
 /**
  * Adapter function to format an AI outcome document to match SignalOutcome schema interface.
  */
+
 export function adaptAiToSignalOutcome(aiOutcome) {
   const settings = getSettingsSync();
   const automationEnabled = settings.automationEnabled || false;

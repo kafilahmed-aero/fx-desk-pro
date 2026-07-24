@@ -8,8 +8,8 @@ import { stopMarketEngine } from "./src/services/marketEngineService.js";
 import { stopPriceMonitoring } from "./src/services/priceMonitoringScheduler.js";
 import { logger } from "./src/utils/logger.js";
 import { stopKeepAlive } from "./src/services/keepAliveService.js";
-import { stopMt5SyncService } from "./src/services/mt5SyncService.js";
 import { initializeAllServices } from "./src/services/serviceRegistry.js";
+
 
 import mongoose from "mongoose";
 
@@ -54,10 +54,10 @@ async function startServer() {
     // 2. Stop Price Monitoring
     stopPriceMonitoring();
 
-    // 3. Stop MT5 Bridge & Keep Alive
+    // 3. Stop Keep Alive & Market Engine
     stopKeepAlive();
     stopMarketEngine();
-    stopMt5SyncService();
+
 
     // 4. Close Server
     server.close(async () => {
