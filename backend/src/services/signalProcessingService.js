@@ -14,6 +14,8 @@ import { sendTelegramAlert } from "./telegramAlertService.js";
 import { getPairState } from "./pairStateEngine.js";
 import { initializeOutcome, processSignalUpdate } from "./signalOutcomeEngine.js";
 import { getCurrentPrice } from "./priceIngestionService.js";
+import { sendSignalToFxExecute } from "./fxExecuteService.js";
+
 
 
 // Turns one raw Telegram message into a stored parsed signal when rules match.
@@ -211,7 +213,16 @@ export async function processRawMessage(rawMessage) {
             error: err.message,
           });
         });
+
+        // Asynchronously dispatch signal to FX Execute Execution Bridge (Non-blocking)
+        sendSignalToFxExecute(storedParsedSignal).catch((err) => {
+          logger.error("fx_execute_dispatch.failed", {
+            messageKey,
+            error: err.message,
+          });
+        });
       } else if (
+
         storedParsedSignal.classification === "UPDATE_SIGNAL" ||
         storedParsedSignal.classification === "RESULT_SIGNAL"
       ) {
