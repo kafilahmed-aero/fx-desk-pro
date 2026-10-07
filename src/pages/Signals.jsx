@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { RadioTower, RefreshCw, AlertCircle } from "lucide-react";
-import { getParsedSignals } from "../services/signalService";
+import { getParsedSignals, subscribeToConsensusEvents } from "../services/signalService";
 
 function Signals() {
   const [signals, setSignals] = useState(() => {
@@ -67,11 +67,22 @@ function Signals() {
     };
 
     load();
-    const interval = window.setInterval(load, 30000);
+    const interval = window.setInterval(load, 4000);
+
+    const stopSse = subscribeToConsensusEvents(
+      () => {
+        load();
+      },
+      null,
+      () => {
+        load();
+      }
+    );
 
     return () => {
       isMounted = false;
       window.clearInterval(interval);
+      stopSse();
     };
   }, []);
 
@@ -273,7 +284,7 @@ function Signals() {
                         {formatTime(signal.createdAt || signal.timestamp)}
                       </td>
                       <td className="py-4 px-6 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                        {signal.channelTitle || signal.channel}
+                        {signal.channelTitle || (signal.channel?.startsWith("private-test-channel") ? "Fx-test-feed" : signal.channel)}
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
                         <span className="font-bold text-slate-900 dark:text-white mr-1.5">

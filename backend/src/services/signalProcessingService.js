@@ -267,8 +267,8 @@ export async function processRawMessage(rawMessage) {
       let signalCount = 1;
       try {
         const pairState = getPairState(storedParsedSignal.pair);
-        if (pairState && typeof pairState.signalCount === "number") {
-          signalCount = pairState.signalCount;
+        if (pairState) {
+          signalCount = pairState.activeSignalsCount || pairState.signalCount || 1;
         }
       } catch (err) {
         logger.error("telegram_alert.get_pair_state_failed", {

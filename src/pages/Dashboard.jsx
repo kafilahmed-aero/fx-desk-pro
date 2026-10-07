@@ -52,6 +52,9 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
 
+  const fallbackRefreshMs = 4000;
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   useEffect(() => {
     let isMounted = true;
     let isRequestActive = false;
@@ -218,7 +221,7 @@ function Dashboard() {
       activeController?.abort();
       window.clearInterval(timer);
     };
-  }, []);
+  }, [refreshTrigger]);
 
   return (
     <div className="animate-dashboard-in space-y-8 pb-8">
@@ -257,10 +260,14 @@ function Dashboard() {
               {formatConsensusSummary(consensusPairs)}
             </p>
           </div>
-          <p className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+          <button
+            onClick={() => setRefreshTrigger((t) => t + 1)}
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 font-bold uppercase tracking-wider transition-colors active:scale-95"
+            title="Refresh consensus feed"
+          >
             <RefreshCw size={12} />
             Consensus Feed
-          </p>
+          </button>
         </div>
 
         <div className="overflow-x-auto">
