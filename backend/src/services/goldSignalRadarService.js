@@ -12,7 +12,7 @@ const MAX_CACHE_SIZE = 500;
 /**
  * Evaluates whether a signal meets the 4-Gate VIP model.
  * 
- * Gate 1 (Controlled Risk): SL distance between 20 and 60 pips ($2.00 to $6.00 on Gold)
+ * Gate 1 (Controlled Risk): SL distance between 20 and 80 pips ($2.00 to $8.00 on Gold)
  * Gate 2 (Meaningful Target): TP1 distance >= 25 pips (>= $2.50 on Gold)
  * Gate 3 (Data Completeness): Valid numerical Entry, SL, and at least 2 distinct TPs
  * Gate 4 (High Conviction): Multi-channel agreement >= 2 OR RRR >= 1.3
@@ -76,8 +76,8 @@ export function evaluateSignalQuality(signal, pairState = null) {
 
   const rrr = risk > 0 ? Number((reward / risk).toFixed(2)) : 0;
 
-  // Gate 1: Controlled Risk (20 to 60 pips)
-  const gate1Risk = riskPips >= 20 && riskPips <= 60;
+  // Gate 1: Controlled Risk (20 to 80 pips / $2.00 to $8.00 on Gold)
+  const gate1Risk = riskPips >= 20 && riskPips <= 80;
 
   // Gate 2: Meaningful Target (TP1 >= 25 pips)
   const gate2Reward = rewardPips >= 25;
