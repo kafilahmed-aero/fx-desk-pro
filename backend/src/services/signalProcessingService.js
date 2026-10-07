@@ -106,8 +106,7 @@ export async function processRawMessage(rawMessage) {
       const hasTP = (extractedSignal.targets && extractedSignal.targets.length > 0) || (extractedSignal.pipTargets && extractedSignal.pipTargets.length > 0) || extractedSignal.isOpenTarget;
       const hasSL = (extractedSignal.stopLoss !== null && extractedSignal.stopLoss !== undefined) || extractedSignal.hiddenStopLoss;
 
-      const paramCount = (hasEntry ? 1 : 0) + (hasTP ? 1 : 0) + (hasSL ? 1 : 0);
-      if (!hasEntry || paramCount < 2) {
+      if (!hasEntry) {
         extractedSignal.parserClassification = "NOISE";
       }
     }
