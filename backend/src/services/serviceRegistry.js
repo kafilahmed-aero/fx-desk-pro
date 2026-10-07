@@ -29,6 +29,13 @@ const services = [
       } catch (err) {
         logger.error("Startup database hydration failed", { error: err.message });
       }
+
+      // Keep pair consensus state continuously synced with DB
+      setInterval(async () => {
+        try {
+          await hydratePairStatesFromDb();
+        } catch (_err) {}
+      }, 30000);
     }
   },
   {

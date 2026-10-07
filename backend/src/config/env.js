@@ -111,9 +111,6 @@ export const config = new Proxy({}, {
 
 function validateInternalServiceKey() {
   if (!process.env.INTERNAL_SERVICE_KEY) {
-    logger.error("config.missing_internal_service_key", {
-      error: "INTERNAL_SERVICE_KEY environment variable is missing."
-    });
     console.error("[ConfigError] CRITICAL: INTERNAL_SERVICE_KEY environment variable is required.");
     process.exit(1);
   }

@@ -621,6 +621,536 @@ export const monitoredTelegramChannels = [
     username: null,
     title: "Private Telegram invite channel",
   },
+  {
+    ref: "GOLD_TP_SIGNALSHUK1",
+    username: "GOLD_TP_SIGNALSHUK1",
+    title: "𝑮𝑶𝑳𝑫 𝑻𝑷 𝑯𝑰𝑻 𝑺𝑰𝑮𝑵𝑨𝑳𝑺",
+  },
+  {
+    ref: "Eliz_fxac_ademy1",
+    username: "Eliz_fxac_ademy1",
+    title: "𝗘𝗹𝗶𝘇 𝗙𝗫 𝗔𝗰𝗮𝗱𝗲𝗺𝘆",
+  },
+  {
+    ref: "GoldInfinity10",
+    username: "Goldinfinity10",
+    title: "Gold infinity",
+  },
+  {
+    ref: "Eliz_fxac_ademy7",
+    username: "Eliz_fxac_ademy7",
+    title: "𝗘𝗹𝗶𝘇 𝗙𝗫 𝗔𝗰𝗮𝗱𝗲𝗺𝘆",
+  },
+  {
+    ref: "bullgoldforexaifxbot753",
+    username: "bullgoldforexaifxbot753",
+    title: "Bull Gold Forex",
+  },
+  {
+    ref: "Xau_Empire2",
+    username: "Xau_Empire2",
+    title: "XAU EMPIRE",
+  },
+  {
+    ref: "imranwithtrare71",
+    username: "imranwithtrare71",
+    title: "Forex Bulls Signals ™",
+  },
+  {
+    ref: "Tradewithmrgold_110",
+    username: "Tradewithmrgold_110",
+    title: "𝗚𝗢𝗟𝗗 𝗦𝗨𝗥𝗘 𝗦𝗜𝗚𝗡𝗔𝗟𝗦",
+  },
+  {
+    ref: "Gold_btcusd_xauusd",
+    username: "Gold_btcusd_xauusd",
+    title: "GOLD BTCUSD XAUUSD FOREX SIGNALS",
+  },
+  {
+    ref: "Gold_Pro_Trader_Forex_Signal",
+    username: "Gold_Pro_Trader_Forex_Signal",
+    title: "GOLD PRO TRADER",
+  },
+  {
+    ref: "besttradingForrex_gold",
+    username: "besttradingForrex_gold",
+    title: "Gold Scalping - Edge Trade👑",
+  },
+  {
+    ref: "Tradingpromoney",
+    username: "Tradingpromoney",
+    title: "Smith 1000Pips Gold Channel",
+  },
+  {
+    ref: "Packerchanneltrading",
+    username: "Packerchanneltrading",
+    title: "Scalper Gold Nexus 💰",
+  },
+  {
+    ref: "Novascalperchannel",
+    username: "Novascalperchannel",
+    title: "🎈Nova Scalper Channel™.🎈",
+  },
+  {
+    ref: "KOTradingGold",
+    username: "KOTradingGold",
+    title: "⚡️KRADO | Analysis Channel⚡️",
+  },
+  {
+    ref: "besttradingForrex",
+    username: "besttradingForrex",
+    title: "Gold Scalping - EdgeTrade 👑",
+  },
+  {
+    ref: "DNAchannelsignal",
+    username: "DNAchannelsignal",
+    title: "DNA - Signals channel",
+  },
+  {
+    ref: "ezforexofficial",
+    username: "ezforexofficial",
+    title: "EZSignals - Gold, Oil, BTC signals",
+  },
+  {
+    ref: "giaodichfx96",
+    username: "giaodichfx96",
+    title: "ASSASSIN SIGNAL FREE",
+  },
+  {
+    ref: "TradeTacticsReal09",
+    username: "TradeTacticsReal09",
+    title: "Trade Tactics",
+  },
+  {
+    ref: "JungoldAnalyst",
+    username: "JungoldAnalyst",
+    title: "Jun-XAUUSD/GOLD/Analysis Channel™️",
+  },
+  {
+    ref: "MambaFX_Official_2026",
+    username: "MambaFX_Official_2026",
+    title: "𝙈𝙖𝙢𝙗𝙖 𝙁𝙓 (🐍🧑‍💻)",
+  },
+  {
+    ref: "ayjaz861",
+    username: "ayjaz861",
+    title: "𝐕𝐈𝐏 𝐒𝐈𝐆𝐍𝐀𝐋𝐒",
+  },
+  {
+    ref: "FOREX_SAGNALS_COM",
+    username: "FOREX_SAGNALS_COM",
+    title: "𝐅𝐨𝐫𝐞𝐱 𝐒𝐢𝐠𝐧𝐚𝐥𝐬.𝐜𝐨𝐦",
+  },
+  {
+    ref: "xauusdgreenpipss",
+    username: "xauusdgreenpipss",
+    title: "𝐗𝐀𝐔(𝐔𝐒𝐃) 𝐆𝐑𝐄𝐄𝐍 𝐏𝐈𝐏𝐒",
+  },
+  {
+    ref: "GoldSignals_4",
+    username: "GoldSignals_4",
+    title: "𝐆𝐎𝐋𝐃 𝐒𝐔𝐑𝐄 𝐒𝐈𝐆𝐍𝐀𝐋𝐒",
+  },
+  {
+    ref: "MrRoberto_king1",
+    username: "MrRoberto_king1",
+    title: "𝑮𝑶𝑳𝑫/𝑿𝑨𝑼𝑼𝑺𝑫 𝑲𝑰𝑳𝑳𝑬𝑹™",
+  },
+  {
+    ref: "Adgruophub112",
+    username: "Adgruophub112",
+    title: "𝙂𝙊𝙇𝘿 𝙎𝘾𝘼𝙇𝙋𝙄𝙉𝙂 𝙏𝙍𝘼𝘿𝙀𝙍",
+  },
+  {
+    ref: "goldeaglegorer3",
+    username: "goldeaglegorer3",
+    title: "Gold Fresh Forex",
+  },
+  {
+    ref: "ForexProSignalsHub",
+    username: "ForexProSignalsHub",
+    title: "Forex Pro Signals Hub",
+  },
+  {
+    ref: "Masterfxgold22",
+    username: "Masterfxgold22",
+    title: "𝗠𝗔𝗦𝗧𝗘𝗥 𝗙𝗫 𝗚𝗢𝗟𝗗",
+  },
+  {
+    ref: "goldfxempire02",
+    username: "goldfxempire02",
+    title: "𝐆𝐎𝐋𝐃 𝐅𝐗 𝐄𝐌𝐏𝐈𝐑𝐄 ⚡️",
+  },
+  {
+    ref: "Forexxauusdgolsignal",
+    username: "Forexxauusdgolsignal",
+    title: "𝙓𝘼𝙐𝙐𝙎𝘿 𝙂𝙊𝙇𝘿 𝙏𝙍𝘼𝘿𝙄𝙉𝙂",
+  },
+  {
+    ref: "precisegoldscalping",
+    username: "precisegoldscalping",
+    title: "Precise Gold Trading",
+  },
+  {
+    ref: "PeterAnaylishub1",
+    username: "PeterAnaylishub1",
+    title: "PETER GOLD ANALYSIS",
+  },
+  {
+    ref: "httpsgilityforex1918",
+    username: "httpsgilityforex1918",
+    title: "Agility Forex",
+  },
+  {
+    ref: "Pro_Trade_Freu_Fx_927",
+    username: "Pro_Trade_Freu_Fx_927",
+    title: "WEWORK TRADER",
+  },
+  {
+    ref: "Profit_Trader_Xauusd",
+    username: "Profit_Trader_Xauusd",
+    title: "𝐗𝐚𝐮𝐮𝐬𝐝 𝐏𝐫𝐨𝐟𝐢𝐭 𝐓𝐫𝐚𝐝𝐞𝐫",
+  },
+  {
+    ref: "golitrader",
+    username: "golitrader",
+    title: "GOLD TRADE",
+  },
+  {
+    ref: "GOLDSNNPER1",
+    username: "GOLDSNNPER1",
+    title: "Gold Trading Idea",
+  },
+  {
+    ref: "GOLDSNNPERS0",
+    username: "GOLDSNNPERS0",
+    title: "Blue Forex Pips ™",
+  },
+  {
+    ref: "goldeaglegorer0",
+    username: "goldeaglegorer0",
+    title: "XAUUSD KILLER",
+  },
+  {
+    ref: "ameritfxvip5425",
+    username: "ameritfxvip5425",
+    title: "Ameritas Forex®",
+  },
+  {
+    ref: "btcusdtradeWith",
+    username: "btcusdtradeWith",
+    title: "𝐀𝐫𝐭𝐢𝐬𝐭𝐢𝐜 𝐅𝐨𝐫𝐞𝐱",
+  },
+  {
+    ref: "Nasdaqhub488",
+    username: "Nasdaqhub488",
+    title: "𝐌𝐚𝐫𝐤𝐞𝐭 𝐅𝐥𝐨𝐰 𝐏𝐈𝐏𝐬 ™",
+  },
+  {
+    ref: "PIPSPROFESSORFX6",
+    username: "PIPSPROFESSORFX6",
+    title: "PIPS PROFESSOR",
+  },
+  {
+    ref: "XAUUSDMarketsInsights",
+    username: "XAUUSDMarketsInsights",
+    title: "XAU Capital FX",
+  },
+  {
+    ref: "Joan_FX_KING_77",
+    username: "Joan_FX_KING_77",
+    title: "GOLD US30 KILLER",
+  },
+  {
+    ref: "GOLDBTCUSD1",
+    username: "GOLDBTCUSD1",
+    title: "Gold Nixon Forex™",
+  },
+  {
+    ref: "GoldProTrade00",
+    username: "GoldProTrade00",
+    title: "Gold Market update💥",
+  },
+  {
+    ref: "masager120",
+    username: "masager120",
+    title: "𝙂𝙊𝙇𝘿 𝙎𝙐𝙕𝙀𝙔 𝙁𝙊𝙍𝙀𝙓",
+  },
+  {
+    ref: "btcyouire",
+    username: "btcyouire",
+    title: "Conrad Forex",
+  },
+  {
+    ref: "xauusdasif7890",
+    username: "xauusdasif7890",
+    title: "𝐆𝐎𝐋𝐃 𝐆𝐁𝐏 𝐊𝐈𝐋𝐋𝐄𝐑™",
+  },
+  {
+    ref: "GOLD_FX_POINT",
+    username: "GOLD_FX_POINT",
+    title: "AUD Gold Trading ™",
+  },
+  {
+    ref: "wiserfx9",
+    username: "wiserfx9",
+    title: "𝙐𝙎30 𝙐𝙎100 𝙏𝙍𝘼𝘿𝙄𝙉𝙂",
+  },
+  {
+    ref: "wolftrading25",
+    username: "wolftrading25",
+    title: "WOLF TRADING",
+  },
+  {
+    ref: "El_SayaadEX",
+    username: "El_SayaadEX",
+    title: "︻╦╤─ الہصيہاد 📊",
+  },
+  {
+    ref: "GoldPrifitgallery",
+    username: "GoldPrifitgallery",
+    title: "Gold_Gallery_Profit",
+  },
+  {
+    ref: "xauuddfx003",
+    username: "xauuddfx003",
+    title: "𝗫𝗔𝗨𝗨𝗦𝗗 𝗚𝗢𝗟𝗗 𝗠𝗔𝗦𝗧𝗘𝗥",
+  },
+  {
+    ref: "RASHID_OFFICAIL_44xx",
+    username: "RASHID_OFFICAIL_44xx",
+    title: "𝙍𝘼𝙎𝙃𝙄𝘿 𝙁𝙓 𝙊𝙁𝙁𝙄𝘾𝙄𝘼𝙇",
+  },
+  {
+    ref: "vipgoldsignals_1778",
+    username: "vipgoldsignals_1778",
+    title: "VIP GOLD SIGNALS️",
+  },
+  {
+    ref: "DailyGoldSignalhs",
+    username: "DailyGoldSignalhs",
+    title: "Daily Gold Signals",
+  },
+  {
+    ref: "JesseGoldOfficial",
+    username: "JesseGoldOfficial",
+    title: "JESSE GOLD TRADER",
+  },
+  {
+    ref: "GLOBAL_MARKETINSIGHT72",
+    username: "GLOBAL_MARKETINSIGHT72",
+    title: "GLOBAL MARKET INSIGHT",
+  },
+  {
+    ref: "Education_Cycle01",
+    username: "Education_Cycle01",
+    title: "GOLD SIGNALS SCALPING ® GSS",
+  },
+  {
+    ref: "forex3882",
+    username: "forex3882",
+    title: "𝐅𝐨𝐫𝐞𝐱 𝐀𝐝𝐯𝐚𝐧𝐜𝐞 🎖",
+  },
+  {
+    ref: "fxpipspredators007",
+    username: "fxpipspredators007",
+    title: "🌐💹FX_Pips_Predators🌐",
+  },
+  {
+    ref: "HugoTradingxGOLD",
+    username: "HugoTradingxGOLD",
+    title: "HUGO TRADER™",
+  },
+  {
+    ref: "Forexwizardsgoldsignals",
+    username: "Forexwizardsgoldsignals",
+    title: "Forex Wizards ®",
+  },
+  {
+    ref: "xauusdtrading00000",
+    username: "xauusdtrading00000",
+    title: "XAUUSD TRADING MASTER",
+  },
+  {
+    ref: "smokeforex1",
+    username: "smokeforex1",
+    title: "SMOKE FOREX 📊",
+  },
+  {
+    ref: "wireforex0",
+    username: "wireforex0",
+    title: "WIRE FOREX 📊",
+  },
+  {
+    ref: "forexbookspdf",
+    username: "forexbookspdf",
+    title: "🚀 Green Pips 🚀",
+  },
+  {
+    ref: "GoldenWolfFreeGOldSignal5",
+    username: "GoldenWolfFreeGOldSignal5",
+    title: "🐺 𝐆𝐎𝐋𝐃𝐄𝐍 𝐖𝐎𝐋𝐅 🐺",
+  },
+  {
+    ref: "aamlish1",
+    username: "aamlish1",
+    title: "🔳XAUUSD SIGNALS 🔳",
+  },
+  {
+    ref: "trades",
+    username: "trades",
+    title: "GOLD EMPIRE",
+  },
+  {
+    ref: "Forex",
+    username: "Forex",
+    title: "Forex Income Forever",
+  },
+  {
+    ref: "Forex_Signals_Blue_Pips",
+    username: "Forex_Signals_Blue_Pips",
+    title: "Forex Signals - Blue Pips",
+  },
+  {
+    ref: "Forex_Signals_4x",
+    username: "Forex_Signals_4x",
+    title: "Forex Signals 4x",
+  },
+  {
+    ref: "Forex_Signals_Pirates",
+    username: "Forex_Signals_Pirates",
+    title: "PIRATES 4X TEAM FOREX SIGNALS",
+  },
+  {
+    ref: "schooloftrades",
+    username: "schooloftrades",
+    title: "School Of Trades",
+  },
+  {
+    ref: "CurrencyBoy11",
+    username: "CurrencyBoy11",
+    title: "CURRENCYBOY",
+  },
+  {
+    ref: "willygoldusd",
+    username: "willygoldusd",
+    title: "Willy Gold Usd",
+  },
+  {
+    ref: "arrashfxreal",
+    username: "arrashfxreal",
+    title: "ARRASH, GOLD TRADER",
+  },
+  {
+    ref: "kingforexs",
+    username: "kingforexs",
+    title: "KING FOREX 💰",
+  },
+  {
+    ref: "Top1Trades",
+    username: "Top1Trades",
+    title: "TOP 1% TRADES 🥇",
+  },
+  {
+    ref: "HenryGoldTraderFx",
+    username: "HenryGoldTraderFx",
+    title: "Henry GoldDigger",
+  },
+  {
+    ref: "SuperScalpingOfficial",
+    username: "SuperScalpingOfficial",
+    title: "SUPER SCALPING KING RYAN 🇸🇬",
+  },
+  {
+    ref: "CharlesTradingMethod",
+    username: "CharlesTradingMethod",
+    title: "Ameer Charles Fx",
+  },
+  {
+    ref: "SoodLayer2024",
+    username: "SoodLayer2024",
+    title: "Sood Giler Layer",
+  },
+  {
+    ref: "FokiyoksMovement",
+    username: "FokiyoksMovement",
+    title: "Fokiyoks Movement",
+  },
+  {
+    ref: "achikM5",
+    username: "achikM5",
+    title: "Achik Trader T20",
+  },
+  {
+    ref: "killerpipss",
+    username: "killerpipss",
+    title: "KILLERPIPS",
+  },
+  {
+    ref: "garrysignals",
+    username: "garrysignals",
+    title: "GARRY&#39;S SIGNALS",
+  },
+  {
+    ref: "Forex_Signal_Freeeeee",
+    username: "Forex_Signal_Freeeeee",
+    title: "FOREX SIGNALS FREEEE",
+  },
+  {
+    ref: "Forex_Signals_Bulls1",
+    username: "Forex_Signals_Bulls1",
+    title: "FOREX SIGNALS BULLS",
+  },
+  {
+    ref: "siscgoldeducation",
+    username: "siscgoldeducation",
+    title: "𝗚𝗢𝗟𝗗 𝗦𝗡𝗜𝗣𝗘𝗥 𝗭𝗢𝗡𝗘",
+  },
+  {
+    ref: "goldTrading_Cool42330",
+    username: "goldTrading_Cool42330",
+    title: "𝗣𝗥𝗜𝗡𝗖𝗘 𝗧𝗥𝗔𝗗𝗜𝗡𝗚 𝗛𝗨𝗕",
+  },
+  {
+    ref: "forexsignalsxauusd",
+    username: "forexsignalsxauusd",
+    title: "Forex Signals🔥💰 XAUUSD",
+  },
+  {
+    ref: "EliteGoldMarket",
+    username: "EliteGoldMarket",
+    title: "Elite Gold Market",
+  },
+  {
+    ref: "forexbrokersignal",
+    username: "forexbrokersignal",
+    title: "Fx Broker Signals",
+  },
+  {
+    ref: "Gold_Signals_Academy",
+    username: "Gold_Signals_Academy",
+    title: "🥇Gold Signals Academy🥇",
+  },
+  {
+    ref: "Fx_elite_club",
+    username: "Fx_elite_club",
+    title: "FX Elite Club",
+  },
+  {
+    ref: "HighPipsFX",
+    username: "HighPipsFX",
+    title: "🏆 HighPipsFX - Best Trading Signals Free",
+  },
+  {
+    ref: "NPFXSignals",
+    username: "NPFXSignals",
+    title: "🎖 NetProfitFX 🥷🏽 FREE Trading Signals",
+  },
+  {
+    ref: "usoilwtisignals",
+    username: "usoilwtisignals",
+    title: "USOIL⛽️ &amp; Gold🏆 Signals",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);

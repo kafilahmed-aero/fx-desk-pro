@@ -6,6 +6,7 @@ import {
   getLiveMarketOverview,
   getWeightedConsensus,
 } from "../services/activeOpportunityService.js";
+import { hydratePairStatesFromDb } from "../services/pairStateHydrationService.js";
 import { subscribeToLiveUpdates } from "../services/liveUpdateService.js";
 import { logger } from "../utils/logger.js";
 
@@ -21,11 +22,19 @@ export async function getConsensusController(request, response) {
   });
 }
 
-export function getActivePairStatesController(_request, response) {
+export async function getActivePairStatesController(_request, response) {
   logger.debug("api.active_pair_states_served");
 
+  let pairs = getActivePairStates();
+  if (pairs.length === 0) {
+    try {
+      await hydratePairStatesFromDb();
+      pairs = getActivePairStates();
+    } catch (_err) {}
+  }
+
   response.json({
-    pairs: getActivePairStates(),
+    pairs,
   });
 }
 
@@ -37,19 +46,35 @@ export function getLiveConsensusController(_request, response) {
   });
 }
 
-export function getActiveOpportunitiesController(_request, response) {
+export async function getActiveOpportunitiesController(_request, response) {
   logger.debug("api.active_opportunities_served");
 
+  let opportunities = getActiveOpportunities();
+  if (opportunities.length === 0) {
+    try {
+      await hydratePairStatesFromDb();
+      opportunities = getActiveOpportunities();
+    } catch (_err) {}
+  }
+
   response.json({
-    opportunities: getActiveOpportunities(),
+    opportunities,
   });
 }
 
-export function getWeightedConsensusController(_request, response) {
+export async function getWeightedConsensusController(_request, response) {
   logger.debug("api.weighted_consensus_served");
 
+  let pairs = getWeightedConsensus();
+  if (pairs.length === 0) {
+    try {
+      await hydratePairStatesFromDb();
+      pairs = getWeightedConsensus();
+    } catch (_err) {}
+  }
+
   response.json({
-    pairs: getWeightedConsensus(),
+    pairs,
   });
 }
 

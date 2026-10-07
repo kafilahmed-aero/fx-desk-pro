@@ -505,8 +505,12 @@ function extractStopLoss(normalized) {
     new RegExp(`\\bSL(?=${numberPattern})\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSTOP\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSTOPLOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`(?<!BUY\\s+|SELL\\s+)\\bSTOP\\b\\s*[:@-]+\\s*(${numberPattern})`, "i"),
     new RegExp(`\\b(?:MY|SAFE|RECOMMENDED)\\s+STOP\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bINVALID(?:ATION)?\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bMANUAL\\s+CUT\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bCUT\\s+LOSS\\b\\s*[:@-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bCUT\\b\\s*[:@-]+\\s*(${numberPattern})`, "i"),
   ];
 
   const val = findFirstNumberByPattern(normalized.compactText, patterns);
@@ -518,7 +522,12 @@ function extractStopLoss(normalized) {
 }
 
 function extractHiddenStopLoss(text) {
-  return /\b(SL|STOP LOSS)\b\s*[:@-]?\s*(VIP|HIDDEN|PRIVATE|DM|INBOX|MEMBERS ONLY)\b/.test(text);
+  return (
+    /\b(SL|STOP LOSS)\b\s*[:@-]?\s*(VIP|HIDDEN|PRIVATE|DM|INBOX|MEMBERS ONLY|MANUAL\s*CUT|MANUAL)\b/i.test(text) ||
+    /\bMANUAL\s*CUT\b/i.test(text) ||
+    /\bCUT\s*MANUAL\b/i.test(text) ||
+    /\b(SL|STOP LOSS)\b\s*[:@-]?\s*MC\b/i.test(text)
+  );
 }
 
 function extractTimeframe(text) {
