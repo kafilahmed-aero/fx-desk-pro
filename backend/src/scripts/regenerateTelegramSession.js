@@ -3,7 +3,14 @@ await import("dotenv/config");
 const input = (await import("input")).default;
 const { TelegramClient } = await import("telegram");
 const { StringSession } = await import("telegram/sessions/index.js");
+const { ConnectionTCPFull } = await import("telegram/network/connection/TCPFull.js");
 const { config } = await import("../config/env.js");
+
+class ConnectionTCPFull443 extends ConnectionTCPFull {
+  constructor(args) {
+    super({ ...args, port: 443 });
+  }
+}
 
 // Run with:
 // node src/scripts/regenerateTelegramSession.js
@@ -20,6 +27,7 @@ async function regenerateTelegramSession() {
     config.telegram.apiId,
     config.telegram.apiHash,
     {
+      connection: ConnectionTCPFull443,
       connectionRetries: 5,
     }
   );
