@@ -310,7 +310,8 @@ export async function processRawMessage(rawMessage) {
         storedParsedSignal.pair,
         storedParsedSignal.action,
         signalCount,
-        messageKey
+        messageKey,
+        storedParsedSignal
       ).catch((err) => {
         logger.error("telegram_alert.unhandled_error", {
           messageKey,
