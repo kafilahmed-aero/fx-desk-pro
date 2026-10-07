@@ -374,9 +374,13 @@ function buildZone(values) {
     return null;
   }
 
+  const sum = numericValues.reduce((acc, curr) => acc + curr, 0);
+  const avg = Number((sum / numericValues.length).toFixed(2));
+
   return {
     min: Math.min(...numericValues),
     max: Math.max(...numericValues),
+    avg,
   };
 }
 

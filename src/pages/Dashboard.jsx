@@ -509,6 +509,10 @@ function formatZone(zone) {
     return formatNumber(zone.min);
   }
 
+  if (zone.avg !== undefined && zone.avg !== null) {
+    return `${formatNumber(zone.avg)} (${formatNumber(zone.min)}-${formatNumber(zone.max)})`;
+  }
+
   return `${formatNumber(zone.min)}-${formatNumber(zone.max)}`;
 }
 
