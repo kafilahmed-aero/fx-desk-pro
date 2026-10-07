@@ -64,8 +64,7 @@ const rawConfig = {
   },
   telegramAlert: {
     botToken: process.env.TELEGRAM_ALERT_BOT_TOKEN || "",
-    channelId: process.env.TELEGRAM_ALERT_CHANNEL_ID || "-1004316826166",
-    publicChannelId: process.env.TELEGRAM_PUBLIC_CHANNEL_ID || "@GoldSignalRadar_Official",
+    channelId: process.env.TELEGRAM_ALERT_CHANNEL_ID || "",
   },
   pipeline: {
     processingConcurrency: Math.max(
