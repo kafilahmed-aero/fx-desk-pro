@@ -557,7 +557,9 @@ function extractStopLoss(normalized) {
 
 function extractHiddenStopLoss(text) {
   return (
-    /\b(SL|STOP LOSS)\b\s*[:@-]?\s*(VIP|HIDDEN|PRIVATE|DM|INBOX|MEMBERS ONLY|MANUAL\s*CUT|MANUAL)\b/i.test(text) ||
+    /\b(SL|STOP LOSS|STOPLOSS|CUT\s*LOSS)\b\s*[:@-]?\s*(VIP|HIDDEN|PRIVATE|DM|INBOX|MEMBERS ONLY|MANUAL\s*CUT|MANUAL|PREMIUM|OPEN|FREE|NONE|HOLD|NOT\s*SET)\b/i.test(text) ||
+    /\b(SL|STOP LOSS)\s+OPEN\b/i.test(text) ||
+    /\bNO\s*(?:SL|STOP\s*LOSS)\b/i.test(text) ||
     /\bMANUAL\s*CUT\b/i.test(text) ||
     /\bCUT\s*MANUAL\b/i.test(text) ||
     /\b(SL|STOP LOSS)\b\s*[:@-]?\s*MC\b/i.test(text)
