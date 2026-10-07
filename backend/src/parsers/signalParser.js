@@ -530,6 +530,7 @@ function extractPipTargets(text) {
 
 function extractStopLoss(normalized) {
   const patterns = [
+    new RegExp(`\\bSL\\b(?:[\\s:@_-]|\\.{1,3})+\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bSL\\b\\s*[\\s:@_-]+[\\s_]*(${numberPattern})`, "i"),
     new RegExp(`\\bSL\\.?\\s+(${numberPattern})`, "i"),
     new RegExp(`\\bSL_\\s*(${numberPattern})`, "i"),

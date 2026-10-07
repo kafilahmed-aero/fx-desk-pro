@@ -8,7 +8,7 @@ export async function connectDatabase() {
   try {
     mongoose.set("bufferCommands", false);
     await mongoose.connect(config.mongoUri, {
-      serverSelectionTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 15000,
     });
     logger.info("database.connected");
 
