@@ -114,6 +114,10 @@ export async function connectTelegramWithSavedSession() {
     await client.getMe();
     return client;
   } catch (error) {
+    try {
+      await client.disconnect().catch(() => {});
+    } catch (_) {}
+    telegramClient = null;
     throw new Error(`Saved Telegram session connection failed: ${formatTelegramError(error)}`, {
       cause: error,
     });

@@ -211,7 +211,7 @@ export async function pollTelegramChannels() {
 
     const activeRefs = new Set();
     try {
-      const dialogs = await withTimeout(client.getDialogs({ limit: 100 }), 8000, "Get active dialogs");
+      const dialogs = await withTimeout(client.getDialogs({ limit: 250 }), 15000, "Get active dialogs");
       for (const d of dialogs) {
         if (!d.isChannel && !d.isGroup) continue;
         const ref = d.entity?.username || (d.id ? String(d.id) : null);
