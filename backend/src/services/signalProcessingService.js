@@ -11,6 +11,7 @@ import { createTestSignalMetadata } from "./testSignalExpiry.js";
 import { logger } from "../utils/logger.js";
 import { broadcastLiveUpdateEvent } from "./liveUpdateService.js";
 import { sendTelegramAlert } from "./telegramAlertService.js";
+import { processGoldRadarSignal } from "./goldSignalRadarService.js";
 import { getPairState } from "./pairStateEngine.js";
 import { initializeOutcome, processSignalUpdate } from "./signalOutcomeEngine.js";
 import { getCurrentPrice } from "./priceIngestionService.js";
@@ -313,6 +314,14 @@ export async function processRawMessage(rawMessage) {
         messageKey
       ).catch((err) => {
         logger.error("telegram_alert.unhandled_error", {
+          messageKey,
+          error: err.message,
+        });
+      });
+
+      // Gold Signal Radar (Project 2 - Standalone VIP/Public routing)
+      processGoldRadarSignal(storedParsedSignal).catch((err) => {
+        logger.error("gold_radar.unhandled_error", {
           messageKey,
           error: err.message,
         });
