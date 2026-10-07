@@ -106,7 +106,19 @@ export async function processRawMessage(rawMessage) {
       const hasTP = (extractedSignal.targets && extractedSignal.targets.length > 0) || (extractedSignal.pipTargets && extractedSignal.pipTargets.length > 0) || extractedSignal.isOpenTarget;
       const hasSL = (extractedSignal.stopLoss !== null && extractedSignal.stopLoss !== undefined) || extractedSignal.hiddenStopLoss;
 
-      if (!hasEntry) {
+      if (!hasEntry || !hasTP || !hasSL) {
+        extractedSignal.parserClassification = "NOISE";
+      }
+    }
+
+    if (extractedSignal.parserClassification === "NEW_SIGNAL") {
+      const hasPair = !!extractedSignal.pair && extractedSignal.pair !== "unknown";
+      const hasAction = !!extractedSignal.action;
+      const hasEntry = (extractedSignal.entry !== null && extractedSignal.entry !== undefined) || (extractedSignal.entryRange && extractedSignal.entryRange.length > 0);
+      const hasTP = (extractedSignal.targets && extractedSignal.targets.length > 0) || (extractedSignal.pipTargets && extractedSignal.pipTargets.length > 0) || extractedSignal.isOpenTarget;
+      const hasSL = (extractedSignal.stopLoss !== null && extractedSignal.stopLoss !== undefined) || extractedSignal.hiddenStopLoss;
+
+      if (!hasPair || !hasAction || !hasEntry || !hasTP || !hasSL) {
         extractedSignal.parserClassification = "NOISE";
       }
     }

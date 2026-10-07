@@ -16,7 +16,26 @@ export async function getParsedSignalsController(req, res) {
     );
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
-    const filters = { classification: "NEW_SIGNAL" };
+    const filters = {
+      classification: "NEW_SIGNAL",
+      entry: { $ne: null },
+      $and: [
+        {
+          $or: [
+            { "targets.0": { $exists: true } },
+            { "pipTargets.0": { $exists: true } },
+            { target: { $ne: null } }
+          ]
+        },
+        {
+          $or: [
+            { stopLoss: { $ne: null } },
+            { hiddenStopLoss: true },
+            { effectiveStopLoss: { $ne: null } }
+          ]
+        }
+      ]
+    };
     const isMongoConnected = mongoose.connection.readyState === 1;
     if (isMongoConnected) {
       const signals = await ParsedSignal.find(filters)

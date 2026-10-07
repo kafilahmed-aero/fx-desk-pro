@@ -325,45 +325,9 @@ function isValidActiveSignal(parsed, rawMessage) {
   const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0) || parsed.isOpenTarget;
   const hasSL = (parsed.stopLoss !== null && parsed.stopLoss !== undefined) || parsed.hiddenStopLoss;
 
-  // Fast-path: if it has both entry and TP, it's accepted without checking promo/analysis keywords
-  if (hasEntry && hasTP) {
-    return true;
-  }
-
-  const paramCount = (hasEntry ? 1 : 0) + (hasTP ? 1 : 0) + (hasSL ? 1 : 0);
-  const text = String(rawMessage.text || "").toUpperCase();
-
-  const analysisIndicators = [
-    "PREDICTION", "PREDICT", "FORECAST", "OUTLOOK", "COMMENTARY", "ANALYSIS", "BIAS", "OPINION"
-  ];
-  const hasAnalysisKeywords = analysisIndicators.some(kw => text.includes(kw));
-
-  const promoIndicators = [
-    "WIN RATE", "ACCURACY", "VIP PRIVILEGES", "SUBSCRIBE", "JOIN NOW", "SIGNALS A DAY", "WINRATE"
-  ];
-  const hasPromoKeywords = promoIndicators.some(kw => text.includes(kw));
-
-  if (hasAnalysisKeywords || hasPromoKeywords) {
-    return false;
-  }
-
-  // Standard signals with at least 2 trade parameters (e.g. Entry+SL)
-  if (paramCount >= 2) {
-    return true;
-  }
-
-  // Pure execution signals (e.g. "XAUUSD SELL NOW 4118", "GOLD BUY 4116 4112", "Gold buy Now 4109")
-  const isExecutionSignal =
-    hasEntry &&
-    (/\b(?:NOW|CMP|CURRENT|ENTER|EXECUTE|AT|@)\b/.test(text) ||
-      (parsed.entryRange && parsed.entryRange.length > 0) ||
-      text.length < 80);
-
-  if (isExecutionSignal) {
-    return true;
-  }
-
-  return false;
+  // Strict Rule: Signals MUST have Entry, TP, and SL to be parsed.
+  // Signals with only entry or only entry and TP (without SL) are excluded.
+  return Boolean(hasEntry && hasTP && hasSL);
 }
 
 function createResult(classification, normalized, reasons, parsed) {
