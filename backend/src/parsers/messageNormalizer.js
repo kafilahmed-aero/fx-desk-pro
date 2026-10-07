@@ -9,13 +9,19 @@ export function normalizeMessageText(text = "") {
     .normalize("NFKC")
     .replace(/\r\n/g, "\n");
 
+  // Normalize dashes
+  cleaned = cleaned.replace(/[–—]/g, "-");
+
   // Split combined pair/action tokens (e.g. Xauusd_Buy, XAUUSD-SELL, XAUUSD:BUY, XAUUSD|BUY)
   cleaned = cleaned
     .replace(/\b([a-zA-Z0-9]{3,8})[_:\-|](BUY|SELL|LONG|SHORT)\b/gi, "$1 $2")
     .replace(/\b(BUY|SELL|LONG|SHORT)[_:\-|]([a-zA-Z0-9]{3,8})\b/gi, "$1 $2");
 
-  // Support shorthand slash range notation (e.g. 4042/40 -> 4042-4040, 3986/83 -> 3986-3983)
-  cleaned = cleaned.replace(/\b(\d{1,4})(\d{2})\s*\/\s*(\d{2})\b/g, "$1$2-$1$3");
+  // Support shorthand range notation (e.g. 4042/40 -> 4042-4040, 4155_58 -> 4155-4158, 3986/83 -> 3986-3983)
+  cleaned = cleaned
+    .replace(/\b(\d{1,4})(\d{2})\s*[/_]\s*(\d{2})\b/g, "$1$2-$1$3")
+    .replace(/\b(\d{4})\s*_\s*(\d{4})\b/g, "$1-$2")
+    .replace(/\bSL_(\d+)\b/gi, "SL $1");
 
   // Clean out promotional deposit messages
   cleaned = cleaned.replace(/\b(?:minimum\s+)?deposit\s+\d+(?:\.\d+)?\b/gi, " ");

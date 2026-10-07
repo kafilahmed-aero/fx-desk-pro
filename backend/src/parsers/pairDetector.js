@@ -14,6 +14,7 @@ const aliasMap = new Map([
   // Metals
   ["GOLD", "XAUUSD"],
   ["XAUUSD", "XAUUSD"],
+  ["XAUUUSD", "XAUUSD"],
   ["XAUSSD", "XAUUSD"],
   ["XAU/USD", "XAUUSD"],
   ["GOLD SPOT", "XAUUSD"],
@@ -125,7 +126,7 @@ const aliasMap = new Map([
   ["QQQ", "QQQ"],
 ]);
 
-const currencyCodes = new Set([
+export const currencyCodes = new Set([
   "AUD",
   "CAD",
   "CHF",
@@ -201,10 +202,10 @@ export function isValidPairCandidate(candidate) {
 }
 
 export function cleanTextForPairDetection(text = "") {
-  if (!text) return "";
-
-  // Normalize (XAU/USD) to XAUUSD before other processing
-  let processedText = text.replace(/\(([A-Z]{3})\s*[/]\s*([A-Z]{3})\)/gi, "$1$2");
+  // Normalize AAA/BBB to AAABBB (e.g. AUD/CAD -> AUDCAD, XAU/USD -> XAUUSD)
+  let processedText = text
+    .replace(/\b([A-Z]{3})\s*[/]\s*([A-Z]{3})\b/gi, "$1$2")
+    .replace(/\(([A-Z]{3})\s*[/]\s*([A-Z]{3})\)/gi, "$1$2");
   if (text.includes("\n")) {
     const lines = text.split(/\r?\n/);
     const urlPattern = /(?:https?:\/\/|www\.|t\.me)/i;
@@ -356,12 +357,13 @@ export function normalizePair(pairStr, shouldLog = false) {
   }
 
   let normalized = cleaned;
+  let isForex = false;
 
   if (aliasMap.has(cleaned)) {
     normalized = aliasMap.get(cleaned);
   } else {
     // Check standard formats
-    const isForex = cleaned.length === 6 &&
+    isForex = cleaned.length === 6 &&
       currencyCodes.has(cleaned.slice(0, 3)) &&
       currencyCodes.has(cleaned.slice(3)) &&
       cleaned.slice(0, 3) !== cleaned.slice(3);

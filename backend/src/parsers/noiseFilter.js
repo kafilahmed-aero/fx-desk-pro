@@ -292,11 +292,13 @@ export function classifyMessage(rawMessage = {}) {
   }
 
   // Complete Trade Setup Dominance Rule (Double check override)
-  if (isSignal && !hasResultPhrase) {
+  const isValidSignal = isValidActiveSignal(parsed, rawMessage);
+
+  if (isValidSignal && !hasResultPhrase) {
     classification = "NEW_SIGNAL";
   }
 
-  if (classification === "NEW_SIGNAL" && !isSignal) {
+  if (classification === "NEW_SIGNAL" && !isValidSignal) {
     const explicitUpdatePattern = /\b(CANCEL|DELETE SETUP|IGNORE SETUP|CLOSE TRADE|EXIT TRADE|CANCELLED|TRAIL SL|TRAIL STOP|MOVE SL|MOVE STOP|MOVE STOPLOSS|MOVE STOP LOSS)\b/;
     const hasGenericUpdate = (/^[^\w]*\bUPDATE\b/i.test(text) || /\bUPDATE\s*:/i.test(text));
     
@@ -317,10 +319,7 @@ export function classifyMessage(rawMessage = {}) {
 }
 
 function isValidActiveSignal(parsed, rawMessage) {
-  if (rawMessage?.channel && String(rawMessage.channel).startsWith("fixture-")) {
-    return true;
-  }
-  if (!parsed.pair || !parsed.action) return false;
+  if (!parsed || !parsed.pair || parsed.pair === "unknown" || !parsed.action) return false;
 
   const hasEntry = (parsed.entry !== null && parsed.entry !== undefined) || (parsed.entryRange && parsed.entryRange.length > 0);
   const hasTP = (parsed.targets && parsed.targets.length > 0) || (parsed.pipTargets && parsed.pipTargets.length > 0) || parsed.isOpenTarget;
