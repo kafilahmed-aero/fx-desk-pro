@@ -1,4 +1,5 @@
 import { config } from "../config/env.js";
+import { NewMessage } from "telegram/events/index.js";
 import {
   getTelegramClient,
   connectTelegramWithSavedSession,
@@ -81,6 +82,46 @@ export async function startTelegramListener() {
     const client = await connectTelegramWithSavedSession();
     logger.info("telegram.connected");
     logger.info("STARTUP 5 Telegram Connected");
+
+    // Register live event handler for instant push notifications from all joined channels
+    client.addEventHandler(async (event) => {
+      try {
+        const message = event.message;
+        if (!message || !message.message) return;
+        const text = message.message || "";
+        let chat = null;
+        try {
+          chat = await message.getChat();
+        } catch (_) {}
+        const channelLabel = chat?.username || (chat?.id ? String(chat.id) : "unknown");
+        const channelTitle = chat?.title || channelLabel;
+        const hasMedia = Boolean(message.media);
+        const rawMessage = {
+          channel: channelLabel,
+          channelTitle,
+          messageId: message.id,
+          text,
+          hasText: text.trim().length > 0,
+          hasMedia,
+          mediaType: hasMedia ? getMediaType(message.media) : null,
+          textLength: text.length,
+          timestamp: formatMessageDate(message.date),
+          fetchedAt: new Date().toISOString(),
+        };
+        const result = await storeRawMessage(rawMessage);
+        if (result.stored) {
+          ingestionMetrics.messagesStored += 1;
+          enqueueRawMessageProcessing(rawMessage);
+          logger.info("telegram.live_event_stored_and_queued", {
+            channel: channelLabel,
+            messageId: message.id,
+          });
+        }
+      } catch (err) {
+        logger.error("telegram.live_event_error", { error: err.message });
+      }
+    }, new NewMessage({}));
+
     validateStartupChannels().then((report) => {
       lastStartupChannelReport = report;
     }).catch((err) => {
@@ -166,7 +207,27 @@ export async function pollTelegramChannels() {
     ingestionMetrics.channelsPolledSuccessfully = 0;
     ingestionMetrics.channelsSkipped = 0;
 
+    const activeRefs = new Set();
+    try {
+      const dialogs = await withTimeout(client.getDialogs({ limit: 40 }), 15000, "Get active dialogs");
+      for (const d of dialogs) {
+        if (!d.isChannel && !d.isGroup) continue;
+        const ref = d.entity?.username || (d.id ? String(d.id) : null);
+        if (!ref) continue;
+        activeRefs.add(ref);
+        const res = await fetchAndStoreChannelMessages(client, ref);
+        if (res && res.success) {
+          ingestionMetrics.channelsPolledSuccessfully += 1;
+        } else {
+          ingestionMetrics.channelsSkipped += 1;
+        }
+      }
+    } catch (dErr) {
+      logger.warn("telegram.dialogs_quick_poll_failed", { error: dErr.message });
+    }
+
     for (const channel of config.telegram.channels) {
+      if (activeRefs.has(channel)) continue;
       const channelResult = await fetchAndStoreChannelMessages(client, channel);
       if (channelResult && channelResult.success) {
         ingestionMetrics.channelsPolledSuccessfully += 1;

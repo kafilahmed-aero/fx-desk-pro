@@ -1151,6 +1151,361 @@ export const monitoredTelegramChannels = [
     username: "usoilwtisignals",
     title: "USOIL⛽️ &amp; Gold🏆 Signals",
   },
+  {
+    ref: "-1001469931329",
+    username: null,
+    title: "SignalProvider (Free Forex Trading Signals)",
+  },
+  {
+    ref: "VasilyTrading",
+    username: "VasilyTrading",
+    title: "VasilyTrader (Free Forex Signals)",
+  },
+  {
+    ref: "-1002707089167",
+    username: null,
+    title: "GTMO 🤴🏽 TRADES",
+  },
+  {
+    ref: "Omamin_fx_trade66",
+    username: "Omamin_fx_trade66",
+    title: "OMANIAN FX TRADE",
+  },
+  {
+    ref: "TaniaTradingAcademy",
+    username: "TaniaTradingAcademy",
+    title: "Tania Trading Academy 👑",
+  },
+  {
+    ref: "bullgoldforexaifxbot792",
+    username: "bullgoldforexaifxbot792",
+    title: "Bull Gold Forex",
+  },
+  {
+    ref: "StarXhuk900",
+    username: "StarXhuk900",
+    title: "𝐒𝐭𝐚𝐫 𝐓𝐫𝐚𝐝𝐢𝐧𝐠 ™",
+  },
+  {
+    ref: "ForexEmpire_tradee",
+    username: "ForexEmpire_tradee",
+    title: "𝐅𝐎𝐑𝐄𝐗 𝐄𝐌𝐏𝐈𝐑𝐄",
+  },
+  {
+    ref: "-1001914224843",
+    username: null,
+    title: "XAUUSD GOLD SIGNAL",
+  },
+  {
+    ref: "THETRADEWITHAHMED95",
+    username: "THETRADEWITHAHMED95",
+    title: "𝐓𝐑𝐀𝐃𝐄 𝐖𝐈𝐓𝐇 𝐀𝐇𝐌𝐄𝐃",
+  },
+  {
+    ref: "DimasTraderCapital",
+    username: "DimasTraderCapital",
+    title: "Dimas Trader Capital",
+  },
+  {
+    ref: "-1001986645239",
+    username: null,
+    title: "MYCHAL GOLD TRADER",
+  },
+  {
+    ref: "forexgoldtradexau",
+    username: "forexgoldtradexau",
+    title: "GOLD PIPS SOCIETY OFFICIAL",
+  },
+  {
+    ref: "-1001196272579",
+    username: null,
+    title: "TopTradingSignals(Best Forex & Gold Signals)",
+  },
+  {
+    ref: "withtradeLzbzjxudhd11",
+    username: "withtradeLzbzjxudhd11",
+    title: "𝘼𝙉𝘼𝙇𝙔𝙎𝙄𝙎 𝙂𝙊𝙇𝘿 𝙎𝙄𝙂𝙉𝘼𝙇𝙎",
+  },
+  {
+    ref: "-1001420190222",
+    username: null,
+    title: "UK Profit Trader",
+  },
+  {
+    ref: "gold_vip450",
+    username: "gold_vip450",
+    title: "𝗚𝗼𝗹𝗱 𝗦𝗶𝗴𝗻𝗮𝗹𝘀",
+  },
+  {
+    ref: "-1001262709229",
+    username: null,
+    title: "Forex Signals - Blue Pips",
+  },
+  {
+    ref: "Frank_adin222",
+    username: "Frank_adin222",
+    title: "𝐆𝐎𝐋𝐃 𝐏𝐈𝐏𝐒™",
+  },
+  {
+    ref: "GoldInfinity193",
+    username: "GoldInfinity193",
+    title: "𝑮𝑶𝑳𝑫𝑰𝑵𝑭𝑰𝑵𝑰𝑻𝒀 ™️🔝",
+  },
+  {
+    ref: "PrimeMarketHubOfficial",
+    username: "PrimeMarketHubOfficial",
+    title: "Gold Market Insights",
+  },
+  {
+    ref: "KingOfForexProOfficial",
+    username: "KingOfForexProOfficial",
+    title: "𝐓𝐇𝐄 𝐊𝐈𝐍𝐆 𝐎𝐅 𝐅𝐎𝐑𝐄𝐗 𝐏𝐑𝐎",
+  },
+  {
+    ref: "-1003651876639",
+    username: null,
+    title: "GOLD MASTER SIGNALS ™",
+  },
+  {
+    ref: "signalstrader_200",
+    username: "signalstrader_200",
+    title: "XAUUSD SIGNALS",
+  },
+  {
+    ref: "goldpipsTS",
+    username: "goldpipsTS",
+    title: "GOLD PIPS TRADE",
+  },
+  {
+    ref: "Kkkmeerbhai_561",
+    username: "Kkkmeerbhai_561",
+    title: "FOREX GOLD TRADING",
+  },
+  {
+    ref: "Goldvisionvip0",
+    username: "Goldvisionvip0",
+    title: "𝐆𝐨𝐥𝐝 𝐕𝐢𝐬𝐢𝐨𝐧",
+  },
+  {
+    ref: "GOLD_PRO_MASTER_HUB",
+    username: "GOLD_PRO_MASTER_HUB",
+    title: "GOLD MARKET MASTER",
+  },
+  {
+    ref: "-1003842492934",
+    username: null,
+    title: "Fx desk pro alert",
+  },
+  {
+    ref: "-1001947580982",
+    username: null,
+    title: "GOLD VIP SIGNALS",
+  },
+  {
+    ref: "SmartMoneySignalsa",
+    username: "SmartMoneySignalsa",
+    title: "🔻Smart Money Trader🔻",
+  },
+  {
+    ref: "-1001604309645",
+    username: null,
+    title: "James Gold Master",
+  },
+  {
+    ref: "FXPROTRADER92",
+    username: "FXPROTRADER92",
+    title: "𝐅𝐗 𝐏𝐑𝐎 𝐓𝐑𝐀𝐃𝐄𝐑",
+  },
+  {
+    ref: "-1001765226347",
+    username: null,
+    title: "Ben, Gold Trader",
+  },
+  {
+    ref: "Xauusd_live_forex_signals_daily",
+    username: "Xauusd_live_forex_signals_daily",
+    title: "XAUUSD BTC GOLD FOREX SIGNALS™",
+  },
+  {
+    ref: "-1001809876773",
+    username: null,
+    title: "INSIDER TRADING",
+  },
+  {
+    ref: "QuarterlyTheorysfx1",
+    username: "QuarterlyTheorysfx1",
+    title: "Quarterly Theory Fx ™®",
+  },
+  {
+    ref: "Forex_Empire20",
+    username: "Forex_Empire20",
+    title: "𝐅𝐨𝐫𝐞𝐱 𝐄𝐦𝐩𝐢𝐫𝐞",
+  },
+  {
+    ref: "Xau_Empire7",
+    username: "Xau_Empire7",
+    title: "𝙁𝙊𝙍𝙀𝙓 𝘾𝙍𝙀𝘿𝙄𝘽𝙇𝙀 𝙏𝙍𝘼𝘿𝙀𝙍",
+  },
+  {
+    ref: "-1001725462062",
+    username: null,
+    title: "GFR ANALYSIS FREE",
+  },
+  {
+    ref: "xauusdking98",
+    username: "xauusdking98",
+    title: "𝐆𝐎𝐋𝐃 𝐒𝐍𝐈𝐏𝐄𝐑 𝐙𝐎𝐍𝐄",
+  },
+  {
+    ref: "-1001498694544",
+    username: null,
+    title: "XAUUSD PROFIT TRADER",
+  },
+  {
+    ref: "-1001625932243",
+    username: null,
+    title: "WIRE FOREX 📊",
+  },
+  {
+    ref: "-1001868019139",
+    username: null,
+    title: "Gold Signals VIP (XAUUSD FOREX)",
+  },
+  {
+    ref: "TechnicalPips6273",
+    username: "TechnicalPips6273",
+    title: "𝐓𝐞𝐜𝐡𝐧𝐢𝐜𝐚𝐥 𝐏𝐢𝐩𝐬 ™",
+  },
+  {
+    ref: "-1001784375097",
+    username: null,
+    title: "XAUUSD GOLD SIGNAL",
+  },
+  {
+    ref: "Tradewith_Forexking786",
+    username: "Tradewith_Forexking786",
+    title: "Forex King",
+  },
+  {
+    ref: "EARNGOLDTRADING2400",
+    username: "EARNGOLDTRADING2400",
+    title: "XAUUSD GOLD MASTER",
+  },
+  {
+    ref: "THE_KINGSOF_FOREX_VIP",
+    username: "THE_KINGSOF_FOREX_VIP",
+    title: "THE KING'S OF FOREX",
+  },
+  {
+    ref: "-1001785197109",
+    username: null,
+    title: "🌸AnabelSignals🌸 Best Free Forex & Gold Signals",
+  },
+  {
+    ref: "-1001215049720",
+    username: null,
+    title: "UnitedSignals (Best Forex Signals)",
+  },
+  {
+    ref: "-1002196516139",
+    username: null,
+    title: "✨(ICT+CRT) Trading Hub✨",
+  },
+  {
+    ref: "NasdaqMaster4",
+    username: "NasdaqMaster4",
+    title: "𝐍𝐀𝐒𝐃𝐀𝐐 𝐌𝐀𝐒𝐓𝐄𝐑𝐒",
+  },
+  {
+    ref: "-1001543568673",
+    username: null,
+    title: "Forex Income Forever",
+  },
+  {
+    ref: "-1001680297592",
+    username: null,
+    title: "GOLD EMPIRE",
+  },
+  {
+    ref: "-1001758700941",
+    username: null,
+    title: "Forexero - Forex Signals",
+  },
+  {
+    ref: "-1001946156345",
+    username: null,
+    title: "𝐆𝐨𝐥𝐝 𝐒𝐦𝐚𝐫𝐭 𝐅𝐗 𝐓𝐫𝐚𝐝𝐞𝐫",
+  },
+  {
+    ref: "akshayjainiitb",
+    username: "akshayjainiitb",
+    title: "Akshay Jain JEE Physics",
+  },
+  {
+    ref: "-1003955968449",
+    username: null,
+    title: "Fx-test-feed",
+  },
+  {
+    ref: "-1003780977094",
+    username: null,
+    title: "Raj Gaming",
+  },
+  {
+    ref: "Engineeringmechanics2025",
+    username: "Engineeringmechanics2025",
+    title: "Engineering mechanics",
+  },
+  {
+    ref: "-1002968274538",
+    username: null,
+    title: "Amazon Shop ™",
+  },
+  {
+    ref: "Zyro_Botz",
+    username: "Zyro_Botz",
+    title: "Zyro Botz",
+  },
+  {
+    ref: "-1002173466828",
+    username: null,
+    title: "Eklavya-JEE-2025-Agrani",
+  },
+  {
+    ref: "-1002925557123",
+    username: null,
+    title: "Attack On Titan",
+  },
+  {
+    ref: "-1002434354802",
+    username: null,
+    title: "Eklavya 2025 - Private",
+  },
+  {
+    ref: "SpringsFern",
+    username: "SpringsFern",
+    title: "SpringsFern",
+  },
+  {
+    ref: "IITJEE_ASPIRANT_2025",
+    username: "IITJEE_ASPIRANT_2025",
+    title: "JEE EKLAVYA 2025 - INFO BROADCAST",
+  },
+  {
+    ref: "-1002257827938",
+    username: null,
+    title: "Backup Channel",
+  },
+  {
+    ref: "-1001554066846",
+    username: null,
+    title: "Money Heist All Seasons Hindi English HD",
+  },
+  {
+    ref: "Lost_in_space_all_seasons_hindi",
+    username: "Lost_in_space_all_seasons_hindi",
+    title: "Lost in space all seasons in hindi",
+  },
 ];
 
 validateMonitoredTelegramChannels(monitoredTelegramChannels);
@@ -1165,18 +1520,14 @@ function validateMonitoredTelegramChannels(channels) {
   }
 
   const seenRefs = new Set();
-
   for (const channel of channels) {
     const ref = String(channel?.ref || "").trim();
-
     if (!ref) {
       throw new Error("Every monitored Telegram channel needs a non-empty ref.");
     }
-
     if (seenRefs.has(ref)) {
       throw new Error(`Duplicate monitored Telegram channel ref: ${ref}`);
     }
-
     seenRefs.add(ref);
   }
 }
@@ -1184,9 +1535,7 @@ function validateMonitoredTelegramChannels(channels) {
 function dedupeChannelRefs(channelRefs) {
   return [
     ...new Set(
-      channelRefs
-        .map((channelRef) => String(channelRef || "").trim())
-        .filter(Boolean)
+      channelRefs.map((channelRef) => String(channelRef || "").trim()).filter(Boolean)
     ),
   ];
 }

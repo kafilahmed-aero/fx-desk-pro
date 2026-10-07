@@ -3,8 +3,15 @@ import path from "node:path";
 import input from "input";
 import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
+import { ConnectionTCPFull } from "telegram/network/connection/TCPFull.js";
 import { config } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+
+class ConnectionTCPFull443 extends ConnectionTCPFull {
+  constructor(args) {
+    super({ ...args, port: 443 });
+  }
+}
 
 let telegramClient = null;
 const channelEntityCache = new Map();
@@ -27,6 +34,7 @@ export function createTelegramClient() {
     config.telegram.apiId,
     config.telegram.apiHash,
     {
+      connection: ConnectionTCPFull443,
       connectionRetries: 5,
     }
   );

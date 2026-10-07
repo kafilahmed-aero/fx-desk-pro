@@ -478,7 +478,7 @@ function extractUnlabeledTargets(text, action, entry, stopLoss, entryRange) {
   const numberRegex = new RegExp(numberPattern, "g");
 
   for (const line of lines) {
-    if (/\b(?:SL|STOP\s*LOSS|STOPLOSS|ENTRY|ENTRIES|CMP|CURRENT|RISK|RISK\s+PRICE)\b/i.test(line)) {
+    if (/\b(?:SL|STOP\s*LOSS|STOPLOSS|CUT\s*LOSS|CUTLOSS|ENTRY|ENTRIES|CMP|CURRENT|RISK|RISK\s+PRICE)\b/i.test(line)) {
       continue;
     }
 
@@ -542,9 +542,8 @@ function extractStopLoss(normalized) {
     new RegExp(`(?<!BUY\\s+|SELL\\s+)\\bSTOP\\b\\.?\\s*[:@_-]+\\s*(${numberPattern})`, "i"),
     new RegExp(`\\b(?:MY|SAFE|RECOMMENDED)\\s+STOP\\s+LOSS\\.?\\s*[:@_-]?\\s*(${numberPattern})`, "i"),
     new RegExp(`\\bINVALID(?:ATION)?\\.?\\s*[:@_-]?\\s*(${numberPattern})`, "i"),
-    new RegExp(`\\bMANUAL\\s+CUT\\.?\\s*[:@_-]?\\s*(${numberPattern})`, "i"),
-    new RegExp(`\\bCUT\\s+LOSS\\.?\\s*[:@_-]?\\s*(${numberPattern})`, "i"),
-    new RegExp(`\\bCUT\\.?\\s*[:@_-]+\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bCUT\\s*LOSS\\b(?:\\s+(?:IF\\s+BREAK|BREAK|BELOW|ABOVE|UNDER|AT|PRICE))?\\s*[:@_-]?\\s*(${numberPattern})`, "i"),
+    new RegExp(`\\bCUT\\b(?:\\s+(?:IF\\s+BREAK|BREAK|BELOW|ABOVE|UNDER|AT|PRICE))?\\s*[:@_-]+\\s*(${numberPattern})`, "i"),
   ];
 
   const val = findFirstNumberByPattern(normalized.compactText, patterns);

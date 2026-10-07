@@ -1552,4 +1552,39 @@ export const parserFixtures = [
       stopLoss: 4000,
     },
   },
+  {
+    name: "CutLoss If Break format as stoploss",
+    rawMessage: {
+      channel: "CPabloScalper",
+      messageId: 23809,
+      text: "Xauusd Buy Zone @4118-4111\n\nCutLoss If Break 4108\n\nTp Open",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4118,
+      targets: [],
+      stopLoss: 4108,
+    },
+  },
+  {
+    name: "Gold Trade 4 TPs with SL",
+    rawMessage: {
+      channel: "golitrader",
+      messageId: 38045,
+      text: "📊XAUUSD BUY 4108\n\n✔️TP 4111\n✔️TP 4114\n✔️TP 4117\n✔️TP 4120\n❌SL 4096\n\n‼️ MANAGEME RISK GUY'S",
+      timestamp: now,
+    },
+    expected: {
+      classification: "NEW_SIGNAL",
+      pair: "XAUUSD",
+      action: "BUY",
+      entry: 4108,
+      targets: [4111, 4114, 4117, 4120],
+      stopLoss: 4096,
+    },
+  },
 ];
+
