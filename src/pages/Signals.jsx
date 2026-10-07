@@ -3,8 +3,21 @@ import { RadioTower, RefreshCw, AlertCircle } from "lucide-react";
 import { getParsedSignals } from "../services/signalService";
 
 function Signals() {
-  const [signals, setSignals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [signals, setSignals] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fx_desk_cached_signals");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem("fx_desk_cached_signals");
+    } catch {
+      return true;
+    }
+  });
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -14,6 +27,9 @@ function Signals() {
       const data = await getParsedSignals();
       setSignals(data);
       setError("");
+      try {
+        sessionStorage.setItem("fx_desk_cached_signals", JSON.stringify(data.slice(0, 50)));
+      } catch (_) {}
     } catch (err) {
       setError(err.message || "Failed to load signals");
     } finally {
@@ -34,6 +50,9 @@ function Signals() {
         if (isMounted) {
           setSignals(data);
           setError("");
+          try {
+            sessionStorage.setItem("fx_desk_cached_signals", JSON.stringify(data.slice(0, 50)));
+          } catch (_) {}
         }
       } catch (err) {
         if (isMounted) {

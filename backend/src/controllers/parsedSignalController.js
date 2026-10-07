@@ -21,7 +21,8 @@ export async function getParsedSignalsController(req, res) {
     if (isMongoConnected) {
       const signals = await ParsedSignal.find(filters)
         .sort({ createdAt: -1 })
-        .limit(100);
+        .limit(100)
+        .lean();
       return res.status(200).json(signals);
     } else {
       // Offline fallback: fetch in-memory signals from the store

@@ -233,6 +233,15 @@ parsedSignalSchema.index({
   signalState: 1,
 });
 
+parsedSignalSchema.index({
+  classification: 1,
+  createdAt: -1,
+});
+
+parsedSignalSchema.index({
+  createdAt: -1,
+});
+
 export const ParsedSignal =
   mongoose.models.ParsedSignal ||
   mongoose.model("ParsedSignal", parsedSignalSchema);

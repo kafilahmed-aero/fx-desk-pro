@@ -31,7 +31,7 @@ import SystemMonitor from "./pages/SystemMonitor";
 import ParserDiagnostics from "./pages/ParserDiagnostics";
 import { ThemeProvider } from "./context/ThemeContext";
 import { useTheme } from "./context/useTheme";
-import { getCurrentUser, logout } from "./services/authService";
+import { getCurrentUser, getCachedUser, logout } from "./services/authService";
 
 const navigationItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -312,8 +312,16 @@ function DashboardShell({ isAuthenticated, user, onLogout }) {
 }
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [user, setUser] = useState(() => getCachedUser());
+  // If we already have a cached user or if there is no token at all, do not block the UI
+  const [isCheckingSession, setIsCheckingSession] = useState(() => {
+    const hasToken = Boolean(localStorage.getItem("fx_desk_token") || sessionStorage.getItem("fx_desk_token"));
+    const cached = getCachedUser();
+    // If no token exists, we know user is logged out immediately (false).
+    // If cached user exists with token, we can render immediately (false).
+    // Only check if token exists but no cached user details exist.
+    return hasToken && !cached;
+  });
   const isAuthenticated = Boolean(user);
 
   useEffect(() => {
@@ -327,7 +335,10 @@ function App() {
       })
       .catch(() => {
         if (isMounted) {
-          setUser(null);
+          // If we had no user cached, clear to null
+          if (!getCachedUser()) {
+            setUser(null);
+          }
         }
       })
       .finally(() => {
@@ -354,7 +365,10 @@ function App() {
     return (
       <ThemeProvider>
         <div className="flex min-h-screen items-center justify-center bg-[#050B16] text-sm font-semibold text-slate-300">
-          Checking session
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+            <span>Connecting...</span>
+          </div>
         </div>
       </ThemeProvider>
     );

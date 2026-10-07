@@ -24,10 +24,14 @@ export async function login({ email, password, remember = true }) {
     try {
       if (remember) {
         localStorage.setItem("fx_desk_token", payload.token);
+        localStorage.setItem("fx_desk_user", JSON.stringify(payload.user));
         sessionStorage.removeItem("fx_desk_token");
+        sessionStorage.removeItem("fx_desk_user");
       } else {
         sessionStorage.setItem("fx_desk_token", payload.token);
+        sessionStorage.setItem("fx_desk_user", JSON.stringify(payload.user));
         localStorage.removeItem("fx_desk_token");
+        localStorage.removeItem("fx_desk_user");
       }
     } catch (err) {
       console.warn("Storage access failed:", err);
@@ -37,6 +41,17 @@ export async function login({ email, password, remember = true }) {
   return payload.user;
 }
 
+export function getCachedUser() {
+  try {
+    const token = localStorage.getItem("fx_desk_token") || sessionStorage.getItem("fx_desk_token");
+    const userStr = localStorage.getItem("fx_desk_user") || sessionStorage.getItem("fx_desk_user");
+    if (token && userStr) {
+      return JSON.parse(userStr);
+    }
+  } catch {}
+  return null;
+}
+
 export async function logout() {
   await fetchWithCredentials("/auth/logout", {
     method: "POST",
@@ -44,26 +59,52 @@ export async function logout() {
   
   try {
     localStorage.removeItem("fx_desk_token");
+    localStorage.removeItem("fx_desk_user");
     sessionStorage.removeItem("fx_desk_token");
+    sessionStorage.removeItem("fx_desk_user");
   } catch (err) {
     console.warn("Storage clear failed:", err);
   }
 }
 
 export async function getCurrentUser() {
-  const response = await fetchWithCredentials("/auth/me");
-
-  if (response.status === 401) {
-    try {
-      localStorage.removeItem("fx_desk_token");
-      sessionStorage.removeItem("fx_desk_token");
-    } catch (err) {
-      console.warn("Storage clear failed:", err);
-    }
+  // If no token exists at all, avoid blocking network call
+  const savedToken = localStorage.getItem("fx_desk_token") || sessionStorage.getItem("fx_desk_token");
+  if (!savedToken) {
     return null;
   }
 
-  const payload = await parseJsonResponse(response);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-  return payload.user;
+  try {
+    const response = await fetchWithCredentials("/auth/me", {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (response.status === 401) {
+      try {
+        localStorage.removeItem("fx_desk_token");
+        localStorage.removeItem("fx_desk_user");
+        sessionStorage.removeItem("fx_desk_token");
+        sessionStorage.removeItem("fx_desk_user");
+      } catch (err) {
+        console.warn("Storage clear failed:", err);
+      }
+      return null;
+    }
+
+    const payload = await parseJsonResponse(response);
+    if (payload?.user) {
+      try {
+        localStorage.setItem("fx_desk_user", JSON.stringify(payload.user));
+      } catch {}
+    }
+    return payload.user;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    // On timeout or network failure, keep cached user if present to prevent jarring logout
+    return getCachedUser();
+  }
 }

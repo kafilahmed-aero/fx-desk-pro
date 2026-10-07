@@ -25,10 +25,30 @@ const directionStyles = {
 };
 
 function Dashboard() {
-  const [opportunities, setOpportunities] = useState([]);
-  const [consensusPairs, setConsensusPairs] = useState([]);
+  const [opportunities, setOpportunities] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fx_desk_cached_opportunities");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [consensusPairs, setConsensusPairs] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("fx_desk_cached_consensus");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [systemHealth, setSystemHealth] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem("fx_desk_cached_opportunities");
+    } catch {
+      return true;
+    }
+  });
   const [error, setError] = useState("");
   const [lastLoadedAt, setLastLoadedAt] = useState(null);
 
@@ -49,38 +69,27 @@ function Dashboard() {
       hasPendingRefresh = false;
 
       try {
-        const [nextOpportunities, nextConsensusPairs, nextHealthData] =
-          await Promise.all([
-            getActiveOpportunities({ signal: activeController.signal }),
-            getWeightedConsensus({ signal: activeController.signal }),
-            fetchWithCredentials("/system/health", { signal: activeController.signal })
-              .then((res) => {
-                if (!res.ok) throw new Error("Failed to load health status");
-                return res.json();
-              })
-              .catch((err) => {
-                console.warn("Dashboard system health fetch failed", err);
-                return null;
-              }),
-          ]);
+        const [nextOpportunities, nextConsensusPairs] = await Promise.all([
+          getActiveOpportunities({ signal: activeController.signal }),
+          getWeightedConsensus({ signal: activeController.signal }),
+        ]);
 
-        if (!isMounted) return;
+        if (isMounted) {
+          setOpportunities(nextOpportunities);
+          setConsensusPairs(nextConsensusPairs);
+          setIsLoading(false);
+          setError("");
+          setLastLoadedAt(new Date());
 
-        setOpportunities(nextOpportunities);
-        setConsensusPairs(nextConsensusPairs);
-        setSystemHealth(nextHealthData);
-        setError("");
-        setLastLoadedAt(new Date());
-        if (import.meta.env.DEV) {
-          console.info("[DASHBOARD REFRESH]", {
-            opportunityCount: nextOpportunities.length,
-            consensusPairs: nextConsensusPairs.length,
-          });
+          try {
+            sessionStorage.setItem("fx_desk_cached_opportunities", JSON.stringify(nextOpportunities));
+            sessionStorage.setItem("fx_desk_cached_consensus", JSON.stringify(nextConsensusPairs));
+          } catch (_) {}
         }
-      } catch (loadError) {
+      } catch (err) {
         if (!isMounted) return;
-        if (loadError.name === "AbortError") return;
-        setError(loadError.message);
+        if (err.name === "AbortError") return;
+        setError(err.message || "Failed to load opportunities");
       } finally {
         isRequestActive = false;
         if (isMounted) {
@@ -90,6 +99,19 @@ function Dashboard() {
           window.setTimeout(loadLiveIntelligence, 150);
         }
       }
+
+      // Fetch system health in background (non-blocking)
+      fetchWithCredentials("/system/health", { signal: activeController?.signal })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load health status");
+          return res.json();
+        })
+        .then((nextHealthData) => {
+          if (isMounted) {
+            setSystemHealth(nextHealthData);
+          }
+        })
+        .catch(() => {});
     }
 
     if ("Notification" in window) {
