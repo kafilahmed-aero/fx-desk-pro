@@ -26,7 +26,7 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
 
 
 
-    // Hardened Dynamic Validation (Issue 10): filter out indices, ratios, and invalid low values globally
+    // Hardened Dynamic Validation: filter out impossible prices, pips misclassified as prices, and promo pollution
     if (entities.pair && entities.pair !== "unknown") {
       const isForex = entities.pair.length === 6 && currencyCodes.has(entities.pair.slice(0, 3)) && currencyCodes.has(entities.pair.slice(3));
       
@@ -35,10 +35,34 @@ export function parseSignalMessage(rawMessage = {}, parserClassification = "NEW_
         const num = Number(val);
         if (!Number.isFinite(num)) return false;
         
-        // Rule A: Whole integers <= 10 are always garbage/pollution (e.g. indices or ratios)
+        // Rule A: Whole integers <= 10 are always garbage/pollution
         if (Number.isInteger(num) && num <= 10) return true;
+
+        // Rule B: Gold / XAUUSD price sanity check (Gold trades ~2000-5000+)
+        // Numbers < 1000 or > 10000 are impossible price levels for Gold
+        if ((entities.pair === "XAUUSD" || entities.pair === "GOLD") && (num < 1000 || num > 10000)) {
+          return true;
+        }
+
+        // Rule C: BTCUSD price sanity check
+        if (entities.pair === "BTCUSD" && (num < 10000 || num > 250000)) {
+          return true;
+        }
+
+        // Rule D: US30 / DJ30 price sanity check
+        if ((entities.pair === "US30" || entities.pair === "DJ30") && (num < 15000 || num > 70000)) {
+          return true;
+        }
+
+        // Rule E: Relative corridor check against entry price for commodities/indices/crypto
+        const refEntry = entities.entryInfo?.entry || (entities.entryInfo?.entryRange?.[0]);
+        if (!isForex && refEntry && Number.isFinite(refEntry) && refEntry > 0) {
+          if (num < refEntry * 0.4 || num > refEntry * 2.5) {
+            return true;
+          }
+        }
         
-        // Rule B: Low values <= 10 for non-forex assets are invalid (except low-priced assets like NATGAS)
+        // Rule F: Low values <= 10 for non-forex assets are invalid (except low-priced assets like NATGAS)
         const isLowPriceAsset = isForex || entities.pair === "NATGAS";
         if (!isLowPriceAsset && num <= 10) return true;
         
@@ -427,7 +451,8 @@ function extractTargets(text, action = null, entryInfo = null, stopLoss = null) 
     const safeGroup = group
       .split(/\n\s*\n/)[0]
       .split(/(?:https?:\/\/|www\.|t\.me)/i)[0]
-      .split(/\b(SL|STOP LOSS|ENTRY|ENTRIES|TIME\s*FRAME|TIMEFRAME|TF)\b/i)[0];
+      .split(/\b(SL|STOP LOSS|ENTRY|ENTRIES|TIME\s*FRAME|TIMEFRAME|TF)\b/i)[0]
+      .split(/\b(?:ONLY\s+\d+|LUCKY\s+PEOPLE|PEOPLE\s+ALLOWED|VIP\s+ROOM|JOIN\s+VIP|VIP|MEMBERS?\s+ALLOWED|LIMITED\s+SPOTS?)\b/i)[0];
     for (const value of extractTargetNumbers(safeGroup)) {
       addUniqueNumber(targets, value);
     }
