@@ -66,13 +66,6 @@ const rawConfig = {
     botToken: process.env.TELEGRAM_ALERT_BOT_TOKEN || "",
     channelId: process.env.TELEGRAM_ALERT_CHANNEL_ID || "",
   },
-  goldRadar: {
-    botToken: process.env.GOLD_RADAR_BOT_TOKEN || "8959056570:AAFCzeFL0QctQoa4Qi4XNefy_lbferddGTQ",
-    vipChannelId: process.env.GOLD_RADAR_VIP_CHANNEL_ID || "-1004316826166",
-    publicChannelId: process.env.GOLD_RADAR_PUBLIC_CHANNEL_ID || "@GoldSignalRadar_Official",
-    maxVipPerDay: Number(process.env.GOLD_RADAR_MAX_VIP_SIGNALS_PER_DAY) || 20,
-    vipInviteLink: process.env.GOLD_RADAR_VIP_INVITE_LINK || "https://t.me/+48_7Kzcq_WZhYWI1",
-  },
   pipeline: {
     processingConcurrency: Math.max(
       1,
