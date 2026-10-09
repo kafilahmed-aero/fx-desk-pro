@@ -239,6 +239,12 @@ parsedSignalSchema.index({
 });
 
 parsedSignalSchema.index({
+  classification: 1,
+  timestamp: -1,
+  createdAt: -1,
+});
+
+parsedSignalSchema.index({
   createdAt: -1,
 });
 

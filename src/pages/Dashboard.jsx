@@ -134,6 +134,8 @@ function Dashboard() {
         }
       },
       (newSignal) => {
+        loadLiveIntelligence();
+
         if (!("Notification" in window) || Notification.permission !== "granted") {
           return;
         }

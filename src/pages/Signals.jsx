@@ -2,11 +2,20 @@ import { useEffect, useState } from "react";
 import { RadioTower, RefreshCw, AlertCircle } from "lucide-react";
 import { getParsedSignals, subscribeToConsensusEvents } from "../services/signalService";
 
+function sortSignalsDesc(items) {
+  if (!Array.isArray(items)) return [];
+  return [...items].sort((a, b) => {
+    const timeA = new Date(a.timestamp || a.createdAt || 0).getTime();
+    const timeB = new Date(b.timestamp || b.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
+}
+
 function Signals() {
   const [signals, setSignals] = useState(() => {
     try {
       const cached = sessionStorage.getItem("fx_desk_cached_signals");
-      return cached ? JSON.parse(cached) : [];
+      return cached ? sortSignalsDesc(JSON.parse(cached)) : [];
     } catch {
       return [];
     }
@@ -25,10 +34,11 @@ function Signals() {
     if (showRefreshing) setIsRefreshing(true);
     try {
       const data = await getParsedSignals();
-      setSignals(data);
+      const sorted = sortSignalsDesc(data);
+      setSignals(sorted);
       setError("");
       try {
-        sessionStorage.setItem("fx_desk_cached_signals", JSON.stringify(data.slice(0, 50)));
+        sessionStorage.setItem("fx_desk_cached_signals", JSON.stringify(sorted.slice(0, 50)));
       } catch (_) {}
     } catch (err) {
       setError(err.message || "Failed to load signals");
@@ -48,10 +58,11 @@ function Signals() {
       try {
         const data = await getParsedSignals();
         if (isMounted) {
-          setSignals(data);
+          const sorted = sortSignalsDesc(data);
+          setSignals(sorted);
           setError("");
           try {
-            sessionStorage.setItem("fx_desk_cached_signals", JSON.stringify(data.slice(0, 50)));
+            sessionStorage.setItem("fx_desk_cached_signals", JSON.stringify(sorted.slice(0, 50)));
           } catch (_) {}
         }
       } catch (err) {
@@ -189,7 +200,7 @@ function Signals() {
     );
   }
 
-  if (error) {
+  if (error && signals.length === 0) {
     return (
       <div className="animate-dashboard-in">
         <div className="flex items-center justify-between">
@@ -233,17 +244,22 @@ function Signals() {
             Signals
           </h2>
         </div>
-        <button
-          onClick={() => fetchSignalsData(true)}
-          disabled={isRefreshing}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm shadow-slate-900/5 transition hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10"
-          title="Refresh signal feed"
-        >
-          <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
-        </button>
+        <div className="flex items-center gap-3">
+          {error && (
+            <span className="text-xs font-bold text-rose-500 bg-rose-500/10 rounded-lg px-3 py-1 border border-rose-500/10">
+              {error}
+            </span>
+          )}
+          <button
+            onClick={() => fetchSignalsData(true)}
+            disabled={isRefreshing}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm shadow-slate-900/5 transition hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10"
+            title="Refresh signal feed"
+          >
+            <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
-
-
 
       {/* Feed Table container */}
       <div className="mt-8 overflow-hidden rounded-2xl border border-white/70 bg-white/75 shadow-xl shadow-slate-200/70 backdrop-blur-xl transition-colors duration-300 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/10">
@@ -281,7 +297,7 @@ function Signals() {
                       className="hover:bg-slate-50/40 dark:hover:bg-white/[0.02] transition-colors duration-150"
                     >
                       <td className="py-4 px-6 font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        {formatTime(signal.createdAt || signal.timestamp)}
+                        {formatTime(signal.timestamp || signal.createdAt)}
                       </td>
                       <td className="py-4 px-6 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                         {signal.channelTitle || (signal.channel?.startsWith("private-test-channel") ? "Fx-test-feed" : signal.channel)}

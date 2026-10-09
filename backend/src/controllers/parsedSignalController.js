@@ -39,7 +39,7 @@ export async function getParsedSignalsController(req, res) {
     const isMongoConnected = mongoose.connection.readyState === 1;
     if (isMongoConnected) {
       const signals = await ParsedSignal.find(filters)
-        .sort({ createdAt: -1 })
+        .sort({ timestamp: -1, createdAt: -1 })
         .limit(100)
         .lean();
       return res.status(200).json(signals);

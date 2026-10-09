@@ -30,7 +30,10 @@ export async function hydratePairStatesFromDb() {
     // Load active/partial signals within the active consensus age window that have Entry, TP, and SL
     const activeSignals = await ParsedSignal.find({
       signalState: { $in: ["ACTIVE", "PARTIAL"] },
-      createdAt: { $gte: cutoffTime },
+      $or: [
+        { createdAt: { $gte: cutoffTime } },
+        { timestamp: { $gte: cutoffTime } },
+      ],
       entry: { $ne: null },
       $and: [
         {
@@ -49,7 +52,7 @@ export async function hydratePairStatesFromDb() {
         }
       ]
     })
-      .sort({ createdAt: 1 }) // replay in oldest -> newest order to reconstruct state correctly
+      .sort({ timestamp: 1, createdAt: 1 }) // replay in oldest -> newest order to reconstruct state correctly
       .lean();
 
     logger.info("consensus.hydration_signals_found", {
@@ -119,11 +122,14 @@ export async function ensurePairStatesSynced() {
 
     const latestSignal = await ParsedSignal.findOne({
       signalState: { $in: ["ACTIVE", "PARTIAL"] },
-      createdAt: { $gte: cutoffTime },
+      $or: [
+        { createdAt: { $gte: cutoffTime } },
+        { timestamp: { $gte: cutoffTime } },
+      ],
       entry: { $ne: null },
     })
-      .sort({ createdAt: -1 })
-      .select("createdAt")
+      .sort({ timestamp: -1, createdAt: -1 })
+      .select("timestamp createdAt")
       .lean();
 
     const storedStates = getStoredPairStates();
@@ -132,7 +138,10 @@ export async function ensurePairStatesSynced() {
       return t > max ? t : max;
     }, 0);
 
-    const newestInDb = latestSignal?.createdAt ? new Date(latestSignal.createdAt).getTime() : 0;
+    const newestInDb = Math.max(
+      latestSignal?.timestamp ? new Date(latestSignal.timestamp).getTime() : 0,
+      latestSignal?.createdAt ? new Date(latestSignal.createdAt).getTime() : 0
+    );
 
     if (newestInDb > newestInMemory || storedStates.length === 0) {
       await hydratePairStatesFromDb();
